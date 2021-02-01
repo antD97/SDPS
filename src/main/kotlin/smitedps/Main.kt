@@ -3,12 +3,10 @@ package smitedps
 import java.io.File
 import java.lang.StringBuilder
 import javax.swing.JFileChooser
+import javax.swing.JFrame
 import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
-
-val documentsPath = JFileChooser().fileSystemView.defaultDirectory.toString()
-val defaultSmiteLogsPath = "$documentsPath\\My Games\\Smite\\BattleGame\\Logs"
 
 var resetTimer = true
 var initDamage = -1
@@ -17,75 +15,32 @@ var totalDamage = 0
 
 fun main() {
 
-    println(" ----- Smite DPS Calculator by antD ----- ")
+    val dpsTracker = DPSTracker()
 
-    val name = getName() ?: exitProcess(0)
-    val combatLogFile = getCombatLogFile() ?: exitProcess(0)
-
-    startResetThread()
-
-    println("\nDo damage to start the DPS timer.")
-    println("Hit enter to reset the timer.\n")
-
-    trackDamage(combatLogFile, name)
-}
-
-/** Tries to use the saved name. If it can't be found, asks the user for it. */
-fun getName(): String? {
-    val defaultNameFile = File("in-game_name.txt")
-
-    // locate saved name
-    if (defaultNameFile.isFile) {
-        val value = defaultNameFile.bufferedReader().readLine()
-        if (value != null && value != "") {
-            println("Loaded name: $value")
-            return value
-        }
-    }
-    // create the file
-    else if (!defaultNameFile.exists()) defaultNameFile.createNewFile()
-
-    // ask user for name
-    print("No name saved, please enter your in-game name: ")
-    val input = readLine()?.toLowerCase()
-    return if (input != "") input else null
-}
-
-/** Tries to locate the combat log file automatically. If it can't be found, asks the user to select the file. */
-fun getCombatLogFile(): File? {
-    val defaultSmiteLogsDir = File(defaultSmiteLogsPath)
-
-    // automatically locate log file
-    if (defaultSmiteLogsDir.isDirectory) {
-
-        val combatLogs = mutableListOf<File>()
-        for (f in defaultSmiteLogsDir.listFiles()!!) {
-            if (f.name.contains("CombatLog_") && !f.name.contains("backup"))
-                combatLogs.add(f)
-        }
-
-        combatLogs.sort()
-
-        if (combatLogs.isNotEmpty()) {
-            println("Loaded combat log file: ${combatLogs.last().name}")
-            return combatLogs.last()
+    javax.swing.SwingUtilities.invokeLater {
+        JFrame("Smite DPS Calculator - antD").apply {
+            defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+            add(MainPanel(dpsTracker))
+            pack()
+            setLocationRelativeTo(null)
+            isVisible = true
         }
     }
 
-    // log file could not be found, ask the user to select it
-    println("Please select the combat log file.")
-    val fileChooserPath = if (File(defaultSmiteLogsPath).isDirectory) defaultSmiteLogsPath else documentsPath
-
-    val fc = JFileChooser(fileChooserPath).apply {
-        fileSelectionMode = JFileChooser.FILES_ONLY
-        fileFilter = FileNameExtensionFilter("Log Files", "log")
-    }
-
-    fc.showOpenDialog(null)
-
-    if (fc.selectedFile == null) exitProcess(0)
-    return fc.selectedFile
+    dpsTracker.run()
 }
+
+//    println(" ----- Smite DPS Calculator by antD ----- ")
+//
+//    val name = getName() ?: exitProcess(0)
+////    val combatLogFile = getCombatLogFile() ?: exitProcess(0)
+//
+//    startResetThread()
+//
+//    println("\nDo damage to start the DPS timer.")
+//    println("Hit enter to reset the timer.\n")
+
+//    trackDamage(combatLogFile, name)
 
 /** Creates a thread to reset the DPS timer. */
 fun startResetThread() {
@@ -160,9 +115,3 @@ fun trackDamage(combatLogFile: File, name: String) {
     println("End of combat log.")
 }
 
-/** Expands the width of [this] by appending whitespace to the end. */
-fun String.spacing(w: Int): String {
-    val sb = StringBuilder(this)
-    while (sb.length < w) sb.append(" ")
-    return sb.toString()
-}

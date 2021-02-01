@@ -1,4 +1,5 @@
 .gradle/
 .idea/
 build/
+releases/
 in-game_name.txt
