@@ -31,7 +31,7 @@ combat log so this tool should always work, even with future updates containing 
   second one is level one, and the third one is level twenty. There are also buttons to the right
   that let you control the amount of protections they have.
 - If there are multiple ticks of damage that occur at the same time (e.g. Qin's Sais), the log file
-  annoyingly won't be updated until the next tick of damage or the file is closed. The late timing
+  annoyingly won't be updated until the next tick of damage, or the file is closed. The late timing
   won't mess up the DPS calculation, but it can make the output visually confusing. If the DPS timer
   is reset when there is output that has yet to be printed, when it does print it'll include a
   message to indicate that it was from the previous DPS timer.  
