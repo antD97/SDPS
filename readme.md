@@ -22,7 +22,7 @@ Releases can be found [here](https://github.com/antD97/SmiteDPS/releases).
 5. After that, it will begin tracking your damage done in that match. When you do your first tick of
    damage, it will start the timer used to calculate DPS. From then on, any time you do damage, it
    will print out your DPS from that initial hit to your last hit.
-6. If you want to reset the DPS timer, hit enter on the console window.
+6. If you want to reset the DPS timer, press enter on the console window.
 
 ## Notes
 

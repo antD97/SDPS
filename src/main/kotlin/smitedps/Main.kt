@@ -11,7 +11,6 @@ val documentsPath = JFileChooser().fileSystemView.defaultDirectory.toString()
 val defaultSmiteLogsPath = "$documentsPath\\My Games\\Smite\\BattleGame\\Logs"
 
 var resetTimer = true
-var initDamage = -1
 var initTime = -1.0
 var totalDamage = 0
 
@@ -19,33 +18,33 @@ fun main() {
 
     println(" ----- Smite DPS Calculator by antD ----- ")
 
-    val name = getName() ?: exitProcess(0)
+    val ign = getIGN() ?: exitProcess(0)
     val combatLogFile = getCombatLogFile() ?: exitProcess(0)
 
     startResetThread()
 
     println("\nDo damage to start the DPS timer.")
-    println("Hit enter to reset the timer.\n")
+    println("Press enter to reset the timer.\n")
 
-    trackDamage(combatLogFile, name)
+    trackDamage(combatLogFile, ign)
 }
 
 /** Tries to use the saved name. If it can't be found, asks the user for it. */
-fun getName(): String? {
-    val defaultNameFile = File("in-game_name.txt")
+fun getIGN(): String? {
+    val ignFile = File("in-game_name.txt")
 
     // locate saved name
-    if (defaultNameFile.isFile) {
-        val value = defaultNameFile.bufferedReader().readLine()
+    if (ignFile.isFile) {
+        val value = ignFile.bufferedReader().readLine()
         if (value != null && value != "") {
             println("Loaded name: $value")
             return value
         }
     }
     // create the file
-    else if (!defaultNameFile.exists()) defaultNameFile.createNewFile()
+    else if (!ignFile.exists()) ignFile.createNewFile()
 
-    // ask user for name
+    // ask user for in-game name
     print("No name saved, please enter your in-game name: ")
     val input = readLine()?.toLowerCase()
     return if (input != "") input else null
@@ -101,7 +100,7 @@ fun startResetThread() {
 }
 
 /** Prints updated DPS. */
-fun trackDamage(combatLogFile: File, name: String) {
+fun trackDamage(combatLogFile: File, ign: String) {
     val br = combatLogFile.bufferedReader()
 
     var prevTime = -10.0
@@ -113,21 +112,36 @@ fun trackDamage(combatLogFile: File, name: String) {
         if (line == "end") running = false  // EOF
 
         else if (line != null) {
-            val lineData = line.split("|")
-            val type = lineData[1].split("=")[1]
 
-            if (lineData[0] == "combatmsg" && (type == "DIT_Damage" || type == "DIT_CritDamage")) {
-                val source = lineData[9].split("=")[1].toLowerCase()
+            // log type that uses "," delimiters
+            val lineData = if (line.contains("{")) {
+                line.trim { it == '{' || it == '}' || it == ','}
+                    .split(",")
+                    .map {
+                        it.trim()
+                            .split(":")[1]
+                            .trim { c -> c == '"' }
+                    }
+            }
+            // log type that uses "|" delimiters
+            else {
+                line.split("|")
+                    .map {
+                        if (it.contains("=")) it.split("=")[1]
+                        else it
+                    }
+            }
 
-                if (source == name) {
-                    val time = lineData[8].split("=")[1].toDouble()
-                    val damage = lineData[12].split("=")[1].toInt()
-                    val reason = lineData[7].split("=")[1]
+            val type = lineData[1]
 
-                    val damageStr = "${"%.2f".format(totalDamage / (time - initTime))} DPS"
-                        .replace("Infinity", "---")
-                    val timeStr = "@ ${"%.2f".format(time - initTime)}s"
-                    val resultStr = "${damageStr.spacing(16)}${timeStr.spacing(16)}$reason"
+            if (type == "DIT_Damage" || type == "DIT_CritDamage") {
+                val source = lineData[9]
+                val damage = lineData[12].toInt()
+                val time = lineData[8].toDouble()
+                val reason = lineData[7]
+
+                // damage dealt by user
+                if (source.toLowerCase() == ign) {
 
                     if (resetTimer) {
 
@@ -135,7 +149,6 @@ fun trackDamage(combatLogFile: File, name: String) {
                         // damage ticks that occur at the same time
                         if (time - prevTime > 0.5) {
                             resetTimer = false
-                            initDamage = damage
                             initTime = time
                             totalDamage = damage
 
@@ -143,12 +156,11 @@ fun trackDamage(combatLogFile: File, name: String) {
 
                         } else {
                             totalDamage += damage
-                            println("$resultStr (from previous DPS timer, but the file updated late)")
+                            println("${formatDamage(time, reason)} (from previous DPS timer, but the file updated late)")
                         }
-
                     } else {
                         totalDamage += damage
-                        println(resultStr)
+                        println(formatDamage(time, reason))
                     }
 
                     prevTime = time
@@ -158,6 +170,13 @@ fun trackDamage(combatLogFile: File, name: String) {
     }
 
     println("End of combat log.")
+}
+
+fun formatDamage(time: Double, reason: String): String {
+    val damageStr = "${"%.2f".format(totalDamage / (time - initTime))} DPS"
+        .replace("Infinity", "0.00")
+    val timeStr = "@ ${"%.2f".format(time - initTime)}s"
+    return "${damageStr.spacing(16)}${timeStr.spacing(16)}$reason"
 }
 
 /** Expands the width of [this] by appending whitespace to the end. */
