@@ -1,9 +1,7 @@
 package smitedps
 
 import java.io.File
-import javax.swing.JComponent
 import javax.swing.JFileChooser
-import javax.swing.filechooser.FileNameExtensionFilter
 
 object CombatLogFinder {
 

@@ -1,18 +1,28 @@
 package smitedps
 
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute.FileTime
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableModel
 
 class DPSTracker {
 
     /** The table model that the tracker updates. */
-    var tableModel = DefaultTableModel()
+    var dpsTableModel = DefaultTableModel()
+    private var dpsTableListeners = mutableListOf<() -> Unit>()
 
     private var ign = ""
     private var updatedIGN: String? = null
 
     private var combatLog: File? = null
+        set(value) {
+            field = value
+            combatLogListeners.forEach{ it(value) }
+        }
+    private var combatLogLastModified = 0L
+    private var combatLogListeners = mutableListOf<(File?) -> Unit>()
 
     /** When true, starts DPS timer on next damage dealt. */
     private var resetTimer = true
@@ -23,7 +33,7 @@ class DPSTracker {
             updatedIGN = ign
     }
 
-    /** Tracks the DPS using [ign] and [combatLog] to update [tableModel]. */
+    /** Tracks the DPS using [ign] and [combatLog] to update [dpsTableModel]. */
     fun run() {
 
         // true if not updating because there is no combat log, or reached eof
@@ -50,6 +60,7 @@ class DPSTracker {
                     if (line == "end") {
                         waiting = true
                         eofReached = true
+                        addTableRow("","","","End of file. Searching...")
                     }
 
                     // all other lines
@@ -93,7 +104,7 @@ class DPSTracker {
                                 prevTime = time
                             }
                         }
-                    } else Thread.sleep(500)
+                    } else Thread.sleep(1000)
                 }
                 br.close()
             }
@@ -107,13 +118,28 @@ class DPSTracker {
 
             // use newest combat log
             val foundCombatLog = CombatLogFinder.search()
-            if (foundCombatLog != combatLog) {
-                combatLog = foundCombatLog
-                waiting = false
+            if (foundCombatLog != null) {
+
+                if (combatLog != null) {
+
+                    // found is newer than current
+                    if (foundCombatLog.lastModified() > combatLogLastModified) {
+                        combatLog = foundCombatLog
+                        combatLogLastModified = combatLog!!.lastModified()
+                        waiting = false
+                    }
+                }
+                // found first combat log
+                else {
+                    combatLog = foundCombatLog
+                    combatLogLastModified = combatLog!!.lastModified()
+                    waiting = false
+                }
             }
 
+
             // if there is no combat log, refresh slowly
-            if (waiting) Thread.sleep(1000)
+            if (waiting) Thread.sleep(3000)
         }
     }
 
@@ -146,11 +172,15 @@ class DPSTracker {
 
     /** Safely adds a row to the dps table. */
     private fun addTableRow(time: String, dps: String, damage: String, reason: String) {
-        SwingUtilities.invokeLater { tableModel.addRow(arrayOf(time, dps, damage, reason)) }
+        SwingUtilities.invokeAndWait { dpsTableModel.addRow(arrayOf(time, dps, damage, reason)) }
+        dpsTableListeners.forEach{ it() }
     }
 
     /** Safely removes all rows from the dps table. */
-    private fun clearDPSTable() { SwingUtilities.invokeLater { tableModel.rowCount = 0 } }
+    private fun clearDPSTable() {
+        SwingUtilities.invokeAndWait { dpsTableModel.rowCount = 0 }
+        dpsTableListeners.forEach{ it() }
+    }
 
     /** Calculates dps and creates a new row for the dps table. */
     private fun addDPSRow(totalDamage: Int,
@@ -165,4 +195,10 @@ class DPSTracker {
 
         addTableRow(timeStr, dpsStr, damage.toString(), reason)
     }
+
+    /** Adds a dps table listener. */
+    fun addDPSTableListener(listener: () -> Unit) { dpsTableListeners.add(listener) }
+
+    /** Adds a combat log update listener. */
+    fun addCombatLogListener(listener: (File?) -> Unit) { combatLogListeners.add(listener) }
 }
