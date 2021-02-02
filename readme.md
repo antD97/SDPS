@@ -11,18 +11,19 @@ combat log so this tool should always work, even with future updates containing 
 
 ## Usage
 
-1. Join a jungle practice and type `/combatlog toggle piped` to enable combat logging to file. This
+1. Make sure you have Java installed. If you don't, you can download it [here](https://www.java.com/en/download/).
+2. Join a jungle practice and type `/combatlog toggle piped` to enable combat logging to file. This
    only has to be done once every game launch.
-2. Extract the zip file and run `SmiteDPS.bat` to start the program.
-3. Enter your Smite in-game name when prompted or enter your name in the `in-game_name.txt` file to
+3. Extract the zip file and run `SmiteDPS.bat` to start the program.
+4. Enter your Smite in-game name when prompted or enter your name in the `in-game_name.txt` file to
    keep it saved.
-4. The program should be able to find your combat log file, but if it can't, it'll ask you to find
+5. The program should be able to find your combat log file, but if it can't, it'll ask you to find
    it. It should be located in `Documents\My Games\Smite\BattleGame\Logs`. From there you'll want to
    select the `CombatLog` file with the largest number.
-5. After that, it will begin tracking your damage done in that match. When you do your first tick of
+6. After that, it will begin tracking your damage done in that match. When you do your first tick of
    damage, it will start the timer used to calculate DPS. From then on, any time you do damage, it
    will print out your DPS from that initial hit to your last hit.
-6. If you want to reset the DPS timer, press enter on the console window.
+7. If you want to reset the DPS timer, press enter on the console window.
 
 ## Notes
 
