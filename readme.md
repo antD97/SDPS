@@ -1,9 +1,9 @@
 # Smite DPS
 
+![GitHub release (by tag)](https://img.shields.io/github/downloads/antD97/SmiteDPS/v1.1/total)
+
 A handy tool to calculate DPS in the game [Smite](https://smitegame.com/). It uses the in-game
 combat log so this tool should always work, even with future updates containing new items and gods.
-
-Releases can be found [here](https://github.com/antD97/SmiteDPS/releases).
 
 ## Screenshots
 
