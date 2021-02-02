@@ -9,30 +9,28 @@ import javax.swing.table.DefaultTableModel
 /** The main UI panel. */
 class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
-    private val dpsTable = JTable(arrayOf(), arrayOf("Time", "DPS", "Reason", "Damage"))
-        .apply { model = DefaultTableModel() }
+    private val nameFile = File("in-game_name.txt")
+
+    private val dpsTable = JTable(
+        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")))
+        .apply { columnModel.getColumn(3).preferredWidth = 175 }
+
+    private val alwaysOnTopCheckBox = JCheckBox("Window always on top")
+        .apply { addActionListener(::alwaysOnTopCheckBoxPress) }
 
     private val nameField = JTextField(10)
-    private val nameRefreshButton = JButton("↻")
+        .apply { addActionListener(::nameFieldEnterPress) }
+    private val nameSaveButton = JButton(UIManager.getIcon("FileView.floppyDriveIcon"))
         .apply {
             preferredSize = Dimension(45, 30)
-            addActionListener(::nameRefreshButtonPress)
+            addActionListener(::nameSaveButtonPress)
+            toolTipText = "Save the current name to file"
         }
 
-    private val combatLogField = JTextField(10)
+    private val combatLogField = JTextField(14)
         .apply {
             text = "no file"
             isEditable = false
-        }
-    private val combatLogRefreshButton = JButton("↻")
-        .apply {
-            preferredSize = Dimension(45, 30)
-            addActionListener(::combatLogRefreshButtonPress)
-        }
-    private val combatLogFileButton = JButton(UIManager.getIcon("FileView.fileIcon"))
-        .apply {
-            preferredSize = Dimension(45, 30)
-            addActionListener(::combatLogFileButtonPress)
         }
 
     private val resetTimerButton = JButton("Reset DPS Timer")
@@ -46,7 +44,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         c.weightx = 1.0; c.weighty = 1.0
         c.fill = GridBagConstraints.BOTH
         c.insets = Insets(10, 10, 10, 10)
-        JScrollPane(dpsTable).also { add(it, c) }
+        JScrollPane(dpsTable).apply { preferredSize = Dimension(300, 300) }.also { add(it, c) }
 
         // sidebar
         c.gridx = 0
@@ -66,15 +64,19 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             c2.fill = GridBagConstraints.HORIZONTAL
             add(JSeparator(), c2)
 
-            // in-game name input field
+            // always on top checkbox
             c2.gridy++
             c2.fill = GridBagConstraints.NONE
             c2.anchor = GridBagConstraints.FIRST_LINE_START
-            add(LabelPanel("In-game name", nameField, nameRefreshButton), c2)
+            add(alwaysOnTopCheckBox, c2)
+
+            // in-game name input field
+            c2.gridy++
+            add(LabelPanel("In-game name", nameField, nameSaveButton), c2)
 
             // combat log file
             c2.gridy++
-            add(LabelPanel("Combat log file", combatLogField, combatLogRefreshButton, combatLogFileButton), c2)
+            add(LabelPanel("Combat log file", combatLogField), c2)
 
             // reset timer button
             c2.weighty = 1.0
@@ -82,54 +84,56 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             c2.anchor = GridBagConstraints.PAGE_START
             add(resetTimerButton, c2)
 
+            minimumSize = preferredSize
+
         }.also { add(it, c) }
 
-        // load name & combat log at startup
         nameField.text = loadName()
-        combatLogRefreshButtonPress(null)
-
-        dpsTracker.tableModel = dpsTable.model as DefaultTableModel?
+        dpsTracker.updateIGN(nameField.text)
+        dpsTracker.tableModel = dpsTable.model as DefaultTableModel
     }
 
-    /** Tries to load the saved name. If it can't be found, returns an empty string. */
-    private fun loadName(): String {
-        val nameFile = File("in-game_name.txt")
-
+    /** Tries to load the saved name. If it can't be found, returns null. */
+    private fun loadName(): String? {
         if (nameFile.isFile) {
-            val value = nameFile.bufferedReader().readLine()
-            if (value != null && value != "") return value
+            val lines = nameFile.readLines()
+            if (lines.isNotEmpty() && lines[0] != "")
+                return lines [0]
         }
-        else if (!nameFile.exists()) nameFile.createNewFile()
-
-        return ""
+        return null
     }
 
 /* ------------------------------------------ Listeners ----------------------------------------- */
 
-    private fun nameRefreshButtonPress(e: ActionEvent?) { dpsTracker.updateIGN(nameField.text) }
+    /** Toggles having the window on top of all other windows. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun alwaysOnTopCheckBoxPress(e: ActionEvent?) {
+        (topLevelAncestor as JFrame).isAlwaysOnTop = alwaysOnTopCheckBox.isSelected
+    }
 
-    private fun combatLogRefreshButtonPress(e: ActionEvent?) {
-        val combatLog = CombatLogFinder.auto()
-        if (combatLog != null) {
-            dpsTracker.combatLog = combatLog
-            combatLogField.text = combatLog.name
+    /** Updates the in-game name used by the DPS tracker. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun nameFieldEnterPress(e: ActionEvent?) { dpsTracker.updateIGN(nameField.text) }
+
+    /** Saves the name in [nameField] to "in-game_name.txt". */
+    @Suppress("UNUSED_PARAMETER")
+    private fun nameSaveButtonPress(e: ActionEvent?) {
+        when {
+            nameFile.isDirectory -> JOptionPane.showMessageDialog(this,
+                "Could not save because \"in-game_name.txt\" is already a folder.")
+
+            nameField.text == "" -> nameFile.delete()
+            else -> nameFile.writeText(nameField.text)
         }
     }
 
-    private fun combatLogFileButtonPress(e: ActionEvent?) {
-        val combatLog = CombatLogFinder.manual(this)
-        if (combatLog != null) {
-            dpsTracker.combatLog = combatLog
-            combatLogField.text = combatLog.name
-        }
-    }
-
+    /** Resets the timer used by the DPS tracker. */
+    @Suppress("UNUSED_PARAMETER")
     private fun resetTimerButtonPress(e: ActionEvent?) { dpsTracker.resetTimer() }
 }
 
 /** Creates a JPanel with a JLabel followed by the specified JComponents. */
 private class LabelPanel(label: String, vararg components: JComponent) : JPanel(GridBagLayout()) {
-
     init {
         val c = GridBagConstraints()
 

@@ -12,7 +12,7 @@ object CombatLogFinder {
         File("${documentsDir.absolutePath}\\My Games\\Smite\\BattleGame\\Logs")
 
     /** Tries to locate the combat log file automatically. If it can't be found, returns null. */
-    fun auto(): File? {
+    fun search(): File? {
 
         if (defaultSmiteLogsDir.isDirectory) {
 
@@ -27,24 +27,5 @@ object CombatLogFinder {
         }
 
         return null
-    }
-
-    /**
-     * Asks the user to locate the combat log file. Returns null if cancelled.
-     * @param component The parent component of the file open dialog
-     */
-    fun manual(component: JComponent?): File? {
-
-        val fileChooserDir =
-            if (defaultSmiteLogsDir.isDirectory) defaultSmiteLogsDir
-            else documentsDir
-
-        val fc = JFileChooser(fileChooserDir).apply {
-            fileSelectionMode = JFileChooser.FILES_ONLY
-            fileFilter = FileNameExtensionFilter("Log Files", "log")
-        }
-
-        fc.showOpenDialog(component)
-        return fc.selectedFile
     }
 }

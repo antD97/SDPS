@@ -1,9 +1,10 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.10'
+    id 'application'
 }
 
 group 'antD'
-version '1.0'
+version '2.0'
 
 repositories {
     mavenCentral()
@@ -19,3 +20,5 @@ jar {
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
+
+mainClassName = 'smitedps.MainKt'
