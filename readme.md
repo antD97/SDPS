@@ -13,7 +13,7 @@ combat log so this tool should always work, even with future updates containing 
 
 1. Join a jungle practice and type `/combatlog toggle piped` to enable combat logging to file. This
    only has to be done once every game launch.
-2. Run `SmiteDPS.bat` to start the program.
+2. Extract the zip file and run `SmiteDPS.bat` to start the program.
 3. Enter your Smite in-game name when prompted or enter your name in the `in-game_name.txt` file to
    keep it saved.
 4. The program should be able to find your combat log file, but if it can't, it'll ask you to find
