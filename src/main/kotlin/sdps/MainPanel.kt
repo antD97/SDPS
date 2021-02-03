@@ -71,13 +71,13 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         c.gridx = 2
         c.weightx = 1.0; c.weighty = 1.0
         c.fill = GridBagConstraints.BOTH
-        c.insets = Insets(10, 5, 10, 10)
+        c.insets = Insets(10, 0, 10, 10)
         add(dpsTableScrollPane, c)
 
         // sidebar
         c.gridx = 1
         c.weightx = 0.0
-        c.insets = Insets(10, 10, 10, 5)
+        c.insets = Insets(10, 10, 10, 10)
         sidebar.apply {
             val c2 = GridBagConstraints()
 
@@ -136,7 +136,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
         // minimized sidebar
         c.gridx = 0
-        c.insets = Insets(10, 5, 0, 0)
+        c.insets = Insets(10, 5, 5, 5)
         minimizedBar.apply {
             val c2 = GridBagConstraints()
 

@@ -23,7 +23,7 @@ fun main() {
             add(MainPanel(dpsTracker))
             pack()
 
-            minimumSize = Dimension(size.width - 275, size.height - 75)
+            minimumSize = Dimension(size.width - 325, size.height - 115)
             setLocation(
                 Toolkit.getDefaultToolkit().screenSize.width - this.width - 10,
                 10)
