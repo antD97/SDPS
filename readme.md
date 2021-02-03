@@ -32,7 +32,12 @@ gods or items.
   output misleading. The following screenshots show an example of two ticks of damage arriving late
   to the DPS log.
 
-TODO
+  ![Screenshot 3](pics/screenshot3.png)
+  
+  There are two missing rows of damage for Qin's Sais and Shifter of Seasons damage that occurred
+  at 1.73s. These rows are not added until more damage is dealt.
+
+  ![Screenshot 4](pics/screenshot4.png)
 
 - In the "Odin bots" section of jungle practice, there are three Odin bots to the immediate left.
   These bots are handy for DPS calculations. The first one matches your character's level, the
