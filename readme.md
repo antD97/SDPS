@@ -43,6 +43,6 @@ Releases can be found [here](https://github.com/antD97/SmiteDPS/releases).
 
 Run `./gradlew jar` on Windows or `gradle jar` on Linux. The output is located in `build/libs`.
 
-## License
-
+## Copyright and License
+Copyright © 2021 antD97  
 Licensed under the [MIT License](LICENSE).
