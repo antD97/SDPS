@@ -57,9 +57,9 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         .apply { addActionListener(::resetTimerButtonPress) }
 
     private val minimizedBar = JPanel(GridBagLayout())
-    private val showSidebarButton = JButton()
+    private val maximizeSidebarButton = JButton()
         .apply {
-            preferredSize = Dimension(20, 10)
+            preferredSize = Dimension(10, 20)
             addActionListener(::showSidebarButtonPress)
             toolTipText = "Maximize the sidebar"
         }
@@ -68,16 +68,16 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         val c = GridBagConstraints()
 
         // main table
-        c.gridx = 1
+        c.gridx = 2
         c.weightx = 1.0; c.weighty = 1.0
         c.fill = GridBagConstraints.BOTH
-        c.insets = Insets(10, 10, 10, 10)
+        c.insets = Insets(10, 5, 10, 10)
         add(dpsTableScrollPane, c)
 
         // sidebar
-        c.gridx = 0
+        c.gridx = 1
         c.weightx = 0.0
-        c.insets = Insets(10, 10, 10, 0)
+        c.insets = Insets(10, 10, 10, 5)
         sidebar.apply {
             val c2 = GridBagConstraints()
 
@@ -135,15 +135,17 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         }.also { add(it, c) }
 
         // minimized sidebar
-        c.insets = Insets(10, 10, 0, 0)
+        c.gridx = 0
+        c.insets = Insets(10, 5, 0, 0)
         minimizedBar.apply {
             val c2 = GridBagConstraints()
 
-            // show side bar button
-            c2.weighty = 1.0
+            // maximize side bar button
+            c2.weightx = 1.0; c2.weighty = 1.0
             c2.anchor = GridBagConstraints.PAGE_START
-            add(showSidebarButton, c2)
+            add(maximizeSidebarButton, c2)
 
+            minimumSize = preferredSize
             isVisible = false
 
         }.also { add(it, c) }
