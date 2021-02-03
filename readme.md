@@ -39,6 +39,10 @@ Releases can be found [here](https://github.com/antD97/SmiteDPS/releases).
   This screenshot should make it clearer. Qin's Sais and Shifters of Seasons occur at the same time
   as the previous basic attack and doesn't update when it should.
 
-## Compiling
+## Building
 
 Run `./gradlew jar` on Windows or `gradle jar` on Linux. The output is located in `build/libs`.
+
+## License
+
+Licensed under the [MIT License](LICENSE).
