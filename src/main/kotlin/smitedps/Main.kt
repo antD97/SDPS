@@ -1,11 +1,14 @@
 package smitedps
 
 import java.awt.Dimension
+import java.awt.Toolkit
 import javax.swing.*
 
 fun main() {
     PopupUncaughtExceptionHandler.set()
     val dpsTracker = DPSTracker()
+
+    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 
     SwingUtilities.invokeAndWait {
         PopupUncaughtExceptionHandler.set()
@@ -16,8 +19,10 @@ fun main() {
             add(MainPanel(dpsTracker))
             pack()
 
-            minimumSize = Dimension(size.width - 225, size.height - 100)
-            setLocationRelativeTo(null)
+            minimumSize = Dimension(size.width - 275, size.height - 75)
+            setLocation(
+                Toolkit.getDefaultToolkit().screenSize.width - this.width - 10,
+                10)
             isAlwaysOnTop = true
             isVisible = true
         }

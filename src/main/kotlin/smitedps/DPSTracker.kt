@@ -1,9 +1,6 @@
 package smitedps
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.attribute.FileTime
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableModel
 
@@ -26,18 +23,14 @@ class DPSTracker {
 
     /** When true, starts DPS timer on next damage dealt. */
     private var resetTimer = true
+    /** When true, dps is not updated. */
+    private var waiting = true
 
     /** Tells the DPS tracker to update the in-game name. */
-    fun updateIGN(ign: String) {
-        if (this.ign != ign && updatedIGN != ign)
-            updatedIGN = ign
-    }
+    fun updateIGN(ign: String) { updatedIGN = ign }
 
     /** Tracks the DPS using [ign] and [combatLog] to update [dpsTableModel]. */
     fun run() {
-
-        // true if not updating because there is no combat log, or reached eof
-        var waiting = true
 
         while (true) {
 
@@ -49,7 +42,6 @@ class DPSTracker {
                 var startTime = -1.0
                 var totalDamage = 0
                 var prevTime = -1.0
-                var firstReset = true
                 var eofReached = false
 
                 // if ign hasn't been updated and didn't reach eof, keep tracking
@@ -57,7 +49,7 @@ class DPSTracker {
                     val line = br.readLine()
 
                     // end of file
-                    if (line == "end") {
+                    if (line == "end" || line == ",{\"eventType\":\"end\"}") {
                         waiting = true
                         eofReached = true
                         addTableRow("","","","End of file. Searching...")
@@ -81,10 +73,12 @@ class DPSTracker {
 
                                 if (resetTimer) {
                                     // hits that happened at the same time as the previous get
-                                    // updated normally
-                                    if (time - prevTime == 0.0) {
+                                    // have to be go before the "DPS Timer Reset" row
+                                    if (time - prevTime == 0.0 && dpsTableModel.rowCount != 0) {
                                         totalDamage += damage
+                                        removeTableRow(dpsTableModel.rowCount - 1)
                                         addDPSRow(totalDamage, startTime, time, damage, reason)
+                                        addTableRow("", "", "", "DPS Timer Reset")
                                     }
                                     // Timer reset on this hit
                                     else {
@@ -92,10 +86,7 @@ class DPSTracker {
                                         startTime = time
                                         totalDamage = damage
 
-                                        if (!firstReset)
-                                            addTableRow("", "", "", "DPS Timer Reset")
                                         addTableRow("0.00s", "0.00", damage.toString(), reason)
-                                        firstReset = false
                                     }
                                 } else {
                                     totalDamage += damage
@@ -104,7 +95,7 @@ class DPSTracker {
                                 prevTime = time
                             }
                         }
-                    } else Thread.sleep(1000)
+                    } else Thread.sleep(100)
                 }
                 br.close()
             }
@@ -137,14 +128,23 @@ class DPSTracker {
                 }
             }
 
-
             // if there is no combat log, refresh slowly
             if (waiting) Thread.sleep(3000)
         }
     }
 
+    // this is used in a button event, so invoke later is not used
+    /** Clears the DPS log and resets the timer. */
+    fun clearLog() { dpsTableModel.rowCount = 0 }
+
+    // this is used in a button event, so invoke later is not used
     /** Resets the DPS timer for the DPS calculation. */
-    fun resetTimer() { resetTimer = true }
+    fun resetTimer() {
+        if (!resetTimer && !waiting) {
+            resetTimer = true
+            dpsTableListeners.forEach { it() }
+        }
+    }
 
     /** Reads the data from a single log file line and stores it in a String list. */
     private fun readLineData(line: String): List<String> {
@@ -173,13 +173,18 @@ class DPSTracker {
     /** Safely adds a row to the dps table. */
     private fun addTableRow(time: String, dps: String, damage: String, reason: String) {
         SwingUtilities.invokeAndWait { dpsTableModel.addRow(arrayOf(time, dps, damage, reason)) }
-        dpsTableListeners.forEach{ it() }
+        dpsTableListeners.forEach { it() }
+    }
+
+    /** Safely removes a row from the dps table. */
+    private fun removeTableRow(i: Int) {
+        SwingUtilities.invokeAndWait { dpsTableModel.removeRow(i) }
     }
 
     /** Safely removes all rows from the dps table. */
     private fun clearDPSTable() {
         SwingUtilities.invokeAndWait { dpsTableModel.rowCount = 0 }
-        dpsTableListeners.forEach{ it() }
+        dpsTableListeners.forEach { it() }
     }
 
     /** Calculates dps and creates a new row for the dps table. */

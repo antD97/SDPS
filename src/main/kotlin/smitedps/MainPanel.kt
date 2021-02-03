@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent
 import java.io.File
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
-import javax.swing.table.TableModel
 
 /** The main UI panel. */
 class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
@@ -17,6 +16,16 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         .apply { columnModel.getColumn(3).preferredWidth = 175 }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
         .apply { preferredSize = Dimension(350, 300) }
+
+    private val sidebar = JPanel(GridBagLayout())
+
+    private val minimizeSidebarButton = JButton()
+        .apply {
+            preferredSize = Dimension(20, 10)
+            addActionListener(::minimizeSidebarButtonPress)
+            toolTipText = "Minimize the sidebar"
+//            focus
+        }
 
     private val alwaysOnTopCheckBox = JCheckBox("Window always on top")
         .apply {
@@ -39,8 +48,18 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             isEditable = false
         }
 
+    private val clearLogButton = JButton("Clear Log")
+        .apply { addActionListener(::clearLogButtonPress) }
     private val resetTimerButton = JButton("Reset DPS Timer")
         .apply { addActionListener(::resetTimerButtonPress) }
+
+    private val minimizedBar = JPanel(GridBagLayout())
+    private val showSidebarButton = JButton()
+        .apply {
+            preferredSize = Dimension(20, 10)
+            addActionListener(::showSidebarButtonPress)
+            toolTipText = "Maximize the sidebar"
+        }
 
     init {
         val c = GridBagConstraints()
@@ -56,12 +75,18 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         c.gridx = 0
         c.weightx = 0.0
         c.insets = Insets(10, 10, 10, 0)
-        JPanel(GridBagLayout()).apply {
+        sidebar.apply {
             val c2 = GridBagConstraints()
 
-            // title
+            // minimize sidebar button
             c2.gridx = 0; c2.gridy = 0
             c2.weightx = 1.0; c2.weighty = 0.0
+            c2.anchor = GridBagConstraints.LINE_START
+            c2.insets = Insets(0, 0, 0, 0)
+            add(minimizeSidebarButton, c2)
+
+            // title
+            c2.gridy++
             c2.anchor = GridBagConstraints.PAGE_START
             c2.insets = Insets(0, 0, 10, 0)
             add(JLabel("Smite DPS Calculator"), c2)
@@ -84,18 +109,44 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             c2.gridy++
             add(LabelPanel("Combat log file", combatLogField), c2)
 
-            // reset timer button
-            c2.weighty = 1.0
+            // 2x button group
             c2.gridy++
+            c2.weighty = 1.0
+            c2.fill = GridBagConstraints.HORIZONTAL
             c2.anchor = GridBagConstraints.PAGE_START
-            add(resetTimerButton, c2)
+            JPanel(GridBagLayout()).apply {
+                val c3 = GridBagConstraints()
+
+                // clear log button
+                c3.gridx = 0; c3.gridy = 0
+                add(resetTimerButton, c3)
+
+                // reset timer button
+                c3.gridx++
+                c3.insets = Insets(0, 15, 0, 0)
+                add(clearLogButton, c3)
+            }.also { add(it, c2) }
 
             minimumSize = preferredSize
 
         }.also { add(it, c) }
 
+        // minimized sidebar
+        c.insets = Insets(10, 10, 0, 0)
+        minimizedBar.apply {
+            val c2 = GridBagConstraints()
+
+            // show side bar button
+            c2.weighty = 1.0
+            c2.anchor = GridBagConstraints.PAGE_START
+            add(showSidebarButton, c2)
+
+            isVisible = false
+
+        }.also { add(it, c) }
+
         nameField.text = loadName()
-        dpsTracker.updateIGN(nameField.text)
+        dpsTracker.updateIGN(nameField.text.toLowerCase())
 
         dpsTracker.dpsTableModel = dpsTable.model as DefaultTableModel
 
@@ -115,6 +166,13 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
 /* ------------------------------------------ Listeners ----------------------------------------- */
 
+    /** Minimizes the sidebar. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun minimizeSidebarButtonPress(e: ActionEvent?) {
+        sidebar.isVisible = false
+        minimizedBar.isVisible = true
+    }
+
     /** Toggles having the window on top of all other windows. */
     @Suppress("UNUSED_PARAMETER")
     private fun alwaysOnTopCheckBoxPress(e: ActionEvent?) {
@@ -123,7 +181,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
     /** Updates the in-game name used by the DPS tracker. */
     @Suppress("UNUSED_PARAMETER")
-    private fun nameFieldEnterPress(e: ActionEvent?) { dpsTracker.updateIGN(nameField.text) }
+    private fun nameFieldEnterPress(e: ActionEvent?) { dpsTracker.updateIGN(nameField.text.toLowerCase()) }
 
     /** Saves the name in [nameField] to "in-game_name.txt". */
     @Suppress("UNUSED_PARAMETER")
@@ -138,9 +196,20 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         }
     }
 
+    /** Clears the dps table of rows. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun clearLogButtonPress(e: ActionEvent?) { dpsTracker.clearLog() }
+
     /** Resets the timer used by the DPS tracker. */
     @Suppress("UNUSED_PARAMETER")
     private fun resetTimerButtonPress(e: ActionEvent?) { dpsTracker.resetTimer() }
+
+    /** Reveals the sidebar. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun showSidebarButtonPress(e: ActionEvent?) {
+        sidebar.isVisible = true
+        minimizedBar.isVisible = false
+    }
 
     /** Moves the table scroll to the bottom. */
     private fun dpsTableUpdate() {

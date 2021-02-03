@@ -14,7 +14,7 @@ object PopupUncaughtExceptionHandler {
     fun set() {
         Thread.currentThread().setUncaughtExceptionHandler { _, e ->
             e.printStackTrace()
-            SwingUtilities.invokeAndWait { ErrorPopup(e) }
+            ErrorPopup(e)
         }
     }
 
@@ -52,6 +52,7 @@ object PopupUncaughtExceptionHandler {
 
             pack()
             setLocationRelativeTo(null)
+            isAlwaysOnTop = true
             isResizable = false
             isVisible = true
         }
