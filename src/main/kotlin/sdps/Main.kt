@@ -20,10 +20,11 @@ fun main() {
         JFrame("SDPS - antD").apply {
             defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
-            add(MainPanel(dpsTracker))
+            val mainPanel = MainPanel(dpsTracker)
+            add(mainPanel)
             pack()
+            minimumSize = Dimension(size.width - 325, size.height - 105)
 
-            minimumSize = Dimension(size.width - 325, size.height - 115)
             setLocation(
                 Toolkit.getDefaultToolkit().screenSize.width - this.width - 10,
                 10)

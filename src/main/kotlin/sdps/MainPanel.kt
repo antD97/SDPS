@@ -13,6 +13,9 @@ import javax.swing.table.DefaultTableModel
 /** The main UI panel. */
 class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
+    private var windowSidebarMinSize: Dimension? = null
+    private val windowSmallMinSize = Dimension(150, 100)
+
     private val nameFile = File("in-game_name.txt")
 
     private val dpsTable = JTable(
@@ -45,7 +48,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             toolTipText = "Save the current name to file"
         }
 
-    private val combatLogField = JTextField(14)
+    private val combatLogField = JTextField(15)
         .apply {
             text = "no file"
             isEditable = false
@@ -60,7 +63,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
     private val maximizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(10, 20)
-            addActionListener(::showSidebarButtonPress)
+            addActionListener(::maximizeSidebarButtonPress)
             toolTipText = "Maximize the sidebar"
         }
 
@@ -174,6 +177,11 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
     /** Minimizes the sidebar. */
     @Suppress("UNUSED_PARAMETER")
     private fun minimizeSidebarButtonPress(e: ActionEvent?) {
+
+        // change min size
+        if (windowSidebarMinSize == null) windowSidebarMinSize = topLevelAncestor.minimumSize
+        topLevelAncestor.minimumSize = windowSmallMinSize
+
         sidebar.isVisible = false
         minimizedBar.isVisible = true
     }
@@ -211,9 +219,10 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
     /** Reveals the sidebar. */
     @Suppress("UNUSED_PARAMETER")
-    private fun showSidebarButtonPress(e: ActionEvent?) {
+    private fun maximizeSidebarButtonPress(e: ActionEvent?) {
         sidebar.isVisible = true
         minimizedBar.isVisible = false
+        topLevelAncestor.minimumSize = windowSidebarMinSize
     }
 
     /** Moves the table scroll to the bottom. */
