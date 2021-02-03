@@ -17,7 +17,7 @@ fun main() {
     SwingUtilities.invokeAndWait {
         PopupUncaughtExceptionHandler.set()
 
-        JFrame("Smite DPS Calculator - antD").apply {
+        JFrame("SDPS - antD").apply {
             defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
             add(MainPanel(dpsTracker))

@@ -146,6 +146,7 @@ class DPSTracker {
     fun resetTimer() {
         if (!resetTimer && !waiting) {
             resetTimer = true
+            dpsTableModel.addRow(arrayOf("", "", "", "DPS Timer Reset"))
             dpsTableListeners.forEach { it() }
         }
     }
