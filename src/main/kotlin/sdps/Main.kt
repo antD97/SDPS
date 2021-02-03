@@ -1,4 +1,8 @@
-package smitedps
+/*
+ * Copyright © 2021 antD97
+ * Licensed under the MIT License https://mit-license.org/
+ */
+package sdps
 
 import java.io.File
 import java.lang.StringBuilder

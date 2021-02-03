@@ -1,6 +1,6 @@
-# Smite DPS
+# SDPS
 
-[![GitHub release (by tag)](https://img.shields.io/github/downloads/antD97/SmiteDPS/v1.1/total)](https://github.com/antD97/SmiteDPS/releases/tag/v1.1)
+[![GitHub release](https://img.shields.io/github/downloads/antD97/SDPS/v1.1/total)](https://github.com/antD97/SmiteDPS/releases/tag/v1.1)
 
 A handy tool to calculate DPS in the game [Smite](https://smitegame.com/). It uses the in-game
 combat log so this tool should always work, even with future updates containing new items and gods.
@@ -14,7 +14,7 @@ combat log so this tool should always work, even with future updates containing 
 1. Make sure you have Java installed. If you don't, you can download it [here](https://www.java.com/en/download/).
 2. Join a jungle practice and type `/combatlog toggle piped` to enable combat logging to file. This
    only has to be done once every game launch.
-3. Extract the zip file and run `SmiteDPS.bat` to start the program.
+3. Extract the zip file and run `SDPS.bat` to start the program.
 4. Enter your Smite in-game name when prompted or enter your name in the `in-game_name.txt` file to
    keep it saved.
 5. The program should be able to find your combat log file, but if it can't, it'll ask you to find

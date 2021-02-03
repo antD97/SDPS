@@ -15,7 +15,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'smitedps.MainKt'
+        attributes 'Main-Class': 'sdps.MainKt'
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
