@@ -108,7 +108,7 @@ class DPSTracker {
             if (updatedIGN != null) {
                 ign = updatedIGN!!
                 updatedIGN = null
-                waiting = false
+                if (combatLog != null) waiting = false
             }
 
             // use newest combat log

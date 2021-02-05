@@ -13,14 +13,22 @@ import javax.swing.table.DefaultTableModel
 /** The main UI panel. */
 class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
+    private val nameFile = File("in-game_name.txt")
+
     private var windowSidebarMinSize: Dimension? = null
     private val windowSmallMinSize = Dimension(150, 100)
 
-    private val nameFile = File("in-game_name.txt")
+/* --------------------------------------- GUI Components --------------------------------------- */
 
-    private val dpsTable = JTable(
-        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")))
-        .apply { columnModel.getColumn(3).preferredWidth = 175 }
+    private val dpsTable = JTable()
+        .apply {
+
+            model = object : DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")) {
+                override fun isCellEditable(row: Int, column: Int): Boolean = false
+            }
+
+            columnModel.getColumn(3).preferredWidth = 175
+        }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
         .apply { preferredSize = Dimension(350, 300) }
 
@@ -66,6 +74,8 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             addActionListener(::maximizeSidebarButtonPress)
             toolTipText = "Maximize the sidebar"
         }
+
+/* ----------------------------------------- Constructor ---------------------------------------- */
 
     init {
         val c = GridBagConstraints()
