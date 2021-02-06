@@ -20,13 +20,9 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
 /* --------------------------------------- GUI Components --------------------------------------- */
 
-    private val dpsTable = JTable()
+    private val dpsTable = JTable(DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")))
         .apply {
-
-            model = object : DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")) {
-                override fun isCellEditable(row: Int, column: Int): Boolean = false
-            }
-
+            setDefaultEditor(Object::class.java, null)
             columnModel.getColumn(3).preferredWidth = 175
         }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
