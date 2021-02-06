@@ -57,7 +57,7 @@ Run `./gradlew build` on Windows or `gradle build` on Linux. The output is locat
 
 ## Screenshots
 
-![Screenshot 1](pics/screenshot1.png) ![Screenshot 2](pics/screenshot2.png)
+[![Screenshot 1](pics/screenshot1.png)](pics/screenshot1.png) [![Screenshot 2](pics/screenshot2.png)](pics/screenshot2.png)
 
 ## Copyright and License
 
