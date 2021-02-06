@@ -24,8 +24,8 @@ gods, and new items.
   Window" or "Window", you can have the tool window display on top of the game which makes DPS
   testing considerably easier.
 
-- **This one is fairly important**, depending on the type of scenario you are trying to measure the
-  DPS of, particularly burst DPS. If there are multiple ticks of damage that occur at the same time
+- **This one is fairly important** depending on the type of scenario you are trying to measure the
+  DPS of, in particular burst DPS. If there are multiple ticks of damage that occur at the same time
   (e.g. Qin's Sais), Smite's combat log annoyingly won't be updated until the next combat update.
   The late timing won't mess up the DPS calculation, but this issue can make the DPS output
   misleading. The following screenshots show an example of two ticks of damage arriving late to the
