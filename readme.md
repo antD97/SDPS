@@ -8,7 +8,7 @@ gods, and new items.
 
 ## Usage
 
-1. Extract the zip file and run `SDPS.exe` to start the program.
+1. Extract the zip file and run `SDPS.exe` to start the tool.
 2. In the Smite chat, enter `/combatlog toggle piped` to let SDPS see your combat log. This command
    has to be typed in once per game launch.
 3. Enter your Smite in-game name and press enter. If you click the save icon, your name will be
@@ -20,7 +20,7 @@ gods, and new items.
 
 ## Notes
 
-- (?) If you have "Window always on top" enabled and your Smite "Screen Type" setting set to "Borderless
+- If you have "Window always on top" enabled and your Smite "Screen Type" setting set to "Borderless
   Window" or "Window", you can have the tool window display on top of the game which makes DPS
   testing considerably easier.
 
@@ -44,12 +44,12 @@ gods, and new items.
   second one is level one, and the third one is level twenty. There are also buttons to the right
   that let you control the amount of protections they have.
 
-- If the calculator log is empty when you don't expect it to be, make sure your in-game name is
-  typed in correctly and then press enter to update the calculator.
+- If the DPS log is empty when you don't expect it to be, make sure your in-game name is typed in
+  correctly and then press enter to update the calculator.
 
-- If you are in a match, and the calculator log says "End of file. Searching...", try typing the
-  command `/combatlog toggle piped` into Smite chat again. You may have accidentally entered it
-  twice which prevents SDPS from monitoring your combat log.
+- If you are in a match, and the DPS log says "End of file. Searching...", try typing the command
+  `/combatlog toggle piped` into Smite chat again. You may have accidentally entered it twice which
+  prevents SDPS from monitoring your combat log.
 
 ## Compiling
 

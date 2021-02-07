@@ -244,22 +244,22 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
     private fun combatLogUpdate(combatLog: File?) {
         combatLogField.text = if (combatLog == null) "no file" else combatLog.name
     }
-}
 
-/** Creates a JPanel with a JLabel followed by the specified JComponents. */
-private class LabelPanel(label: String, vararg components: JComponent) : JPanel(GridBagLayout()) {
-    init {
-        val c = GridBagConstraints()
+    /** Creates a JPanel with a JLabel followed by the specified JComponents. */
+    private class LabelPanel(label: String, vararg components: JComponent) : JPanel(GridBagLayout()) {
+        init {
+            val c = GridBagConstraints()
 
-        // label
-        c.gridx = 0; c.gridy = 0
-        add(JLabel(label), c)
+            // label
+            c.gridx = 0; c.gridy = 0
+            add(JLabel(label), c)
 
-        // components
-        c.insets = Insets(0, 5, 0, 0)
-        for (component in components) {
-            c.gridx++
-            add(component, c)
+            // components
+            c.insets = Insets(0, 5, 0, 0)
+            for (component in components) {
+                c.gridx++
+                add(component, c)
+            }
         }
     }
 }
