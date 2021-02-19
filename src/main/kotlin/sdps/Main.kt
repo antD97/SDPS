@@ -4,8 +4,8 @@
  */
 package sdps
 
+import sdps.ConfigManager.save
 import java.awt.Dimension
-import java.awt.Toolkit
 import javax.swing.*
 
 fun main() {
@@ -13,25 +13,52 @@ fun main() {
     val dpsTracker = DPSTracker()
 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+    val jFrame = JFrame("SDPS - antD")
+    // min size of window with sidebar
+    val windowSidebarMinSize = Dimension(300, 360)
+    // min size of window without sidebar
+    val windowSmallMinSize = Dimension(150, 100)
+
+    // load save data. if none, use defaults
+    val configData =
+        if (ConfigManager.load() != null) ConfigManager.load()!!
+        else ConfigManager.ConfigData()
+
+    val mainPanel = MainPanel(dpsTracker, configData, windowSidebarMinSize, windowSmallMinSize)
 
     SwingUtilities.invokeAndWait {
         PopupUncaughtExceptionHandler.set()
 
-        JFrame("SDPS - antD").apply {
+        jFrame.apply {
+            title = "SDPS - antD"
             defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
-            val mainPanel = MainPanel(dpsTracker)
             add(mainPanel)
-            pack()
-            minimumSize = Dimension(size.width - 325, size.height - 105)
 
-            setLocation(
-                Toolkit.getDefaultToolkit().screenSize.width - this.width - 10,
-                10)
-            isAlwaysOnTop = true
+            // load saved window data
+            if (configData.loc != null) location = configData.loc!! else setLocationRelativeTo(null)
+            if (configData.size != null) size = configData.size else pack()
+            minimumSize = if (configData.sidebar) windowSidebarMinSize else windowSmallMinSize
+            isAlwaysOnTop = configData.onTop
+
             isVisible = true
         }
     }
+
+    // save config on close
+    Runtime.getRuntime().addShutdownHook(object : Thread() {
+        override fun run() {
+            ConfigManager.ConfigData(
+                jFrame.location,
+                jFrame.size,
+                if (mainPanel.ign != "") mainPanel.ign else null,
+                mainPanel.isSidebarEnabled,
+                mainPanel.isOnTopEnabled,
+                mainPanel.columnOrder,
+                mainPanel.columnWidths
+            ).save()
+        }
+    })
 
     dpsTracker.run()
 }

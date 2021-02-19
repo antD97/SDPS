@@ -1,10 +1,12 @@
 # SDPS
 
-[![GitHub release](https://img.shields.io/github/downloads/antD97/SDPS/v2.0/total)](https://github.com/antD97/SmiteDPS/releases/tag/v2.0)
+[![GitHub release](https://img.shields.io/github/downloads/antD97/SDPS/v2.1/total)](https://github.com/antD97/SmiteDPS/releases/tag/v2.1)
 
 A handy tool to calculate DPS in the game [Smite](https://smitegame.com/). SDPS uses the in-game
 combat log, so this tool will work seamlessly with future updates containing balance changes, new
 gods, and new items.
+
+You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag/v2.1).
 
 ## Usage
 
