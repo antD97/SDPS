@@ -12,8 +12,8 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
 ## Usage
 
 1. Extract the zip file and run `SDPS.exe` to start the tool. Windows will likely display a message
-   stating "Windows protected your PC", because Windows doesn't recognize the file. Click "More
-   info" and then "Run anyway" to launch the tool.
+   stating "Windows protected your PC", because the file is not recognized. Click "More info" and
+   then "Run anyway" to launch the tool.
 2. In the Smite chat, enter `/combatlog toggle piped` to let SDPS see your combat log. This command
    has to be typed in once per game launch.
 3. Enter your Smite in-game name and SDPS will begin tracking your damage in your match. Your first
@@ -31,7 +31,7 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
 - SDPS can be used for more than just comparing DPS. If you want compare burst damage pay attention
   to the "Σ Damage" column which displays the total damage since reset has been clicked.
 
-- **This one is fairly important:** depending on the type of scenario you are trying to measure, in
+- **This one is fairly important** depending on the type of scenario you are trying to measure, in
   particular burst DPS. If there are multiple combat ticks that occur at the same time (e.g. Qin's
   Sais), Smite's combat log annoyingly won't be updated until the next combat update. The late
   timing won't mess up the DPS calculation, but this issue can make the DPS output misleading. The
