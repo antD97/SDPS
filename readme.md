@@ -2,10 +2,10 @@
 
 [![GitHub release](https://img.shields.io/github/downloads/antD97/SDPS/v2.1/total)](https://github.com/antD97/SmiteDPS/releases/tag/v2.1)
 
-SDPS is a tool for the game [Smite](https://smitegame.com/) that lets you track your DPS in real
-time. By jumping into a jungle practice match, this handy tool makes it easy to compare the damage
-of different builds. SDPS uses the in-game combat log, so it will work seamlessly with future
-updates containing balance changes, new gods, and new items.
+SDPS is a handy tool for the game [Smite](https://smitegame.com/) that lets you track your DPS in
+real time. By jumping into a jungle practice match, SDPS makes it easy to compare the damage of
+different builds. SDPS uses the in-game combat log, so it will work seamlessly with future updates
+containing balance changes, new gods, and new items.
 
 You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag/v2.1).
 
@@ -45,11 +45,11 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
 
   ![Screenshot 4](pics/screenshot4.png)
 
-  I've also seen this happen with Bacchus' ult which counts as two combat ticks, once for drunk
-  effect and once for damage. Bacchus' ult damage will only appear in the log on the next combat
-  tick. It's difficult to tell which gods and items have this behavior so: **whenever you want to**
-  **record DPS or total damage, click "Reset" and then do another tick of damage to reveal any**
-  **damage ticks that may have been hidden.**
+  Some other examples of this are Polynomicon and Bacchus' ult which counts as two combat ticks,
+  once for drunk effect and once for damage. Damage from these sources will appear in the log on the
+  next combat tick. It's difficult to tell which gods and items have this behavior so: **whenever**
+  **you want to record DPS or total damage, click "Reset" and then do another tick of damage to**
+  **reveal any damage ticks that may have been hidden.**
 
 - In the "Odin bots" section of jungle practice, there are three Odin bots to the immediate left.
   These bots are handy for DPS calculations. The first one matches your character's level, the
