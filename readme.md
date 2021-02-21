@@ -2,10 +2,10 @@
 
 [![GitHub release](https://img.shields.io/github/downloads/antD97/SDPS/v2.1/total)](https://github.com/antD97/SmiteDPS/releases/tag/v2.1)
 
-SDPS is a handy tool for the game [Smite](https://smitegame.com/) that lets you track your DPS in
-real time. By jumping into a jungle practice match, SDPS makes it easy to compare the damage of
-different builds. SDPS uses the in-game combat log, so it will work seamlessly with future updates
-containing balance changes, new gods, and new items.
+SDPS is a handy tool for the game [Smite](https://smitegame.com/) that lets you track your in-game
+damage in real time. By jumping into a jungle practice match, SDPS makes it easy to compare the
+damage of different builds. SDPS uses the in-game combat log, so it will work seamlessly with future
+updates containing balance changes, new gods, and new items.
 
 You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag/v2.1).
 
@@ -56,7 +56,7 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
   second one is level one, and the third one is level twenty. There are also buttons to the right
   that let you control the amount of protections they have.
 
-- If you are in a match, and the DPS log says "End.", try typing the command
+- If you are in a match, and the DPS log says "End", try typing the command
   `/combatlog toggle piped` into Smite chat again. You may have accidentally entered it twice which
   prevents SDPS from monitoring your combat log.
 
