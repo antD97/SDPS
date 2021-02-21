@@ -1,6 +1,6 @@
 /*
  * Copyright © 2021 antD97
- * Licensed under the MIT License https://mit-license.org/
+ * Licensed under the MIT License https://antD.mit-license.org/
  */
 package sdps
 
@@ -36,8 +36,8 @@ fun main() {
             add(mainPanel)
 
             // load saved window data
-            if (configData.loc != null) location = configData.loc!! else setLocationRelativeTo(null)
             if (configData.size != null) size = configData.size else pack()
+            if (configData.loc != null) location = configData.loc!! else setLocationRelativeTo(null)
             minimumSize = if (configData.sidebar) windowSidebarMinSize else windowSmallMinSize
             isAlwaysOnTop = configData.onTop
 

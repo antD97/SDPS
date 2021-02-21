@@ -1,6 +1,6 @@
 /*
  * Copyright © 2021 antD97
- * Licensed under the MIT License https://mit-license.org/
+ * Licensed under the MIT License https://antD.mit-license.org/
  */
 package sdps
 
@@ -35,13 +35,13 @@ object ConfigManager {
                 if (list != null) append("$key=${list.joinToString(",")}\n")
             }
 
-            sb.appendKeyValuePair("loc", loc)                   // if (loc != null)          sb.append("loc=${loc!!.x},${loc!!.y}\n")
-            sb.appendKeyValuePair("size", size)                 // if (size != null)         sb.append("size=${size!!.width},${size!!.height}\n")
-            sb.appendKeyValuePair("ign", ign)                   // if (ign != null)          sb.append("ign=$ign\n")
-            sb.appendKeyValuePair("sidebar", sidebar)           // sb.append("sidebar=$sidebar\n")
-            sb.appendKeyValuePair("onTop", onTop)               // sb.append("onTop=$onTop\n")
-            sb.appendKeyValuePair("columnOrder", columnOrder)   //if (columnOrder != null)  sb.append("columnOrder=${columnOrder!!.joinToString(",")}\n")
-            sb.appendKeyValuePair("columnWidths", columnWidths) // if (columnWidths != null) sb.append("columnWidths=${columnWidths!!.joinToString(",")}\n")
+            sb.appendKeyValuePair("loc", loc)
+            sb.appendKeyValuePair("size", size)
+            sb.appendKeyValuePair("ign", ign)
+            sb.appendKeyValuePair("sidebar", sidebar)
+            sb.appendKeyValuePair("onTop", onTop)
+            sb.appendKeyValuePair("columnOrder", columnOrder)
+            sb.appendKeyValuePair("columnWidths", columnWidths)
 
             f.writeText(sb.toString())
             true

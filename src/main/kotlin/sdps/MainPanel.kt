@@ -1,6 +1,6 @@
 /*
  * Copyright © 2021 antD97
- * Licensed under the MIT License https://mit-license.org/
+ * Licensed under the MIT License https://antD.mit-license.org/
  */
 package sdps
 
@@ -56,12 +56,12 @@ class MainPanel(
     private val minimizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(20, 10)
-            addActionListener(::minimizeSidebarButtonPress)
+            addActionListener(::minimizeSidebarButtonClick)
             toolTipText = "Minimize the sidebar"
         }
 
     private val onTopCheckBox = JCheckBox("Window always on top")
-        .apply { addActionListener(::onTopCheckBoxPress) }
+        .apply { addActionListener(::onTopCheckBoxClick) }
 
     private val nameField = JTextField(13)
         .apply {
@@ -79,41 +79,41 @@ class MainPanel(
         }
 
     private val clearLogButton = JButton("Clear Log")
-        .apply { addActionListener(::clearLogButtonPress) }
-    private val resetTimerButton = JButton("Reset DPS Timer")
-        .apply { addActionListener(::resetTimerButtonPress) }
+        .apply { addActionListener(::clearLogButtonClick) }
+    private val resetTimerButton = JButton("Reset")
+        .apply { addActionListener(::resetTimerButtonClick) }
 
     private val minimizedBar = JPanel(GridBagLayout())
     private val maximizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(10, 20)
-            addActionListener(::maximizeSidebarButtonPress)
+            addActionListener(::maximizeSidebarButtonClick)
             toolTipText = "Maximize the sidebar"
         }
 
     private val timeCheckBox = JCheckBox("Time")
         .apply {
-            addActionListener(::timeCheckBoxPress)
+            addActionListener(::timeCheckBoxClick)
             isSelected = true
         }
     private val dpsCheckBox = JCheckBox("DPS")
         .apply {
-            addActionListener(::dpsCheckBoxPress)
+            addActionListener(::dpsCheckBoxClick)
             isSelected = true
         }
     private val damageCheckBox = JCheckBox("Damage")
         .apply {
-            addActionListener(::damageCheckBoxPress)
+            addActionListener(::damageCheckBoxClick)
             isSelected = true
         }
     private val totalDamageCheckBox = JCheckBox("Total Damage")
         .apply {
-            addActionListener(::totalDamageCheckBoxPress)
+            addActionListener(::totalDamageCheckBoxClick)
             isSelected = true
         }
     private val reasonCheckBox = JCheckBox("Reason")
         .apply {
-            addActionListener(::reasonCheckBoxPress)
+            addActionListener(::reasonCheckBoxClick)
             isSelected = true
         }
 
@@ -170,6 +170,7 @@ class MainPanel(
 
             // 2x button group
             c2.gridy++
+            c2.fill = GridBagConstraints.HORIZONTAL
             JPanel(GridBagLayout()).apply {
                 val c3 = GridBagConstraints()
 
@@ -185,7 +186,6 @@ class MainPanel(
 
             // separator
             c2.gridy++
-            c2.fill = GridBagConstraints.HORIZONTAL
             add(JSeparator(), c2)
 
             // time checkbox
@@ -289,7 +289,7 @@ class MainPanel(
 
     /** Minimizes the sidebar. */
     @Suppress("UNUSED_PARAMETER")
-    private fun minimizeSidebarButtonPress(e: ActionEvent?) {
+    private fun minimizeSidebarButtonClick(e: ActionEvent?) {
         topLevelAncestor.minimumSize = windowSmallMinSize
         sidebar.isVisible = false
         minimizedBar.isVisible = true
@@ -297,7 +297,7 @@ class MainPanel(
 
     /** Toggles having the window on top of all other windows. */
     @Suppress("UNUSED_PARAMETER")
-    private fun onTopCheckBoxPress(e: ActionEvent?) {
+    private fun onTopCheckBoxClick(e: ActionEvent?) {
         (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
     }
 
@@ -306,15 +306,15 @@ class MainPanel(
 
     /** Clears the dps table of rows. */
     @Suppress("UNUSED_PARAMETER")
-    private fun clearLogButtonPress(e: ActionEvent?) { dpsTracker.clearLog() }
+    private fun clearLogButtonClick(e: ActionEvent?) { dpsTracker.clearLog() }
 
     /** Resets the timer used by the DPS tracker. */
     @Suppress("UNUSED_PARAMETER")
-    private fun resetTimerButtonPress(e: ActionEvent?) { dpsTracker.resetTimer() }
+    private fun resetTimerButtonClick(e: ActionEvent?) { dpsTracker.resetTimer() }
 
     /** Reveals the sidebar. */
     @Suppress("UNUSED_PARAMETER")
-    private fun maximizeSidebarButtonPress(e: ActionEvent?) {
+    private fun maximizeSidebarButtonClick(e: ActionEvent?) {
         sidebar.isVisible = true
         minimizedBar.isVisible = false
         topLevelAncestor.minimumSize = windowSidebarMinSize
@@ -333,6 +333,38 @@ class MainPanel(
     private fun combatLogUpdate(combatLog: File?) {
         combatLogField.text = if (combatLog == null) "no file" else combatLog.name
     }
+
+    /** Toggles the DPS table time column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun timeCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Time", timeCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table DPS column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun dpsCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("DPS", dpsCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table damage column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun damageCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Damage", damageCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table total damage column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun totalDamageCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Σ Damage", totalDamageCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table reason column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun reasonCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Reason", reasonCheckBox.isSelected)
+    }
+
+/* -------------------------------------------- Util -------------------------------------------- */
 
     /** Shows or hides the specified column.  */
     private fun setColumnVisible(header: String, isVisible: Boolean) {
@@ -354,38 +386,6 @@ class MainPanel(
             }
         }
     }
-
-    /** Toggles the DPS table time column. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun timeCheckBoxPress(actionEvent: ActionEvent?) {
-        setColumnVisible("Time", timeCheckBox.isSelected)
-    }
-
-    /** Toggles the DPS table DPS column. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun dpsCheckBoxPress(actionEvent: ActionEvent?) {
-        setColumnVisible("DPS", dpsCheckBox.isSelected)
-    }
-
-    /** Toggles the DPS table damage column. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun damageCheckBoxPress(actionEvent: ActionEvent?) {
-        setColumnVisible("Damage", damageCheckBox.isSelected)
-    }
-
-    /** Toggles the DPS table total damage column. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun totalDamageCheckBoxPress(actionEvent: ActionEvent?) {
-        setColumnVisible("Σ Damage", totalDamageCheckBox.isSelected)
-    }
-
-    /** Toggles the DPS table reason column. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun reasonCheckBoxPress(actionEvent: ActionEvent?) {
-        setColumnVisible("Reason", reasonCheckBox.isSelected)
-    }
-
-/* -------------------------------------------- Util -------------------------------------------- */
 
     /** Creates a JPanel with a JLabel followed by the specified JComponents. */
     private class LabelPanel(label: String, vararg components: JComponent)
