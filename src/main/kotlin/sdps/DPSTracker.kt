@@ -1,6 +1,6 @@
 /*
  * Copyright © 2021 antD97
- * Licensed under the MIT License https://mit-license.org/
+ * Licensed under the MIT License https://antD.mit-license.org/
  */
 package sdps
 
@@ -8,6 +8,7 @@ import java.io.File
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableModel
 
+/** Monitors the newest combat log file and updates a table with DPS information. */
 class DPSTracker {
 
     /** The table model that the tracker updates. */
@@ -27,6 +28,8 @@ class DPSTracker {
 
     /** When true, starts DPS timer on next damage dealt. */
     private var resetTimer = true
+    /** The time of when reset was clicked. */
+    private var resetTimerTime = 0L
     /** When true, dps is not updated. */
     private var waiting = true
 
@@ -43,9 +46,9 @@ class DPSTracker {
                 clearDPSTable()
                 val br = combatLog!!.bufferedReader()
                 resetTimer = true
-                var startTime = -1.0
+                var startTime = -1L
+                var startTimeST = -1L   // start time in system time
                 var totalDamage = 0
-                var prevTime = -1.0
                 var eofReached = false
 
                 // if ign hasn't been updated and didn't reach eof, keep tracking
@@ -56,7 +59,7 @@ class DPSTracker {
                     if (line == "end" || line == ",{\"eventType\":\"end\"}") {
                         waiting = true
                         eofReached = true
-                        addTableRow("","","","End of file. Searching...")
+                        addTableRow("End", "End", "End", "End", "End")
                     }
 
                     // all other lines
@@ -69,34 +72,46 @@ class DPSTracker {
                         if (type == "DIT_Damage" || type == "DIT_CritDamage") {
                             val source = lineData[9]
                             val damage = lineData[12].toInt()
-                            val time = lineData[8].toDouble()
+                            val time = (lineData[8].toDouble() * 1000).toLong()
                             val reason = lineData[7]
 
                             // damage dealt by user
                             if (source.toLowerCase() == ign) {
 
                                 if (resetTimer) {
-                                    // hits that happened at the same time as the previous get
-                                    // have to be go before the "DPS Timer Reset" row
-                                    if (time - prevTime == 0.0 && dpsTableModel.rowCount != 0) {
-                                        totalDamage += damage
-                                        removeTableRow(dpsTableModel.rowCount - 1)
-                                        addDPSRow(totalDamage, startTime, time, damage, reason)
-                                        addTableRow("", "", "", "DPS Timer Reset")
+                                    // reset timer time in game time
+                                    val resetTimerGT = resetTimerTime - (startTimeST - startTime)
+
+                                    // delayed combat log hits that have to be go before the
+                                    // "DPS Timer Reset" row
+                                    if (time - resetTimerGT < 0) {
+                                        if (dpsTableModel.rowCount != 0) {
+                                            totalDamage += damage
+                                            removeTableRow(dpsTableModel.rowCount - 1)
+                                            addDPSRow(totalDamage, startTime / 1000.0,
+                                                time / 1000.0, damage, reason)
+                                            addTableRow("Reset", "Reset", "Reset", "Reset", "Reset")
+                                        }
                                     }
                                     // Timer reset on this hit
                                     else {
                                         resetTimer = false
                                         startTime = time
+                                        startTimeST = System.currentTimeMillis()
                                         totalDamage = damage
 
-                                        addTableRow("0.00s", "0.00", damage.toString(), reason)
+                                        addTableRow(
+                                            "0.00s",
+                                            "0.00",
+                                            damage.toString(),
+                                            totalDamage.toString(),
+                                            reason)
                                     }
                                 } else {
                                     totalDamage += damage
-                                    addDPSRow(totalDamage, startTime, time, damage, reason)
+                                    addDPSRow(totalDamage, startTime / 1000.0, time / 1000.0,
+                                        damage, reason)
                                 }
-                                prevTime = time
                             }
                         }
                     } else Thread.sleep(100)
@@ -139,14 +154,15 @@ class DPSTracker {
 
     // this is used in a button event, so invoke later is not used
     /** Clears the DPS log and resets the timer. */
-    fun clearLog() { dpsTableModel.rowCount = 0 }
+    fun clearLog() { clearDPSTable(false) }
 
     // this is used in a button event, so invoke later is not used
     /** Resets the DPS timer for the DPS calculation. */
     fun resetTimer() {
         if (!resetTimer && !waiting) {
             resetTimer = true
-            dpsTableModel.addRow(arrayOf("", "", "", "DPS Timer Reset"))
+            resetTimerTime = System.currentTimeMillis()
+            addTableRow("Reset", "Reset", "Reset", "Reset", "Reset", false)
             dpsTableListeners.forEach { it() }
         }
     }
@@ -175,20 +191,42 @@ class DPSTracker {
         }
     }
 
-    /** Safely adds a row to the dps table. */
-    private fun addTableRow(time: String, dps: String, damage: String, reason: String) {
-        SwingUtilities.invokeAndWait { dpsTableModel.addRow(arrayOf(time, dps, damage, reason)) }
+    /**
+     * Adds a row to the dps table.
+     * @param safe whether or not to invoke and wait on the EDT
+     */
+    private fun addTableRow(time: String,
+                            dps: String,
+                            damage: String,
+                            totalDamage: String,
+                            reason: String,
+                            safe: Boolean = true) {
+
+        if (safe) {
+            SwingUtilities.invokeAndWait {
+                dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, reason))
+            }
+        } else dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, reason))
+
         dpsTableListeners.forEach { it() }
     }
 
-    /** Safely removes a row from the dps table. */
-    private fun removeTableRow(i: Int) {
-        SwingUtilities.invokeAndWait { dpsTableModel.removeRow(i) }
+    /**
+     * Safely removes a row from the dps table.
+     * @param safe whether or not to invoke and wait on the EDT
+     */
+    private fun removeTableRow(i: Int, safe: Boolean = true) {
+        if (safe) SwingUtilities.invokeAndWait { dpsTableModel.removeRow(i) }
+        else dpsTableModel.removeRow(i)
     }
 
-    /** Safely removes all rows from the dps table. */
-    private fun clearDPSTable() {
-        SwingUtilities.invokeAndWait { dpsTableModel.rowCount = 0 }
+    /**
+     * Safely removes all rows from the dps table.
+     * @param safe whether or not to invoke and wait on the EDT
+     */
+    private fun clearDPSTable(safe: Boolean = true) {
+        if (safe) SwingUtilities.invokeAndWait { dpsTableModel.rowCount = 0 }
+        else dpsTableModel.rowCount = 0
         dpsTableListeners.forEach { it() }
     }
 
@@ -197,13 +235,14 @@ class DPSTracker {
                           startTime: Double,
                           endTime: Double,
                           damage: Int,
-                          reason: String) {
+                          reason: String,
+                          safe: Boolean = true) {
 
         val timeStr = "${"%.2f".format(endTime - startTime)}s"
         val dpsStr = "%.2f".format(totalDamage / (endTime - startTime))
             .replace("Infinity", "0.00")
 
-        addTableRow(timeStr, dpsStr, damage.toString(), reason)
+        addTableRow(timeStr, dpsStr, damage.toString(), totalDamage.toString(), reason, safe)
     }
 
     /** Adds a dps table listener. */

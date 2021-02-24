@@ -1,17 +1,20 @@
+
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.10'
     id 'application'
+    id 'org.beryx.runtime' version '1.12.1'
+    id 'edu.sc.seis.launch4j' version '2.4.9'
 }
 
 group 'antD'
-version '2.0'
+version '2.1'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 }
 
 jar {
@@ -22,3 +25,33 @@ jar {
 }
 
 mainClassName = 'sdps.MainKt'
+
+runtime {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    modules = ['java.base', 'java.desktop']
+}
+
+launch4j {
+    headerType = 'gui'
+    mainClassName = 'sdps.MainKt'
+    outfile = "$project.name-${project.version}.exe"
+    jar = "$buildDir/libs/$project.name-${project.version}.jar"
+    bundledJrePath = 'jre'
+}
+
+task createBundledExe() {
+    dependsOn('runtime', 'createExe')
+    doLast {
+        def bundledExeDir = "$buildDir/bundledExe/$project.name-$project.version"
+        copy {
+            from "$buildDir/image"
+            into "$bundledExeDir/jre"
+        }
+        copy {
+            from "$buildDir/launch4j/$project.name-${project.version}.exe",
+                 "$projectDir/legal/release-license.txt"
+            into bundledExeDir
+            rename 'release-license.txt', 'license.txt'
+        }
+    }
+}

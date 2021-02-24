@@ -1,6 +1,6 @@
 /*
  * Copyright © 2021 antD97
- * Licensed under the MIT License https://mit-license.org/
+ * Licensed under the MIT License https://antD.mit-license.org/
  */
 package sdps
 
@@ -8,22 +8,45 @@ import java.awt.*
 import java.awt.event.ActionEvent
 import java.io.File
 import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import javax.swing.table.DefaultTableModel
+import javax.swing.table.TableColumn
 
 /** The main UI panel. */
-class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
+class MainPanel(
+    private val dpsTracker: DPSTracker,
+    configData: ConfigManager.ConfigData,
+    private val windowSidebarMinSize: Dimension,
+    private val windowSmallMinSize: Dimension
+) : JPanel(GridBagLayout()) {
 
-    private val nameFile = File("in-game_name.txt")
+    val ign: String
+        get() { return nameField.text }
 
-    private var windowSidebarMinSize: Dimension? = null
-    private val windowSmallMinSize = Dimension(150, 100)
+    val isSidebarEnabled: Boolean
+        get() { return sidebar.isVisible }
+
+    val isOnTopEnabled: Boolean
+        get() { return onTopCheckBox.isSelected }
+
+    val columnOrder: List<String>
+        get() { return dpsTable.columnModel.columns.toList().map { it.headerValue as String } }
+
+    val columnWidths: List<Int>
+        get() { return dpsTable.columnModel.columns.toList().map { it.width } }
 
 /* --------------------------------------- GUI Components --------------------------------------- */
 
-    private val dpsTable = JTable(DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Reason")))
+    private val colMaxWidth = Int.MAX_VALUE
+    private val colMinWidth = 15
+
+    private val dpsTable = JTable(
+        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Reason")))
         .apply {
             setDefaultEditor(Object::class.java, null)
-            columnModel.getColumn(3).preferredWidth = 175
+            columnModel.getColumn(3).preferredWidth = 100
+            columnModel.getColumn(4).preferredWidth = 175
         }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
         .apply { preferredSize = Dimension(350, 300) }
@@ -33,42 +56,65 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
     private val minimizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(20, 10)
-            addActionListener(::minimizeSidebarButtonPress)
+            addActionListener(::minimizeSidebarButtonClick)
             toolTipText = "Minimize the sidebar"
         }
 
-    private val alwaysOnTopCheckBox = JCheckBox("Window always on top")
+    private val onTopCheckBox = JCheckBox("Window always on top")
+        .apply { addActionListener(::onTopCheckBoxClick) }
+
+    private val nameField = JTextField(13)
         .apply {
-            isSelected = true
-            addActionListener(::alwaysOnTopCheckBoxPress)
+            document.addDocumentListener(object : DocumentListener {
+                override fun insertUpdate(e: DocumentEvent?) { nameFieldUpdate() }
+                override fun removeUpdate(e: DocumentEvent?) { nameFieldUpdate() }
+                override fun changedUpdate(e: DocumentEvent?) { nameFieldUpdate() }
+            })
         }
 
-    private val nameField = JTextField(10)
-        .apply { addActionListener(::nameFieldEnterPress) }
-    private val nameSaveButton = JButton(UIManager.getIcon("FileView.floppyDriveIcon"))
-        .apply {
-            preferredSize = Dimension(45, 30)
-            addActionListener(::nameSaveButtonPress)
-            toolTipText = "Save the current name to file"
-        }
-
-    private val combatLogField = JTextField(15)
+    private val combatLogField = JTextField(13)
         .apply {
             text = "no file"
             isEditable = false
         }
 
     private val clearLogButton = JButton("Clear Log")
-        .apply { addActionListener(::clearLogButtonPress) }
-    private val resetTimerButton = JButton("Reset DPS Timer")
-        .apply { addActionListener(::resetTimerButtonPress) }
+        .apply { addActionListener(::clearLogButtonClick) }
+    private val resetTimerButton = JButton("Reset")
+        .apply { addActionListener(::resetTimerButtonClick) }
 
     private val minimizedBar = JPanel(GridBagLayout())
     private val maximizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(10, 20)
-            addActionListener(::maximizeSidebarButtonPress)
+            addActionListener(::maximizeSidebarButtonClick)
             toolTipText = "Maximize the sidebar"
+        }
+
+    private val timeCheckBox = JCheckBox("Time")
+        .apply {
+            addActionListener(::timeCheckBoxClick)
+            isSelected = true
+        }
+    private val dpsCheckBox = JCheckBox("DPS")
+        .apply {
+            addActionListener(::dpsCheckBoxClick)
+            isSelected = true
+        }
+    private val damageCheckBox = JCheckBox("Damage")
+        .apply {
+            addActionListener(::damageCheckBoxClick)
+            isSelected = true
+        }
+    private val totalDamageCheckBox = JCheckBox("Total Damage")
+        .apply {
+            addActionListener(::totalDamageCheckBoxClick)
+            isSelected = true
+        }
+    private val reasonCheckBox = JCheckBox("Reason")
+        .apply {
+            addActionListener(::reasonCheckBoxClick)
+            isSelected = true
         }
 
 /* ----------------------------------------- Constructor ---------------------------------------- */
@@ -103,19 +149,20 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             c2.insets = Insets(0, 0, 10, 0)
             add(JLabel("Smite DPS Calculator"), c2)
 
+            // separator
             c2.gridy++
             c2.fill = GridBagConstraints.HORIZONTAL
             add(JSeparator(), c2)
 
-            // always on top checkbox
+            // on top checkbox
             c2.gridy++
             c2.fill = GridBagConstraints.NONE
             c2.anchor = GridBagConstraints.FIRST_LINE_START
-            add(alwaysOnTopCheckBox, c2)
+            add(onTopCheckBox, c2)
 
             // in-game name input field
             c2.gridy++
-            add(LabelPanel("In-game name", nameField, nameSaveButton), c2)
+            add(LabelPanel("In-game name", nameField), c2)
 
             // combat log file
             c2.gridy++
@@ -123,9 +170,7 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
 
             // 2x button group
             c2.gridy++
-            c2.weighty = 1.0
             c2.fill = GridBagConstraints.HORIZONTAL
-            c2.anchor = GridBagConstraints.PAGE_START
             JPanel(GridBagLayout()).apply {
                 val c3 = GridBagConstraints()
 
@@ -138,6 +183,36 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
                 c3.insets = Insets(0, 15, 0, 0)
                 add(clearLogButton, c3)
             }.also { add(it, c2) }
+
+            // separator
+            c2.gridy++
+            add(JSeparator(), c2)
+
+            // time checkbox
+            c2.gridy++
+            c2.fill = GridBagConstraints.NONE
+            c2.anchor = GridBagConstraints.FIRST_LINE_START
+            c2.insets = Insets(0, 0, 0, 0)
+            add(timeCheckBox, c2)
+
+            // dps checkbox
+            c2.gridy++
+            add(dpsCheckBox, c2)
+
+            // damage checkbox
+            c2.gridy++
+            add(damageCheckBox, c2)
+
+            // total damage checkbox
+            c2.gridy++
+            add(totalDamageCheckBox, c2)
+
+            // reason checkbox
+            c2.gridy++
+            c2.weighty = 1.0
+            c2.fill = GridBagConstraints.HORIZONTAL
+            c2.anchor = GridBagConstraints.PAGE_START
+            add(reasonCheckBox, c2)
 
             minimumSize = preferredSize
 
@@ -155,11 +230,53 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
             add(maximizeSidebarButton, c2)
 
             minimumSize = preferredSize
-            isVisible = false
 
         }.also { add(it, c) }
 
-        nameField.text = loadName()
+        // load settings
+        if (configData.ign != null) nameField.text = configData.ign
+
+        sidebar.isVisible = configData.sidebar
+        minimizedBar.isVisible = !configData.sidebar
+
+        onTopCheckBox.isSelected = configData.onTop
+
+        if (configData.columnOrder != null) {
+            for (i in 0..configData.columnOrder!!.lastIndex) {
+                val targetCol = configData.columnOrder!![i]
+                val tableColumns = dpsTable.columnModel.columns.toList()
+
+                for (j in i+1..tableColumns.lastIndex) {
+                    if (tableColumns[j].headerValue as String == targetCol) {
+                        // move the column to the correct spot
+                        dpsTable.columnModel.moveColumn(j, i)
+                    }
+                }
+            }
+        }
+
+        if (configData.columnWidths != null) {
+            for (i in configData.columnWidths!!.indices) {
+
+                val column = dpsTable.columnModel.getColumn(i)
+
+                if (configData.columnWidths!![i] == 0) {
+                    when (column.headerValue) {
+                        "Time" -> timeCheckBox.isSelected = false
+                        "DPS" -> dpsCheckBox.isSelected = false
+                        "Damage" -> damageCheckBox.isSelected = false
+                        "Σ Damage" -> totalDamageCheckBox.isSelected = false
+                        "Reason" -> reasonCheckBox.isSelected = false
+                    }
+
+                    column.minWidth = 0
+                    column.maxWidth = 0
+
+                } else column.preferredWidth = configData.columnWidths!![i]
+            }
+        }
+
+        // update dps tracker
         dpsTracker.updateIGN(nameField.text.toLowerCase())
 
         dpsTracker.dpsTableModel = dpsTable.model as DefaultTableModel
@@ -168,64 +285,36 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         dpsTracker.addCombatLogListener(::combatLogUpdate)
     }
 
-    /** Tries to load the saved name. If it can't be found, returns null. */
-    private fun loadName(): String? {
-        if (nameFile.isFile) {
-            val lines = nameFile.readLines()
-            if (lines.isNotEmpty() && lines[0] != "")
-                return lines [0]
-        }
-        return null
-    }
-
 /* ------------------------------------------ Listeners ----------------------------------------- */
 
     /** Minimizes the sidebar. */
     @Suppress("UNUSED_PARAMETER")
-    private fun minimizeSidebarButtonPress(e: ActionEvent?) {
-
-        // change min size
-        if (windowSidebarMinSize == null) windowSidebarMinSize = topLevelAncestor.minimumSize
+    private fun minimizeSidebarButtonClick(e: ActionEvent?) {
         topLevelAncestor.minimumSize = windowSmallMinSize
-
         sidebar.isVisible = false
         minimizedBar.isVisible = true
     }
 
     /** Toggles having the window on top of all other windows. */
     @Suppress("UNUSED_PARAMETER")
-    private fun alwaysOnTopCheckBoxPress(e: ActionEvent?) {
-        (topLevelAncestor as JFrame).isAlwaysOnTop = alwaysOnTopCheckBox.isSelected
+    private fun onTopCheckBoxClick(e: ActionEvent?) {
+        (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
     }
 
     /** Updates the in-game name used by the DPS tracker. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun nameFieldEnterPress(e: ActionEvent?) { dpsTracker.updateIGN(nameField.text.toLowerCase()) }
-
-    /** Saves the name in [nameField] to "in-game_name.txt". */
-    @Suppress("UNUSED_PARAMETER")
-    private fun nameSaveButtonPress(e: ActionEvent?) {
-        nameFieldEnterPress(null)
-        when {
-            nameFile.isDirectory -> JOptionPane.showMessageDialog(this,
-                "Could not save because \"in-game_name.txt\" is already a folder.")
-
-            nameField.text == "" -> nameFile.delete()
-            else -> nameFile.writeText(nameField.text)
-        }
-    }
+    private fun nameFieldUpdate() { dpsTracker.updateIGN(nameField.text.toLowerCase()) }
 
     /** Clears the dps table of rows. */
     @Suppress("UNUSED_PARAMETER")
-    private fun clearLogButtonPress(e: ActionEvent?) { dpsTracker.clearLog() }
+    private fun clearLogButtonClick(e: ActionEvent?) { dpsTracker.clearLog() }
 
     /** Resets the timer used by the DPS tracker. */
     @Suppress("UNUSED_PARAMETER")
-    private fun resetTimerButtonPress(e: ActionEvent?) { dpsTracker.resetTimer() }
+    private fun resetTimerButtonClick(e: ActionEvent?) { dpsTracker.resetTimer() }
 
     /** Reveals the sidebar. */
     @Suppress("UNUSED_PARAMETER")
-    private fun maximizeSidebarButtonPress(e: ActionEvent?) {
+    private fun maximizeSidebarButtonClick(e: ActionEvent?) {
         sidebar.isVisible = true
         minimizedBar.isVisible = false
         topLevelAncestor.minimumSize = windowSidebarMinSize
@@ -245,8 +334,63 @@ class MainPanel(private val dpsTracker: DPSTracker) : JPanel(GridBagLayout()) {
         combatLogField.text = if (combatLog == null) "no file" else combatLog.name
     }
 
+    /** Toggles the DPS table time column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun timeCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Time", timeCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table DPS column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun dpsCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("DPS", dpsCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table damage column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun damageCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Damage", damageCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table total damage column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun totalDamageCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Σ Damage", totalDamageCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table reason column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun reasonCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Reason", reasonCheckBox.isSelected)
+    }
+
+/* -------------------------------------------- Util -------------------------------------------- */
+
+    /** Shows or hides the specified column.  */
+    private fun setColumnVisible(header: String, isVisible: Boolean) {
+        var column: TableColumn? = null
+        for (c in dpsTable.columnModel.columns)
+            if (c.headerValue as String == header) column = c
+
+        if (column != null) {
+            // visible
+            if (isVisible) {
+                column.maxWidth = colMaxWidth
+                column.minWidth = colMinWidth
+                column.preferredWidth = 100
+            }
+            // hidden
+            else {
+                column.minWidth = 0
+                column.maxWidth = 0
+            }
+        }
+    }
+
     /** Creates a JPanel with a JLabel followed by the specified JComponents. */
-    private class LabelPanel(label: String, vararg components: JComponent) : JPanel(GridBagLayout()) {
+    private class LabelPanel(label: String, vararg components: JComponent)
+        : JPanel(GridBagLayout()) {
+
         init {
             val c = GridBagConstraints()
 
