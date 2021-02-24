@@ -65,9 +65,6 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
 1. Download and install OpenJDK [here](https://openjdk.java.net/install).
 2. Run `./gradlew createBundledExe`. The output is located in `build/bundledExe`.
 
-   If you would like to verify my release, I'm using OpenJDK 15.0.2. If you use the same version,
-   the builds' checksums should match.
-
 ## Screenshots
 
 [![Screenshot 1](pics/screenshot1.png)](pics/screenshot1.png)  
