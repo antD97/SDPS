@@ -45,7 +45,7 @@ class MainPanel(
         DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Σ Mitigated", "Reason")))
         .apply { setDefaultEditor(Object::class.java, null) }
     private val tableScrollPane = JScrollPane(table)
-        .apply { preferredSize = Dimension(400, 300) }
+        .apply { preferredSize = Dimension(275, 300) }
 
     private val sidebar = JPanel(GridBagLayout())
 
