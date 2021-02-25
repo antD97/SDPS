@@ -41,24 +41,24 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
   as out of your way as possible.
 
 - **This one is fairly important** depending on the type of scenario you are trying to measure, in
-  particular burst DPS. If there are multiple combat ticks that occur at the same time (e.g. Qin's
-  Sais), Smite's combat log annoyingly won't be updated until the next combat update. The late
-  timing won't mess up the DPS calculation, but this issue can make the DPS output misleading. The
-  following screenshots show an example of two ticks of damage arriving late to the DPS log.
+  particular burst damage. If there are multiple damage ticks that occur at the same time (e.g.
+  Qin's Sais), Smite's combat log annoyingly won't be updated until the next combat update. The late
+  timing won't mess up the DPS calculation, but this issue can make the table's output misleading.
+  The following screenshots show an example of two ticks of damage arriving late to the DPS log.
 
   ![Screenshot 4](pics/screenshot3.png)
   
   There are two missing rows of damage from Qin's Sais and Shifter of Seasons that occurred at the
   same time as the last shown basic attack. These rows are not added until the combat log is
-  updated.
+  updated with another basic attack.
 
   ![Screenshot 4](pics/screenshot4.png)
 
   Some other examples of this are Polynomicon and Bacchus' ult which counts as two combat ticks,
-  once for drunk effect and once for damage. Damage from these sources will appear in the log on the
-  next combat tick. It's difficult to tell which gods and items have this behavior so: **whenever**
-  **you want to record DPS or total damage, be sure to click "Reset" and then do another tick of**
-  **damage to reveal any damage ticks that may have been hidden.**
+  once for drunk effect and once for damage. Damage from these sources will appear in the table on
+  the next combat tick. It's difficult to tell which gods and items have this behavior so:
+  **whenever you want to record DPS or total damage, be sure to click "Reset" and then do another**
+  **tick of damage to reveal any damage ticks that may have been hidden.**
 
 - In the "Odin bots" section of jungle practice, there are three Odin bots to the immediate left.
   These bots are handy for DPS calculations. The first one matches your character's level, the
