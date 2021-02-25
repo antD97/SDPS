@@ -15,7 +15,7 @@ fun main() {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     val jFrame = JFrame("SDPS - antD")
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 385)
+    val windowSidebarMinSize = Dimension(300, 405)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
 

@@ -50,6 +50,7 @@ class DPSTracker {
                 var startTimeST = -1L   // start time in system time
                 resetTimerTime = 0L
                 var totalDamage = 0
+                var totalMitigated = 0
                 var eofReached = false
 
                 // if ign hasn't been updated and didn't reach eof, keep tracking
@@ -60,7 +61,7 @@ class DPSTracker {
                     if (line == "end" || line == ",{\"eventType\":\"end\"}") {
                         waiting = true
                         eofReached = true
-                        addTableRow("End", "End", "End", "End", "End", "End")
+                        addTableRow("End", "End", "End", "End", "End", "End", "End")
                     }
 
                     // all other lines
@@ -89,11 +90,11 @@ class DPSTracker {
                                     if (time - resetTimerGT < 0) {
                                         if (dpsTableModel.rowCount != 0) {
                                             totalDamage += damage
+                                            totalMitigated += mitigated
                                             removeTableRow(dpsTableModel.rowCount - 1)
-                                            addDPSRow(totalDamage, startTime / 1000.0,
-                                                time / 1000.0, damage, mitigated, reason)
+                                            addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
                                             addTableRow("Reset", "Reset", "Reset", "Reset", "Reset",
-                                                "Reset")
+                                                "Reset", "Reset")
                                         }
                                     }
                                     // Timer reset on this hit
@@ -102,6 +103,7 @@ class DPSTracker {
                                         startTime = time
                                         startTimeST = System.currentTimeMillis()
                                         totalDamage = damage
+                                        totalMitigated = mitigated
 
                                         addTableRow(
                                             "0.00s",
@@ -109,12 +111,12 @@ class DPSTracker {
                                             damage.toString(),
                                             totalDamage.toString(),
                                             mitigated.toString(),
+                                            totalMitigated.toString(),
                                             reason)
                                     }
                                 } else {
                                     totalDamage += damage
-                                    addDPSRow(totalDamage, startTime / 1000.0, time / 1000.0,
-                                        damage, mitigated, reason)
+                                    addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
                                 }
                             }
                         }
@@ -166,7 +168,7 @@ class DPSTracker {
         if (!resetTimer && !waiting) {
             resetTimer = true
             resetTimerTime = System.currentTimeMillis()
-            addTableRow("Reset", "Reset", "Reset", "Reset", "Reset", "Reset", false)
+            addTableRow("Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", false)
             dpsTableListeners.forEach { it() }
         }
     }
@@ -204,14 +206,15 @@ class DPSTracker {
                             damage: String,
                             totalDamage: String,
                             mitigated: String,
+                            totalMitigated: String,
                             reason: String,
                             safe: Boolean = true) {
 
         if (safe) {
             SwingUtilities.invokeAndWait {
-                dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, mitigated, reason))
+                dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, mitigated, totalMitigated, reason))
             }
-        } else dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, mitigated, reason))
+        } else dpsTableModel.addRow(arrayOf(time, dps, damage, totalDamage, mitigated, totalMitigated, reason))
 
         dpsTableListeners.forEach { it() }
     }
@@ -236,11 +239,12 @@ class DPSTracker {
     }
 
     /** Calculates dps and creates a new row for the dps table. */
-    private fun addDPSRow(totalDamage: Int,
-                          startTime: Double,
+    private fun addDPSRow(startTime: Double,
                           endTime: Double,
                           damage: Int,
+                          totalDamage: Int,
                           mitigated: Int,
+                          totalMitigated: Int,
                           reason: String,
                           safe: Boolean = true) {
 
@@ -249,7 +253,7 @@ class DPSTracker {
             .replace("Infinity", "0.00")
 
         addTableRow(timeStr, dpsStr, damage.toString(), totalDamage.toString(),
-            mitigated.toString(), reason, safe)
+            mitigated.toString(), totalMitigated.toString(), reason, safe)
     }
 
     /** Adds a dps table listener. */

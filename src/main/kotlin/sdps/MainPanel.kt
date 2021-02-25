@@ -42,7 +42,7 @@ class MainPanel(
     private val colMinWidth = 15
 
     private val dpsTable = JTable(
-        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Reason")))
+        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Σ Mitigated", "Reason")))
         .apply { setDefaultEditor(Object::class.java, null) }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
         .apply { preferredSize = Dimension(400, 300) }
@@ -126,11 +126,17 @@ class MainPanel(
             isSelected = true
             toolTipText = "Toggles the mitigated column (5)"
         }
+    private val totalMitigatedCheckBox = JCheckBox("Total Mitigated")
+        .apply {
+            addActionListener(::totalMitigatedCheckBoxClick)
+            isSelected = true
+            toolTipText = "Toggles the mitigated column (6)"
+        }
     private val reasonCheckBox = JCheckBox("Reason")
         .apply {
             addActionListener(::reasonCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the reason column (6)"
+            toolTipText = "Toggles the reason column (7)"
         }
 
 /* ----------------------------------------- Constructor ---------------------------------------- */
@@ -227,6 +233,10 @@ class MainPanel(
             c2.gridy++
             add(mitigatedCheckBox, c2)
 
+            // total mitigated checkbox
+            c2.gridy++
+            add(totalMitigatedCheckBox, c2)
+
             // reason checkbox
             c2.gridy++
             c2.weighty = 1.0
@@ -252,6 +262,14 @@ class MainPanel(
             minimumSize = preferredSize
 
         }.also { add(it, c) }
+
+        // initially hidden columns
+        timeCheckBox.isSelected = false
+        timeCheckBoxClick(null)
+        mitigatedCheckBox.isSelected = false
+        mitigatedCheckBoxClick(null)
+        totalMitigatedCheckBox.isSelected = false
+        totalMitigatedCheckBoxClick(null)
 
         // key binds
         isFocusable = true
@@ -307,21 +325,27 @@ class MainPanel(
             for (i in configData.columnWidths!!.indices) {
 
                 val column = dpsTable.columnModel.getColumn(i)
+                val selected = configData.columnWidths!![i] != 0
 
-                if (configData.columnWidths!![i] == 0) {
-                    when (column.headerValue) {
-                        "Time" -> timeCheckBox.isSelected = false
-                        "DPS" -> dpsCheckBox.isSelected = false
-                        "Damage" -> damageCheckBox.isSelected = false
-                        "Σ Damage" -> totalDamageCheckBox.isSelected = false
-                        "Mitigated" -> mitigatedCheckBox.isSelected = false
-                        "Reason" -> reasonCheckBox.isSelected = false
-                    }
+                when (column.headerValue) {
+                    "Time" -> timeCheckBox.isSelected = selected
+                    "DPS" -> dpsCheckBox.isSelected = selected
+                    "Damage" -> damageCheckBox.isSelected = selected
+                    "Σ Damage" -> totalDamageCheckBox.isSelected = selected
+                    "Mitigated" -> mitigatedCheckBox.isSelected = selected
+                    "Σ Mitigated" -> totalMitigatedCheckBox.isSelected = selected
+                    "Reason" -> reasonCheckBox.isSelected = selected
+                }
 
+                if (selected) {
+                    column.maxWidth = colMaxWidth
+                    column.minWidth = colMinWidth
+                    column.preferredWidth = configData.columnWidths!![i]
+                }
+                else {
                     column.minWidth = 0
                     column.maxWidth = 0
-
-                } else column.preferredWidth = configData.columnWidths!![i]
+                }
             }
         }
 
@@ -371,6 +395,10 @@ class MainPanel(
                     mitigatedCheckBoxClick(null)
                 }
                 KeyEvent.VK_6 -> {
+                    totalMitigatedCheckBox.isSelected = !totalMitigatedCheckBox.isSelected
+                    totalMitigatedCheckBoxClick(null)
+                }
+                KeyEvent.VK_7 -> {
                     reasonCheckBox.isSelected = !reasonCheckBox.isSelected
                     reasonCheckBoxClick(null)
                 }
@@ -456,6 +484,12 @@ class MainPanel(
     @Suppress("UNUSED_PARAMETER")
     private fun mitigatedCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Mitigated", mitigatedCheckBox.isSelected)
+    }
+
+    /** Toggles the DPS table total mitigated column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun totalMitigatedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Σ Mitigated", totalMitigatedCheckBox.isSelected)
     }
 
     /** Toggles the DPS table reason column. */
