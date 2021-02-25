@@ -34,7 +34,7 @@ class DPSTracker {
     private var waiting = true
 
     /** Tells the DPS tracker to update the in-game name. */
-    fun updateIGN(ign: String) { updatedIGN = ign }
+    fun updateIGN(ign: String) { updatedIGN = ign.toLowerCase() }
 
     /** Tracks the DPS using [ign] and [combatLog] to update [dpsTableModel]. */
     fun run() {
@@ -71,52 +71,56 @@ class DPSTracker {
                         val type = lineData[1]
 
                         // damage dealt
-                        if (type == "DIT_Damage" || type == "DIT_CritDamage") {
-                            val source = lineData[9]
-                            val time = (lineData[8].toDouble() * 1000).toLong()
-                            val damage = lineData[12].toInt()
-                            val mitigated = lineData[13].toInt()
-                            val reason = lineData[7]
+                        val damageTypes = listOf("Damage", "CritDamage", "Backstab")
+                        val typeSplit = type.split("_")
+                        if (typeSplit.size == 2) {
+                            if (damageTypes.contains(typeSplit[1])) {
+                                val source = lineData[9]
+                                val time = (lineData[8].toDouble() * 1000).toLong()
+                                val damage = lineData[12].toInt()
+                                val mitigated = lineData[13].toInt()
+                                val reason = lineData[7]
 
-                            // damage dealt by user
-                            if (source.toLowerCase() == ign) {
+                                // damage dealt by user
+                                if (source.toLowerCase() == ign) {
 
-                                if (resetTimer) {
-                                    // reset timer time in game time
-                                    val resetTimerGT = resetTimerTime - (startTimeST - startTime)
+                                    if (resetTimer) {
+                                        // reset timer time in game time
+                                        val resetTimerGT = resetTimerTime - (startTimeST - startTime)
 
-                                    // delayed combat log hits that have to be go before the
-                                    // "DPS Timer Reset" row
-                                    if (time - resetTimerGT < 0) {
-                                        if (dpsTableModel.rowCount != 0) {
-                                            totalDamage += damage
-                                            totalMitigated += mitigated
-                                            removeTableRow(dpsTableModel.rowCount - 1)
-                                            addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
-                                            addTableRow("Reset", "Reset", "Reset", "Reset", "Reset",
-                                                "Reset", "Reset")
+                                        // delayed combat log hits that have to be go before the
+                                        // "DPS Timer Reset" row
+                                        if (time - resetTimerGT < 0) {
+                                            if (dpsTableModel.rowCount != 0) {
+                                                totalDamage += damage
+                                                totalMitigated += mitigated
+                                                removeTableRow(dpsTableModel.rowCount - 1)
+                                                addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
+                                                addTableRow("Reset", "Reset", "Reset", "Reset", "Reset",
+                                                    "Reset", "Reset")
+                                            }
                                         }
-                                    }
-                                    // Timer reset on this hit
-                                    else {
-                                        resetTimer = false
-                                        startTime = time
-                                        startTimeST = System.currentTimeMillis()
-                                        totalDamage = damage
-                                        totalMitigated = mitigated
+                                        // Timer reset on this hit
+                                        else {
+                                            resetTimer = false
+                                            startTime = time
+                                            startTimeST = System.currentTimeMillis()
+                                            totalDamage = damage
+                                            totalMitigated = mitigated
 
-                                        addTableRow(
-                                            "0.00s",
-                                            "0.00",
-                                            damage.toString(),
-                                            totalDamage.toString(),
-                                            mitigated.toString(),
-                                            totalMitigated.toString(),
-                                            reason)
+                                            addTableRow(
+                                                "0.00s",
+                                                "0.00",
+                                                damage.toString(),
+                                                totalDamage.toString(),
+                                                mitigated.toString(),
+                                                totalMitigated.toString(),
+                                                reason)
+                                        }
+                                    } else {
+                                        totalDamage += damage
+                                        addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
                                     }
-                                } else {
-                                    totalDamage += damage
-                                    addDPSRow(startTime / 1000.0, time / 1000.0, damage, totalDamage, mitigated, totalMitigated, reason)
                                 }
                             }
                         }

@@ -350,7 +350,7 @@ class MainPanel(
         }
 
         // update dps tracker
-        dpsTracker.updateIGN(nameField.text.toLowerCase())
+        dpsTracker.updateIGN(nameField.text)
 
         dpsTracker.dpsTableModel = dpsTable.model as DefaultTableModel
 
