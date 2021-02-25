@@ -5,7 +5,7 @@
 package sdps
 
 import java.awt.*
-import java.awt.event.ActionEvent
+import java.awt.event.*
 import java.io.File
 import javax.swing.*
 import javax.swing.event.DocumentEvent
@@ -42,14 +42,10 @@ class MainPanel(
     private val colMinWidth = 15
 
     private val dpsTable = JTable(
-        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Reason")))
-        .apply {
-            setDefaultEditor(Object::class.java, null)
-            columnModel.getColumn(3).preferredWidth = 100
-            columnModel.getColumn(4).preferredWidth = 175
-        }
+        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Reason")))
+        .apply { setDefaultEditor(Object::class.java, null) }
     private val dpsTableScrollPane = JScrollPane(dpsTable)
-        .apply { preferredSize = Dimension(350, 300) }
+        .apply { preferredSize = Dimension(400, 300) }
 
     private val sidebar = JPanel(GridBagLayout())
 
@@ -57,11 +53,14 @@ class MainPanel(
         .apply {
             preferredSize = Dimension(20, 10)
             addActionListener(::minimizeSidebarButtonClick)
-            toolTipText = "Minimize the sidebar"
+            toolTipText = "Minimize the sidebar (Escape)"
         }
 
     private val onTopCheckBox = JCheckBox("Window always on top")
-        .apply { addActionListener(::onTopCheckBoxClick) }
+        .apply {
+            addActionListener(::onTopCheckBoxClick)
+            toolTipText = "Force this window to display on top of Smite and other windows (T)"
+        }
 
     private val nameField = JTextField(13)
         .apply {
@@ -78,43 +77,60 @@ class MainPanel(
             isEditable = false
         }
 
-    private val clearLogButton = JButton("Clear Log")
-        .apply { addActionListener(::clearLogButtonClick) }
     private val resetTimerButton = JButton("Reset")
-        .apply { addActionListener(::resetTimerButtonClick) }
+        .apply {
+            addActionListener(::resetTimerButtonClick)
+            toolTipText = "Makes your next tick of damage reset the DPS timer (R)"
+        }
+    private val clearTableButton = JButton("Clear Table")
+        .apply {
+            addActionListener(::clearTableButtonClick)
+            toolTipText = "Clears the table of all rows and resets the DPS timer (C)"
+        }
 
     private val minimizedBar = JPanel(GridBagLayout())
     private val maximizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(10, 20)
             addActionListener(::maximizeSidebarButtonClick)
-            toolTipText = "Maximize the sidebar"
+            toolTipText = "Maximize the sidebar (Escape)"
         }
 
     private val timeCheckBox = JCheckBox("Time")
         .apply {
             addActionListener(::timeCheckBoxClick)
             isSelected = true
+            toolTipText = "Toggles the time column (1)"
         }
     private val dpsCheckBox = JCheckBox("DPS")
         .apply {
             addActionListener(::dpsCheckBoxClick)
             isSelected = true
+            toolTipText = "Toggles the DPS column (2)"
         }
     private val damageCheckBox = JCheckBox("Damage")
         .apply {
             addActionListener(::damageCheckBoxClick)
             isSelected = true
+            toolTipText = "Toggles the damage column (3)"
         }
     private val totalDamageCheckBox = JCheckBox("Total Damage")
         .apply {
             addActionListener(::totalDamageCheckBoxClick)
             isSelected = true
+            toolTipText = "Toggles the total damage column (4)"
+        }
+    private val mitigatedCheckBox = JCheckBox("Mitigated")
+        .apply {
+            addActionListener(::mitigatedCheckBoxClick)
+            isSelected = true
+            toolTipText = "Toggles the mitigated column (5)"
         }
     private val reasonCheckBox = JCheckBox("Reason")
         .apply {
             addActionListener(::reasonCheckBoxClick)
             isSelected = true
+            toolTipText = "Toggles the reason column (6)"
         }
 
 /* ----------------------------------------- Constructor ---------------------------------------- */
@@ -147,7 +163,7 @@ class MainPanel(
             c2.gridy++
             c2.anchor = GridBagConstraints.PAGE_START
             c2.insets = Insets(0, 0, 10, 0)
-            add(JLabel("Smite DPS Calculator"), c2)
+            add(JLabel("Smite Damage Tracker"), c2)
 
             // separator
             c2.gridy++
@@ -174,14 +190,14 @@ class MainPanel(
             JPanel(GridBagLayout()).apply {
                 val c3 = GridBagConstraints()
 
-                // clear log button
+                // reset timer button
                 c3.gridx = 0; c3.gridy = 0
                 add(resetTimerButton, c3)
 
-                // reset timer button
+                // clear table button
                 c3.gridx++
                 c3.insets = Insets(0, 15, 0, 0)
-                add(clearLogButton, c3)
+                add(clearTableButton, c3)
             }.also { add(it, c2) }
 
             // separator
@@ -206,6 +222,10 @@ class MainPanel(
             // total damage checkbox
             c2.gridy++
             add(totalDamageCheckBox, c2)
+
+            // mitigated checkbox
+            c2.gridy++
+            add(mitigatedCheckBox, c2)
 
             // reason checkbox
             c2.gridy++
@@ -232,6 +252,34 @@ class MainPanel(
             minimumSize = preferredSize
 
         }.also { add(it, c) }
+
+        // key binds
+        isFocusable = true
+        addMouseListener(object : MouseListener {
+            override fun mouseClicked(e: MouseEvent?) { }
+            override fun mousePressed(e: MouseEvent?) { requestFocus() }
+            override fun mouseReleased(e: MouseEvent?) { }
+            override fun mouseEntered(e: MouseEvent?) { }
+            override fun mouseExited(e: MouseEvent?) { }
+        })
+
+        fun Component.onEachComponent(condition: (Component) -> Boolean, action: (Component) -> Unit) {
+            if (condition(this)) {
+                action(this)
+                if (this is Container) {
+                    for (comp in components) comp.onEachComponent(condition, action)
+                }
+            }
+        }
+
+        onEachComponent({ component: Component -> component !is JTextField },
+            {
+                it.addKeyListener(object : KeyListener {
+                    override fun keyTyped(e: KeyEvent?) { }
+                    override fun keyPressed(e: KeyEvent?) { shortcutButtonPress(e) }
+                    override fun keyReleased(e: KeyEvent?) { }
+                })
+            })
 
         // load settings
         if (configData.ign != null) nameField.text = configData.ign
@@ -266,6 +314,7 @@ class MainPanel(
                         "DPS" -> dpsCheckBox.isSelected = false
                         "Damage" -> damageCheckBox.isSelected = false
                         "Σ Damage" -> totalDamageCheckBox.isSelected = false
+                        "Mitigated" -> mitigatedCheckBox.isSelected = false
                         "Reason" -> reasonCheckBox.isSelected = false
                     }
 
@@ -287,6 +336,48 @@ class MainPanel(
 
 /* ------------------------------------------ Listeners ----------------------------------------- */
 
+    /** Handles shortcut key actions */
+    private fun shortcutButtonPress(e: KeyEvent?) {
+        if (e != null) {
+            when (e.keyCode) {
+                KeyEvent.VK_ESCAPE -> {
+                    if (sidebar.isVisible) minimizeSidebarButtonClick(null)
+                    else maximizeSidebarButtonClick(null)
+                }
+                KeyEvent.VK_T -> {
+                    onTopCheckBox.isSelected = !onTopCheckBox.isSelected
+                    onTopCheckBoxClick(null)
+                }
+                KeyEvent.VK_R -> { resetTimerButtonClick(null) }
+                KeyEvent.VK_C -> { clearTableButtonClick(null) }
+                KeyEvent.VK_1 -> {
+                    timeCheckBox.isSelected = !timeCheckBox.isSelected
+                    timeCheckBoxClick(null)
+                }
+                KeyEvent.VK_2 -> {
+                    dpsCheckBox.isSelected = !dpsCheckBox.isSelected
+                    dpsCheckBoxClick(null)
+                }
+                KeyEvent.VK_3 -> {
+                    damageCheckBox.isSelected = !damageCheckBox.isSelected
+                    damageCheckBoxClick(null)
+                }
+                KeyEvent.VK_4 -> {
+                    totalDamageCheckBox.isSelected = !totalDamageCheckBox.isSelected
+                    totalDamageCheckBoxClick(null)
+                }
+                KeyEvent.VK_5 -> {
+                    mitigatedCheckBox.isSelected = !mitigatedCheckBox.isSelected
+                    mitigatedCheckBoxClick(null)
+                }
+                KeyEvent.VK_6 -> {
+                    reasonCheckBox.isSelected = !reasonCheckBox.isSelected
+                    reasonCheckBoxClick(null)
+                }
+            }
+        }
+    }
+
     /** Minimizes the sidebar. */
     @Suppress("UNUSED_PARAMETER")
     private fun minimizeSidebarButtonClick(e: ActionEvent?) {
@@ -304,13 +395,16 @@ class MainPanel(
     /** Updates the in-game name used by the DPS tracker. */
     private fun nameFieldUpdate() { dpsTracker.updateIGN(nameField.text.toLowerCase()) }
 
-    /** Clears the dps table of rows. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun clearLogButtonClick(e: ActionEvent?) { dpsTracker.clearLog() }
-
     /** Resets the timer used by the DPS tracker. */
     @Suppress("UNUSED_PARAMETER")
     private fun resetTimerButtonClick(e: ActionEvent?) { dpsTracker.resetTimer() }
+
+    /** Resets the time and clears the dps table of rows. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun clearTableButtonClick(e: ActionEvent?) {
+        dpsTracker.clearTable()
+        dpsTracker.resetTimer()
+    }
 
     /** Reveals the sidebar. */
     @Suppress("UNUSED_PARAMETER")
@@ -358,6 +452,12 @@ class MainPanel(
         setColumnVisible("Σ Damage", totalDamageCheckBox.isSelected)
     }
 
+    /** Toggles the DPS table mitigated column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun mitigatedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Mitigated", mitigatedCheckBox.isSelected)
+    }
+
     /** Toggles the DPS table reason column. */
     @Suppress("UNUSED_PARAMETER")
     private fun reasonCheckBoxClick(actionEvent: ActionEvent?) {
@@ -377,7 +477,7 @@ class MainPanel(
             if (isVisible) {
                 column.maxWidth = colMaxWidth
                 column.minWidth = colMinWidth
-                column.preferredWidth = 100
+                column.preferredWidth = 66
             }
             // hidden
             else {

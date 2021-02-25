@@ -26,6 +26,17 @@ jar {
 
 mainClassName = 'sdps.MainKt'
 
+task createProperties() {
+    doLast {
+        mkdir("$buildDir/resources/main")
+        new File("$buildDir/resources/main/version.txt").write("${project.version}")
+    }
+}
+
+classes {
+    dependsOn createProperties
+}
+
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     modules = ['java.base', 'java.desktop']

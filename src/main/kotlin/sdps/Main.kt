@@ -15,9 +15,11 @@ fun main() {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     val jFrame = JFrame("SDPS - antD")
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 360)
+    val windowSidebarMinSize = Dimension(300, 385)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
+
+    val version = object {}.javaClass.getResource("/version.txt").readText()
 
     // load save data. if none, use defaults
     val configData =
@@ -30,7 +32,7 @@ fun main() {
         PopupUncaughtExceptionHandler.set()
 
         jFrame.apply {
-            title = "SDPS - antD"
+            title = "SDPS v$version - antD"
             defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
             add(mainPanel)
