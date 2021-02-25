@@ -26,8 +26,8 @@ For a more detailed readme: https://github.com/antD97/SDPS/tree/v2.2
    click "Clear Table", the table will both be cleared and the timer reset.
 
 5. Whenever you want to record DPS or total damage, be sure to click "Reset" and then do another
-   tick of damage to reveal any damage ticks that may have been hidden. Read the fourth bullet in
-   the detailed readme's notes section for an explanation.
+   tick of damage to reveal any damage ticks that may have been hidden. Read the last bullet in the
+   detailed readme's notes section for an explanation.
 
  --- Copyright and License ---
 

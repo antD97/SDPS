@@ -23,8 +23,8 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
 4. If you click "Reset", your next tick of damage will reset the DPS timer. Alternatively, if you
    click "Clear Table", the table will both be cleared and the timer reset.
 5. Whenever you want to record DPS or total damage, be sure to click "Reset" and then do another
-   tick of damage to reveal any damage ticks that may have been hidden. Read the fourth bullet in
-   the notes section for an explanation.
+   tick of damage to reveal any damage ticks that may have been hidden. Read the last bullet in the
+   notes section for an explanation.
 
 ## Notes
 
@@ -39,6 +39,15 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
   By only displaying columns that are relevant to you and clicking the button in the top left
   corner to hide the sidebar, you can resize the window and use the shortcuts so that the tool is
   as out of your way as possible.
+
+- In the "Odin bots" section of jungle practice, there are three Odin bots to the immediate left.
+  These bots are handy for DPS calculations. The first one matches your character's level, the
+  second one is level one, and the third one is level twenty. There are also buttons to the right
+  that let you change the amount of protections they have.
+
+- If you are in a match, and the DPS log says "End", try typing the command
+  `/combatlog toggle piped` into Smite chat again. You may have accidentally entered it twice which
+  prevents SDPS from monitoring your combat log.
 
 - **This one is fairly important** depending on the type of scenario you are trying to measure, in
   particular burst damage. If there are multiple damage ticks that occur at the same time (e.g.
@@ -59,15 +68,6 @@ You can find the download [here](https://github.com/antD97/SmiteDPS/releases/tag
   the next combat tick. It's difficult to tell which gods and items have this behavior so:
   **whenever you want to record DPS or total damage, be sure to click "Reset" and then do another**
   **tick of damage to reveal any damage ticks that may have been hidden.**
-
-- In the "Odin bots" section of jungle practice, there are three Odin bots to the immediate left.
-  These bots are handy for DPS calculations. The first one matches your character's level, the
-  second one is level one, and the third one is level twenty. There are also buttons to the right
-  that let you change the amount of protections they have.
-
-- If you are in a match, and the DPS log says "End", try typing the command
-  `/combatlog toggle piped` into Smite chat again. You may have accidentally entered it twice which
-  prevents SDPS from monitoring your combat log.
 
 ## Building
 
