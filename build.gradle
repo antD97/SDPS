@@ -60,9 +60,8 @@ task createBundledExe() {
         }
         copy {
             from "$buildDir/launch4j/$project.name-${project.version}.exe",
-                 "$projectDir/legal/release-license.txt"
+                 "$projectDir/bundle"
             into bundledExeDir
-            rename 'release-license.txt', 'license.txt'
         }
     }
 }

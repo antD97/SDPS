@@ -15,7 +15,7 @@ import javax.swing.table.TableColumn
 
 /** The main UI panel. */
 class MainPanel(
-    private val dpsTracker: DPSTracker,
+    private val damageTracker: DamageTracker,
     configData: ConfigManager.ConfigData,
     private val windowSidebarMinSize: Dimension,
     private val windowSmallMinSize: Dimension
@@ -31,20 +31,20 @@ class MainPanel(
         get() { return onTopCheckBox.isSelected }
 
     val columnOrder: List<String>
-        get() { return dpsTable.columnModel.columns.toList().map { it.headerValue as String } }
+        get() { return table.columnModel.columns.toList().map { it.headerValue as String } }
 
     val columnWidths: List<Int>
-        get() { return dpsTable.columnModel.columns.toList().map { it.width } }
+        get() { return table.columnModel.columns.toList().map { it.width } }
 
 /* --------------------------------------- GUI Components --------------------------------------- */
 
     private val colMaxWidth = Int.MAX_VALUE
     private val colMinWidth = 15
 
-    private val dpsTable = JTable(
+    private val table = JTable(
         DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Σ Mitigated", "Reason")))
         .apply { setDefaultEditor(Object::class.java, null) }
-    private val dpsTableScrollPane = JScrollPane(dpsTable)
+    private val tableScrollPane = JScrollPane(table)
         .apply { preferredSize = Dimension(400, 300) }
 
     private val sidebar = JPanel(GridBagLayout())
@@ -149,7 +149,7 @@ class MainPanel(
         c.weightx = 1.0; c.weighty = 1.0
         c.fill = GridBagConstraints.BOTH
         c.insets = Insets(10, 0, 10, 10)
-        add(dpsTableScrollPane, c)
+        add(tableScrollPane, c)
 
         // sidebar
         c.gridx = 1
@@ -310,12 +310,12 @@ class MainPanel(
         if (configData.columnOrder != null) {
             for (i in 0..configData.columnOrder!!.lastIndex) {
                 val targetCol = configData.columnOrder!![i]
-                val tableColumns = dpsTable.columnModel.columns.toList()
+                val tableColumns = table.columnModel.columns.toList()
 
                 for (j in i+1..tableColumns.lastIndex) {
                     if (tableColumns[j].headerValue as String == targetCol) {
                         // move the column to the correct spot
-                        dpsTable.columnModel.moveColumn(j, i)
+                        table.columnModel.moveColumn(j, i)
                     }
                 }
             }
@@ -324,7 +324,7 @@ class MainPanel(
         if (configData.columnWidths != null) {
             for (i in configData.columnWidths!!.indices) {
 
-                val column = dpsTable.columnModel.getColumn(i)
+                val column = table.columnModel.getColumn(i)
                 val selected = configData.columnWidths!![i] != 0
 
                 when (column.headerValue) {
@@ -349,13 +349,13 @@ class MainPanel(
             }
         }
 
-        // update dps tracker
-        dpsTracker.updateIGN(nameField.text)
+        // update damage tracker
+        damageTracker.updateIGN(nameField.text)
 
-        dpsTracker.dpsTableModel = dpsTable.model as DefaultTableModel
+        damageTracker.tableModel = table.model as DefaultTableModel
 
-        dpsTracker.addDPSTableListener(::dpsTableUpdate)
-        dpsTracker.addCombatLogListener(::combatLogUpdate)
+        damageTracker.addTableListener(::tableUpdate)
+        damageTracker.addCombatLogListener(::combatLogUpdate)
     }
 
 /* ------------------------------------------ Listeners ----------------------------------------- */
@@ -420,18 +420,18 @@ class MainPanel(
         (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
     }
 
-    /** Updates the in-game name used by the DPS tracker. */
-    private fun nameFieldUpdate() { dpsTracker.updateIGN(nameField.text.toLowerCase()) }
+    /** Updates the in-game name used by the damage tracker. */
+    private fun nameFieldUpdate() { damageTracker.updateIGN(nameField.text.toLowerCase()) }
 
-    /** Resets the timer used by the DPS tracker. */
+    /** Resets the timer used by the damage tracker. */
     @Suppress("UNUSED_PARAMETER")
-    private fun resetTimerButtonClick(e: ActionEvent?) { dpsTracker.resetTimer() }
+    private fun resetTimerButtonClick(e: ActionEvent?) { damageTracker.resetTimer() }
 
-    /** Resets the time and clears the dps table of rows. */
+    /** Resets the time and clears the table. */
     @Suppress("UNUSED_PARAMETER")
     private fun clearTableButtonClick(e: ActionEvent?) {
-        dpsTracker.clearTable()
-        dpsTracker.resetTimer()
+        damageTracker.clearTable(false)
+        damageTracker.resetTimer()
     }
 
     /** Reveals the sidebar. */
@@ -443,10 +443,10 @@ class MainPanel(
     }
 
     /** Moves the table scroll to the bottom. */
-    private fun dpsTableUpdate() {
-        val scrollBar = dpsTableScrollPane.verticalScrollBar
+    private fun tableUpdate() {
+        val scrollBar = tableScrollPane.verticalScrollBar
         SwingUtilities.invokeLater {
-            dpsTable.revalidate()
+            table.revalidate()
             scrollBar.value = scrollBar.maximum
         }
     }
@@ -456,43 +456,43 @@ class MainPanel(
         combatLogField.text = if (combatLog == null) "no file" else combatLog.name
     }
 
-    /** Toggles the DPS table time column. */
+    /** Toggles the table time column. */
     @Suppress("UNUSED_PARAMETER")
     private fun timeCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Time", timeCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table DPS column. */
+    /** Toggles the table DPS column. */
     @Suppress("UNUSED_PARAMETER")
     private fun dpsCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("DPS", dpsCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table damage column. */
+    /** Toggles the table damage column. */
     @Suppress("UNUSED_PARAMETER")
     private fun damageCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Damage", damageCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table total damage column. */
+    /** Toggles the table total damage column. */
     @Suppress("UNUSED_PARAMETER")
     private fun totalDamageCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Σ Damage", totalDamageCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table mitigated column. */
+    /** Toggles the table mitigated column. */
     @Suppress("UNUSED_PARAMETER")
     private fun mitigatedCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Mitigated", mitigatedCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table total mitigated column. */
+    /** Toggles the table total mitigated column. */
     @Suppress("UNUSED_PARAMETER")
     private fun totalMitigatedCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Σ Mitigated", totalMitigatedCheckBox.isSelected)
     }
 
-    /** Toggles the DPS table reason column. */
+    /** Toggles the table reason column. */
     @Suppress("UNUSED_PARAMETER")
     private fun reasonCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Reason", reasonCheckBox.isSelected)
@@ -503,7 +503,7 @@ class MainPanel(
     /** Shows or hides the specified column.  */
     private fun setColumnVisible(header: String, isVisible: Boolean) {
         var column: TableColumn? = null
-        for (c in dpsTable.columnModel.columns)
+        for (c in table.columnModel.columns)
             if (c.headerValue as String == header) column = c
 
         if (column != null) {
