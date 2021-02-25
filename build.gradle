@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'antD'
-version '2.1'
+version '2.2'
 
 repositories {
     mavenCentral()
@@ -25,6 +25,17 @@ jar {
 }
 
 mainClassName = 'sdps.MainKt'
+
+task createProperties() {
+    doLast {
+        mkdir("$buildDir/resources/main")
+        new File("$buildDir/resources/main/version.txt").write("${project.version}")
+    }
+}
+
+classes {
+    dependsOn createProperties
+}
 
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
@@ -49,9 +60,8 @@ task createBundledExe() {
         }
         copy {
             from "$buildDir/launch4j/$project.name-${project.version}.exe",
-                 "$projectDir/legal/release-license.txt"
+                 "$projectDir/bundle"
             into bundledExeDir
-            rename 'release-license.txt', 'license.txt'
         }
     }
 }

@@ -10,27 +10,29 @@ import javax.swing.*
 
 fun main() {
     PopupUncaughtExceptionHandler.set()
-    val dpsTracker = DPSTracker()
+    val damageTracker = DamageTracker()
 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-    val jFrame = JFrame("SDPS - antD")
+    val jFrame = JFrame()
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 360)
+    val windowSidebarMinSize = Dimension(300, 405)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
+
+    val version = object {}.javaClass.getResource("/version.txt").readText()
 
     // load save data. if none, use defaults
     val configData =
         if (ConfigManager.load() != null) ConfigManager.load()!!
         else ConfigManager.ConfigData()
 
-    val mainPanel = MainPanel(dpsTracker, configData, windowSidebarMinSize, windowSmallMinSize)
+    val mainPanel = MainPanel(damageTracker, configData, windowSidebarMinSize, windowSmallMinSize)
 
     SwingUtilities.invokeAndWait {
         PopupUncaughtExceptionHandler.set()
 
         jFrame.apply {
-            title = "SDPS - antD"
+            title = "SDPS v$version - antD"
             defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
             add(mainPanel)
@@ -60,5 +62,5 @@ fun main() {
         }
     })
 
-    dpsTracker.run()
+    damageTracker.run()
 }
