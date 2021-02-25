@@ -53,7 +53,7 @@ class MainPanel(
         .apply {
             preferredSize = Dimension(20, 10)
             addActionListener(::minimizeSidebarButtonClick)
-            toolTipText = "Minimize the sidebar (Escape)"
+            toolTipText = "Minimize the sidebar (Esc)"
         }
 
     private val onTopCheckBox = JCheckBox("Window always on top")
