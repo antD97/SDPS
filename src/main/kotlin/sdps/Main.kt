@@ -8,18 +8,20 @@ import sdps.ConfigManager.save
 import java.awt.Dimension
 import javax.swing.*
 
+
 fun main() {
+
+    val version = object {}.javaClass.getResource("/version.txt").readText()
+
     PopupUncaughtExceptionHandler.set()
     val damageTracker = DamageTracker()
 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     val jFrame = JFrame()
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 405)
+    val windowSidebarMinSize = Dimension(300, 407)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
-
-    val version = object {}.javaClass.getResource("/version.txt").readText()
 
     // load save data. if none, use defaults
     val configData =
@@ -53,7 +55,7 @@ fun main() {
             ConfigManager.ConfigData(
                 jFrame.location,
                 jFrame.size,
-                if (mainPanel.ign != "") mainPanel.ign else null,
+                if (mainPanel.ign != "Searching...") mainPanel.ign else null,
                 mainPanel.isSidebarEnabled,
                 mainPanel.isOnTopEnabled,
                 mainPanel.columnOrder,
@@ -61,6 +63,9 @@ fun main() {
             ).save()
         }
     })
+
+    // check for new release
+    UpdateChecker.check(version)
 
     damageTracker.run()
 }

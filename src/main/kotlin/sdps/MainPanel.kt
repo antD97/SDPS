@@ -8,8 +8,6 @@ import java.awt.*
 import java.awt.event.*
 import java.io.File
 import javax.swing.*
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
 import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableColumn
 
@@ -22,7 +20,7 @@ class MainPanel(
 ) : JPanel(GridBagLayout()) {
 
     val ign: String
-        get() { return nameField.text }
+        get() { return nameField.text  }
 
     val isSidebarEnabled: Boolean
         get() { return sidebar.isVisible }
@@ -62,13 +60,16 @@ class MainPanel(
             toolTipText = "Force this window to display on top of Smite and other windows (T)"
         }
 
-    private val nameField = JTextField(13)
+    private val nameField = JTextField(8)
         .apply {
-            document.addDocumentListener(object : DocumentListener {
-                override fun insertUpdate(e: DocumentEvent?) { nameFieldUpdate() }
-                override fun removeUpdate(e: DocumentEvent?) { nameFieldUpdate() }
-                override fun changedUpdate(e: DocumentEvent?) { nameFieldUpdate() }
-            })
+            text = "Searching..."
+            isEditable = false
+        }
+
+    private val nameFieldResetButton = JButton("↺")
+        .apply {
+            addActionListener(::nameFieldResetButtonClick)
+            toolTipText = "Resets the in-game name; will be set on the next tick of damage"
         }
 
     private val combatLogField = JTextField(13)
@@ -182,9 +183,9 @@ class MainPanel(
             c2.anchor = GridBagConstraints.FIRST_LINE_START
             add(onTopCheckBox, c2)
 
-            // in-game name input field
+            // in-game name field
             c2.gridy++
-            add(LabelPanel("In-game name", nameField), c2)
+            add(LabelPanel("In-game name", nameField, nameFieldResetButton), c2)
 
             // combat log file
             c2.gridy++
@@ -350,7 +351,7 @@ class MainPanel(
         }
 
         // update damage tracker
-        damageTracker.updateIGN(nameField.text)
+        damageTracker.nameField = nameField
 
         damageTracker.tableModel = table.model as DefaultTableModel
 
@@ -420,8 +421,12 @@ class MainPanel(
         (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
     }
 
-    /** Updates the in-game name used by the damage tracker. */
-    private fun nameFieldUpdate() { damageTracker.updateIGN(nameField.text.toLowerCase()) }
+    /** Resets the name field. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun nameFieldResetButtonClick(e: ActionEvent?) {
+        nameField.text = "Searching..."
+        damageTracker.updateIGN("")
+    }
 
     /** Resets the timer used by the damage tracker. */
     @Suppress("UNUSED_PARAMETER")
@@ -450,6 +455,7 @@ class MainPanel(
             scrollBar.value = scrollBar.maximum
         }
     }
+
 
     /** Updates the combat log field with the new combat log file name. */
     private fun combatLogUpdate(combatLog: File?) {
