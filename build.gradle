@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'antD'
-version '2.2'
+version '2.3'
 
 repositories {
     mavenCentral()
@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+    implementation group: 'org.kohsuke', name: 'github-api', version: '1.129'
 }
 
 jar {
@@ -39,7 +40,7 @@ classes {
 
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-    modules = ['java.base', 'java.desktop']
+    modules = ['java.base', 'java.desktop', 'java.logging', 'jdk.crypto.ec']
 }
 
 launch4j {

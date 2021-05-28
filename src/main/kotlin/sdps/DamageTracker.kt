@@ -5,11 +5,16 @@
 package sdps
 
 import java.io.File
+import java.util.logging.Logger
+import javax.swing.JTextField
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableModel
 
 /** Monitors the newest combat log file and updates a table with damage information. */
 class DamageTracker {
+
+    // gui name field
+    var nameField = JTextField()
 
     /** The table model that the tracker updates. */
     var tableModel = DefaultTableModel()
@@ -34,10 +39,12 @@ class DamageTracker {
     private var waiting = true
 
     /** Tells the damage tracker to update the in-game name. */
-    fun updateIGN(ign: String) { updatedIGN = ign.toLowerCase() }
+    fun updateIGN(ign: String) { updatedIGN = ign }
 
     /** Tracks damage using [ign] and [combatLog] to update [tableModel]. */
     fun run() {
+
+        val x: Logger
 
         while (true) {
 
@@ -54,7 +61,7 @@ class DamageTracker {
                 var eofReached = false
 
                 // if ign hasn't been updated and didn't reach eof, keep tracking
-                @Suppress("SameParameterValue")
+                var caughtUp = false
                 while (updatedIGN == null && !eofReached) {
                     val line = br.readLine()
 
@@ -72,7 +79,7 @@ class DamageTracker {
                         val type = lineData[1]
 
                         // damage dealt
-                        val damageTypes = listOf("Damage", "CritDamage", "Backstab")
+                        val damageTypes = listOf("Damage", "CritDamage", "Backstab", "HolyCrit")
                         val typeSplit = type.split("_")
                         if (typeSplit.size == 2) {
                             if (damageTypes.contains(typeSplit[1])) {
@@ -82,8 +89,14 @@ class DamageTracker {
                                 val mitigated = lineData[13].toInt()
                                 val reason = lineData[7]
 
+                                // update the gui name field
+                                if (ign == "" && caughtUp) {
+                                    ign = source
+                                    nameField.text = source
+                                }
+
                                 // damage dealt by user
-                                if (source.toLowerCase() == ign) {
+                                if (source == ign) {
 
                                     if (resetTimer) {
                                         // reset timer time in game time
@@ -147,7 +160,10 @@ class DamageTracker {
                                 }
                             }
                         }
-                    } else Thread.sleep(100)
+                    } else {
+                        caughtUp = true
+                        Thread.sleep(100)
+                    }
                 }
                 br.close()
             }
