@@ -13,7 +13,7 @@ import java.awt.event.WindowEvent
 import java.net.URI
 import javax.swing.*
 
-/** Used to check if a newer version of the tool has been released */
+/** Used to check if a newer version of the tool has been released. */
 object UpdateChecker {
 
     /** Displays a message if the newest version found on GitHub does not match [currVer]. */

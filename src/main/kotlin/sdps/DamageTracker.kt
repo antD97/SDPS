@@ -44,8 +44,6 @@ class DamageTracker {
     /** Tracks damage using [ign] and [combatLog] to update [tableModel]. */
     fun run() {
 
-        val x: Logger
-
         while (true) {
 
             // start tracking
