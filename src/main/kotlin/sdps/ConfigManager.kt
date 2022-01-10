@@ -34,6 +34,9 @@ object ConfigManager {
             fun StringBuilder.appendKeyValuePair(key: String, list: List<*>?) {
                 if (list != null) append("$key=${list.joinToString(",")}\n")
             }
+            fun StringBuilder.appendKeyValuePair(key: String, x: Int?) {
+                if (x != null) append("$key=$x\n")
+            }
 
             sb.appendKeyValuePair("loc", loc)
             sb.appendKeyValuePair("size", size)
@@ -42,6 +45,8 @@ object ConfigManager {
             sb.appendKeyValuePair("onTop", onTop)
             sb.appendKeyValuePair("columnOrder", columnOrder)
             sb.appendKeyValuePair("columnWidths", columnWidths)
+            sb.appendKeyValuePair("rowSize", rowSize)
+            sb.appendKeyValuePair("updateCheck", updateCheck)
 
             f.writeText(sb.toString())
             true
@@ -68,6 +73,8 @@ object ConfigManager {
                         "onTop" ->        sd.onTop = value.toBoolean()
                         "columnOrder" ->  sd.columnOrder = value.split(",").map { it.trim() }
                         "columnWidths" -> sd.columnWidths = value.toIntListOrNull()
+                        "rowSize" ->      sd.rowSize = value.toInt()
+                        "updateCheck" ->  sd.updateCheck = value.toBoolean()
                     }
                 }
             }
@@ -81,7 +88,9 @@ object ConfigManager {
                           var sidebar: Boolean = true,
                           var onTop: Boolean = false,
                           var columnOrder: List<String>? = null,
-                          var columnWidths: List<Int>? = null)
+                          var columnWidths: List<Int>? = null,
+                          var rowSize: Int = 12,
+                          var updateCheck: Boolean = true)
 
 /* -------------------------------------------- Util -------------------------------------------- */
 

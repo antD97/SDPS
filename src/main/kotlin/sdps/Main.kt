@@ -19,7 +19,7 @@ fun main() {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     val jFrame = JFrame()
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 407)
+    val windowSidebarMinSize = Dimension(300, 437)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
 
@@ -59,13 +59,17 @@ fun main() {
                 mainPanel.isSidebarEnabled,
                 mainPanel.isOnTopEnabled,
                 mainPanel.columnOrder,
-                mainPanel.columnWidths
+                mainPanel.columnWidths,
+                mainPanel.rowSize,
+                configData.updateCheck
             ).save()
         }
     })
 
     // check for new release
-    UpdateChecker.check(version)
+    if (configData.updateCheck) {
+        UpdateChecker.check(version)
+    }
 
     damageTracker.run()
 }

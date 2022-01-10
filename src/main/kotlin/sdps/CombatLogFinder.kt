@@ -24,7 +24,7 @@ object CombatLogFinder {
                     combatLogs.add(f)
             }
 
-            combatLogs.sort()
+            combatLogs.sortBy { it.lastModified() }
             if (combatLogs.isNotEmpty()) return combatLogs.last()
         }
 
