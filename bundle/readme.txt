@@ -1,12 +1,12 @@
- ---------- SDPS v2.3 ----------
+ ---------- SDPS v2.4 ----------
 
 SDPS is a handy tool for the game Smite (https://smitegame.com/) that lets you track your in-game
 damage in real time. By jumping into a jungle practice match, SDPS makes it easy to compare the
 damage of different builds. SDPS uses the in-game combat log, so it will work seamlessly with future
 updates containing balance changes, new gods, and new items.
 
-Release: https://github.com/antD97/SmiteDPS/releases/tag/v2.3
-For a more detailed readme: https://github.com/antD97/SDPS/tree/v2.3
+Release: https://github.com/antD97/SmiteDPS/releases/tag/v2.4
+For a more detailed readme: https://github.com/antD97/SDPS/tree/v2.4
 
  --- Usage ---
 

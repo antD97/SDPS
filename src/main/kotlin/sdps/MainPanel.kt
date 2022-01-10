@@ -8,6 +8,7 @@ import java.awt.*
 import java.awt.event.*
 import java.io.File
 import javax.swing.*
+import javax.swing.event.ChangeEvent
 import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableColumn
 
@@ -34,6 +35,9 @@ class MainPanel(
     val columnWidths: List<Int>
         get() { return table.columnModel.columns.toList().map { it.width } }
 
+    val rowSize: Int
+        get() { return table.font.size }
+
 /* --------------------------------------- GUI Components --------------------------------------- */
 
     private val colMaxWidth = Int.MAX_VALUE
@@ -41,7 +45,12 @@ class MainPanel(
 
     private val table = JTable(
         DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Σ Mitigated", "Reason")))
-        .apply { setDefaultEditor(Object::class.java, null) }
+        .apply {
+            setDefaultEditor(Object::class.java, null)
+            font = Font(font.name, font.style, configData.rowSize)
+            tableHeader.font = font
+            rowHeight = font.size + 5
+        }
     private val tableScrollPane = JScrollPane(table)
         .apply { preferredSize = Dimension(275, 300) }
 
@@ -76,6 +85,12 @@ class MainPanel(
         .apply {
             text = "no file"
             isEditable = false
+        }
+
+    private val rowSizeSpinner = JSpinner(SpinnerNumberModel(configData.rowSize, 1, 100, 1))
+        .apply {
+            addChangeListener(::rowSizeSpinnerChange)
+            toolTipText = "Adjust table row size"
         }
 
     private val resetTimerButton = JButton("Reset")
@@ -189,7 +204,15 @@ class MainPanel(
 
             // combat log file
             c2.gridy++
-            add(LabelPanel("Combat log file", combatLogField), c2)
+            add(LabelPanel("Combat log file", combatLogField, gap = 3), c2)
+
+            // row size spinner
+            c2.gridy++
+            add(LabelPanel(
+                "Row Size",
+                rowSizeSpinner.apply { preferredSize = Dimension(70, preferredSize.height) },
+                gap = 71
+            ), c2)
 
             // 2x button group
             c2.gridy++
@@ -365,6 +388,9 @@ class MainPanel(
     private fun shortcutButtonPress(e: KeyEvent?) {
         if (e != null) {
             when (e.keyCode) {
+                KeyEvent.VK_SPACE -> {
+                    println(table.tableHeader.height)
+                }
                 KeyEvent.VK_ESCAPE -> {
                     if (sidebar.isVisible) minimizeSidebarButtonClick(null)
                     else maximizeSidebarButtonClick(null)
@@ -426,6 +452,15 @@ class MainPanel(
     private fun nameFieldResetButtonClick(e: ActionEvent?) {
         nameField.text = "Searching..."
         damageTracker.updateIGN("")
+    }
+
+    /** Sets the font size for the table rows. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun rowSizeSpinnerChange(e: ChangeEvent) {
+        val rowSize = (rowSizeSpinner.model as SpinnerNumberModel).number.toInt()
+        table.font = Font(font.name, font.style, rowSize)
+        table.tableHeader.font = table.font
+        table.rowHeight = table.font.size + 5
     }
 
     /** Resets the timer used by the damage tracker. */
@@ -528,7 +563,7 @@ class MainPanel(
     }
 
     /** Creates a JPanel with a JLabel followed by the specified JComponents. */
-    private class LabelPanel(label: String, vararg components: JComponent)
+    private class LabelPanel(label: String, vararg components: JComponent, gap: Int = 0)
         : JPanel(GridBagLayout()) {
 
         init {
@@ -536,7 +571,11 @@ class MainPanel(
 
             // label
             c.gridx = 0; c.gridy = 0
-            add(JLabel(label), c)
+            add(JLabel(label).apply {
+                if (gap > 0) {
+                    preferredSize = Dimension(preferredSize.width + gap, preferredSize.height)
+                }
+            }, c)
 
             // components
             c.insets = Insets(0, 5, 0, 0)
