@@ -24,8 +24,7 @@ object CombatLogFinder {
                     combatLogs.add(f)
             }
 
-            combatLogs.sortBy { it.lastModified() }
-            if (combatLogs.isNotEmpty()) return combatLogs.last()
+            return combatLogs.maxByOrNull { it.lastModified() }
         }
 
         return null
