@@ -14,7 +14,7 @@ import javax.swing.table.TableColumn
 
 /** The main UI panel. */
 class MainPanel(
-    private val damageTracker: DamageTracker,
+    private val combatTracker: CombatTracker,
     configData: ConfigManager.ConfigData,
     private val windowSidebarMinSize: Dimension,
     private val windowSmallMinSize: Dimension
@@ -23,11 +23,23 @@ class MainPanel(
     val ign: String
         get() { return nameField.text  }
 
-    val isSidebarEnabled: Boolean
+    val sidebarEnabled: Boolean
         get() { return sidebar.isVisible }
 
-    val isOnTopEnabled: Boolean
+    val onTopEnabled: Boolean
         get() { return onTopCheckBox.isSelected }
+
+    val trackDamageEnabled: Boolean
+        get() { return trackDamageCheckBox.isSelected }
+
+    val trackHealReceivedEnabled: Boolean
+        get() { return trackHealReceivedCheckBox.isSelected }
+
+    val trackHealAppliedEnabled: Boolean
+        get() { return trackHealAppliedCheckBox.isSelected }
+
+    val godsOnlyEnabled: Boolean
+        get() { return godsOnlyCheckBox.isSelected }
 
     val columnOrder: List<String>
         get() { return table.columnModel.columns.toList().map { it.headerValue as String } }
@@ -43,14 +55,7 @@ class MainPanel(
     private val colMaxWidth = Int.MAX_VALUE
     private val colMinWidth = 15
 
-    private val table = JTable(
-        DefaultTableModel(arrayOf(), arrayOf("Time", "DPS", "Damage", "Σ Damage", "Mitigated", "Σ Mitigated", "Reason")))
-        .apply {
-            setDefaultEditor(Object::class.java, null)
-            font = Font(font.name, font.style, configData.rowSize)
-            tableHeader.font = font
-            rowHeight = font.size + 5
-        }
+    private val table = OutputTable(configData.rowSize)
     private val tableScrollPane = JScrollPane(table)
         .apply { preferredSize = Dimension(275, 300) }
 
@@ -63,10 +68,38 @@ class MainPanel(
             toolTipText = "Minimize the sidebar (Esc)"
         }
 
-    private val onTopCheckBox = JCheckBox("Window always on top")
+    private val onTopCheckBox = JCheckBox("Window Always On Top")
         .apply {
             addActionListener(::onTopCheckBoxClick)
             toolTipText = "Force this window to display on top of Smite and other windows (T)"
+        }
+
+    private val trackDamageCheckBox = JCheckBox("Track Damage")
+        .apply {
+            addActionListener(::trackDamageCheckBoxClick)
+            toolTipText = "Track & print damage onto the table (1)"
+            isSelected = true
+        }
+
+    private val trackHealReceivedCheckBox = JCheckBox("Track Heal Received")
+        .apply {
+            addActionListener(::trackHealReceivedCheckBoxClick)
+            toolTipText = "Track & print heal received onto the table (2)"
+            isSelected = false
+        }
+
+    private val trackHealAppliedCheckBox = JCheckBox("Track Heal Applied")
+        .apply {
+            addActionListener(::trackHealAppliedCheckBoxClick)
+            toolTipText = "Track & print heal applied onto the table (3)"
+            isSelected = false
+        }
+
+    private val godsOnlyCheckBox = JCheckBox("Gods Only")
+        .apply {
+            addActionListener(::godsOnlyCheckBoxClick)
+            toolTipText = "Ignore minions/structures (G)"
+            isSelected = true
         }
 
     private val nameField = JTextField(8)
@@ -90,18 +123,18 @@ class MainPanel(
     private val rowSizeSpinner = JSpinner(SpinnerNumberModel(configData.rowSize, 1, 100, 1))
         .apply {
             addChangeListener(::rowSizeSpinnerChange)
-            toolTipText = "Adjust table row size"
+            toolTipText = "Adjust table font size"
         }
 
-    private val resetTimerButton = JButton("Reset")
+    private val resetCombatButton = JButton("Reset")
         .apply {
-            addActionListener(::resetTimerButtonClick)
-            toolTipText = "Makes your next tick of damage reset the DPS timer (R)"
+            addActionListener(::resetCombatButtonClick)
+            toolTipText = "Makes your next tick of damage reset the DPS timer and resets damage & healing totals (R)"
         }
     private val clearTableButton = JButton("Clear Table")
         .apply {
             addActionListener(::clearTableButtonClick)
-            toolTipText = "Clears the table of all rows and resets the DPS timer (C)"
+            toolTipText = "Clears the table of all rows and resets (C)"
         }
 
     private val minimizedBar = JPanel(GridBagLayout())
@@ -116,43 +149,59 @@ class MainPanel(
         .apply {
             addActionListener(::timeCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the time column (1)"
         }
+
     private val dpsCheckBox = JCheckBox("DPS")
         .apply {
             addActionListener(::dpsCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the DPS column (2)"
         }
     private val damageCheckBox = JCheckBox("Damage")
         .apply {
             addActionListener(::damageCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the damage column (3)"
         }
     private val totalDamageCheckBox = JCheckBox("Total Damage")
         .apply {
             addActionListener(::totalDamageCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the total damage column (4)"
         }
     private val mitigatedCheckBox = JCheckBox("Mitigated")
         .apply {
             addActionListener(::mitigatedCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the mitigated column (5)"
         }
     private val totalMitigatedCheckBox = JCheckBox("Total Mitigated")
         .apply {
             addActionListener(::totalMitigatedCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the mitigated column (6)"
         }
+
+    private val healReceivedCheckBox = JCheckBox("Heal Received")
+        .apply {
+            addActionListener(::healReceivedCheckBoxClick)
+            isSelected = true
+        }
+    private val totalHealReceivedCheckBox = JCheckBox("Total Heal Received")
+        .apply {
+            addActionListener(::totalHealReceivedCheckBoxClick)
+            isSelected = true
+        }
+    private val healAppliedCheckBox = JCheckBox("Heal Applied")
+        .apply {
+            addActionListener(::healAppliedCheckBoxClick)
+            isSelected = true
+        }
+    private val totalHealAppliedCheckBox = JCheckBox("Total Heal Applied")
+        .apply {
+            addActionListener(::totalHealAppliedCheckBoxClick)
+            isSelected = true
+        }
+
     private val reasonCheckBox = JCheckBox("Reason")
         .apply {
             addActionListener(::reasonCheckBoxClick)
             isSelected = true
-            toolTipText = "Toggles the reason column (7)"
         }
 
 /* ----------------------------------------- Constructor ---------------------------------------- */
@@ -171,6 +220,7 @@ class MainPanel(
         c.gridx = 1
         c.weightx = 0.0
         c.insets = Insets(10, 10, 10, 10)
+
         sidebar.apply {
             val c2 = GridBagConstraints()
 
@@ -196,7 +246,25 @@ class MainPanel(
             c2.gridy++
             c2.fill = GridBagConstraints.NONE
             c2.anchor = GridBagConstraints.FIRST_LINE_START
+            c2.insets = Insets(0, 0, 0, 0)
             add(onTopCheckBox, c2)
+
+            // track damage checkbox
+            c2.gridy++
+            add(trackDamageCheckBox, c2)
+
+            // track heal received checkbox
+            c2.gridy++
+            add(trackHealReceivedCheckBox, c2)
+
+            // track damage checkbox
+            c2.gridy++
+            add(trackHealAppliedCheckBox, c2)
+
+            // gods only checkbox
+            c2.gridy++
+            c2.insets = Insets(0, 0, 10, 0)
+            add(godsOnlyCheckBox, c2)
 
             // in-game name field
             c2.gridy++
@@ -209,8 +277,8 @@ class MainPanel(
             // row size spinner
             c2.gridy++
             add(LabelPanel(
-                "Row Size",
-                rowSizeSpinner.apply { preferredSize = Dimension(70, preferredSize.height) },
+                "Table Font Size",
+                rowSizeSpinner.apply { preferredSize = Dimension(40, preferredSize.height) },
                 gap = 71
             ), c2)
 
@@ -220,9 +288,9 @@ class MainPanel(
             JPanel(GridBagLayout()).apply {
                 val c3 = GridBagConstraints()
 
-                // reset timer button
+                // reset combat button
                 c3.gridx = 0; c3.gridy = 0
-                add(resetTimerButton, c3)
+                add(resetCombatButton, c3)
 
                 // clear table button
                 c3.gridx++
@@ -230,43 +298,84 @@ class MainPanel(
                 add(clearTableButton, c3)
             }.also { add(it, c2) }
 
-            // separator
-            c2.gridy++
-            add(JSeparator(), c2)
-
-            // time checkbox
-            c2.gridy++
-            c2.fill = GridBagConstraints.NONE
-            c2.anchor = GridBagConstraints.FIRST_LINE_START
-            c2.insets = Insets(0, 0, 0, 0)
-            add(timeCheckBox, c2)
-
-            // dps checkbox
-            c2.gridy++
-            add(dpsCheckBox, c2)
-
-            // damage checkbox
-            c2.gridy++
-            add(damageCheckBox, c2)
-
-            // total damage checkbox
-            c2.gridy++
-            add(totalDamageCheckBox, c2)
-
-            // mitigated checkbox
-            c2.gridy++
-            add(mitigatedCheckBox, c2)
-
-            // total mitigated checkbox
-            c2.gridy++
-            add(totalMitigatedCheckBox, c2)
-
-            // reason checkbox
-            c2.gridy++
+            // checkboxes
+            c2.insets = Insets(40, 0, 0, 0) // ? not sure why top is required here
             c2.weighty = 1.0
-            c2.fill = GridBagConstraints.HORIZONTAL
+            c2.fill = GridBagConstraints.BOTH
             c2.anchor = GridBagConstraints.PAGE_START
-            add(reasonCheckBox, c2)
+            val checkboxScrollPane = JScrollPane(JPanel(GridBagLayout()).apply {
+                val c3 = GridBagConstraints()
+
+                // time checkbox
+                c3.gridy = 0
+                c3.fill = GridBagConstraints.HORIZONTAL
+                c3.weightx = 1.0
+                c3.anchor = GridBagConstraints.FIRST_LINE_START
+                c3.insets = Insets(0, 0, 0, 0)
+                add(timeCheckBox, c3)
+
+                // separator
+                c3.gridy++
+                add(JSeparator(), c3)
+
+                // dps checkbox
+                c3.gridy++
+                add(dpsCheckBox, c3)
+
+                // damage checkbox
+                c3.gridy++
+                add(damageCheckBox, c3)
+
+                // total damage checkbox
+                c3.gridy++
+                add(totalDamageCheckBox, c3)
+
+                // mitigated checkbox
+                c3.gridy++
+                add(mitigatedCheckBox, c3)
+
+                // total mitigated checkbox
+                c3.gridy++
+                add(totalMitigatedCheckBox, c3)
+
+                // separator
+                c3.gridy++
+                add(JSeparator(), c3)
+
+                // heal received checkbox
+                c3.gridy++
+                add(healReceivedCheckBox, c3)
+
+                // total heal received checkbox
+                c3.gridy++
+                add(totalHealReceivedCheckBox, c3)
+
+                // heal applied checkbox
+                c3.gridy++
+                add(healAppliedCheckBox, c3)
+
+                // total heal applied checkbox
+                c3.gridy++
+                add(totalHealAppliedCheckBox, c3)
+
+                // separator
+                c3.gridy++
+                add(JSeparator(), c3)
+
+                // reason checkbox
+                c3.gridy++
+                c3.weighty = 1.0
+                c3.fill = GridBagConstraints.HORIZONTAL
+                c3.anchor = GridBagConstraints.PAGE_START
+                add(reasonCheckBox, c3)
+            })
+
+            checkboxScrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            checkboxScrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+            checkboxScrollPane.minimumSize = Dimension(0, 0)
+            checkboxScrollPane.preferredSize = Dimension(0, 0)
+
+            add(checkboxScrollPane, c2)
 
             minimumSize = preferredSize
 
@@ -294,6 +403,14 @@ class MainPanel(
         mitigatedCheckBoxClick(null)
         totalMitigatedCheckBox.isSelected = false
         totalMitigatedCheckBoxClick(null)
+        healReceivedCheckBox.isSelected = false
+        healReceivedCheckBoxClick(null)
+        totalHealReceivedCheckBox.isSelected = false
+        totalHealReceivedCheckBoxClick(null)
+        healAppliedCheckBox.isSelected = false
+        healAppliedCheckBoxClick(null)
+        totalHealAppliedCheckBox.isSelected = false
+        totalHealAppliedCheckBoxClick(null)
 
         // key binds
         isFocusable = true
@@ -331,6 +448,12 @@ class MainPanel(
 
         onTopCheckBox.isSelected = configData.onTop
 
+        trackDamageCheckBox.isSelected = configData.trackDamage
+        trackHealReceivedCheckBox.isSelected = configData.trackHealReceived
+        trackHealAppliedCheckBox.isSelected = configData.trackHealApplied
+
+        godsOnlyCheckBox.isSelected = configData.godsOnly
+
         if (configData.columnOrder != null) {
             for (i in 0..configData.columnOrder!!.lastIndex) {
                 val targetCol = configData.columnOrder!![i]
@@ -358,6 +481,10 @@ class MainPanel(
                     "Σ Damage" -> totalDamageCheckBox.isSelected = selected
                     "Mitigated" -> mitigatedCheckBox.isSelected = selected
                     "Σ Mitigated" -> totalMitigatedCheckBox.isSelected = selected
+                    "Heal Received" -> healReceivedCheckBox.isSelected = selected
+                    "Σ Heal Received" -> totalHealReceivedCheckBox.isSelected = selected
+                    "Heal Applied" -> healAppliedCheckBox.isSelected = selected
+                    "Σ Heal Applied" -> totalHealAppliedCheckBox.isSelected = selected
                     "Reason" -> reasonCheckBox.isSelected = selected
                 }
 
@@ -374,23 +501,21 @@ class MainPanel(
         }
 
         // update damage tracker
-        damageTracker.nameField = nameField
+        combatTracker.nameField = nameField
 
-        damageTracker.tableModel = table.model as DefaultTableModel
+        combatTracker.tableModel = table.model as DefaultTableModel
 
-        damageTracker.addTableListener(::tableUpdate)
-        damageTracker.addCombatLogListener(::combatLogUpdate)
+        combatTracker.addTableListener(::tableUpdate)
+        combatTracker.addCombatLogListener(::combatLogUpdate)
     }
 
 /* ------------------------------------------ Listeners ----------------------------------------- */
+
 
     /** Handles shortcut key actions */
     private fun shortcutButtonPress(e: KeyEvent?) {
         if (e != null) {
             when (e.keyCode) {
-                KeyEvent.VK_SPACE -> {
-                    println(table.tableHeader.height)
-                }
                 KeyEvent.VK_ESCAPE -> {
                     if (sidebar.isVisible) minimizeSidebarButtonClick(null)
                     else maximizeSidebarButtonClick(null)
@@ -399,36 +524,24 @@ class MainPanel(
                     onTopCheckBox.isSelected = !onTopCheckBox.isSelected
                     onTopCheckBoxClick(null)
                 }
-                KeyEvent.VK_R -> { resetTimerButtonClick(null) }
-                KeyEvent.VK_C -> { clearTableButtonClick(null) }
                 KeyEvent.VK_1 -> {
-                    timeCheckBox.isSelected = !timeCheckBox.isSelected
-                    timeCheckBoxClick(null)
+                    trackDamageCheckBox.isSelected = !trackDamageCheckBox.isSelected
+                    trackDamageCheckBoxClick(null)
                 }
                 KeyEvent.VK_2 -> {
-                    dpsCheckBox.isSelected = !dpsCheckBox.isSelected
-                    dpsCheckBoxClick(null)
+                    trackHealReceivedCheckBox.isSelected = !trackHealReceivedCheckBox.isSelected
+                    trackHealReceivedCheckBoxClick(null)
                 }
                 KeyEvent.VK_3 -> {
-                    damageCheckBox.isSelected = !damageCheckBox.isSelected
-                    damageCheckBoxClick(null)
+                    trackHealAppliedCheckBox.isSelected = !trackHealAppliedCheckBox.isSelected
+                    trackHealAppliedCheckBoxClick(null)
                 }
-                KeyEvent.VK_4 -> {
-                    totalDamageCheckBox.isSelected = !totalDamageCheckBox.isSelected
-                    totalDamageCheckBoxClick(null)
+                KeyEvent.VK_G -> {
+                    godsOnlyCheckBox.isSelected = !godsOnlyCheckBox.isSelected
+                    godsOnlyCheckBoxClick(null)
                 }
-                KeyEvent.VK_5 -> {
-                    mitigatedCheckBox.isSelected = !mitigatedCheckBox.isSelected
-                    mitigatedCheckBoxClick(null)
-                }
-                KeyEvent.VK_6 -> {
-                    totalMitigatedCheckBox.isSelected = !totalMitigatedCheckBox.isSelected
-                    totalMitigatedCheckBoxClick(null)
-                }
-                KeyEvent.VK_7 -> {
-                    reasonCheckBox.isSelected = !reasonCheckBox.isSelected
-                    reasonCheckBoxClick(null)
-                }
+                KeyEvent.VK_R -> { resetCombatButtonClick(null) }
+                KeyEvent.VK_C -> { clearTableButtonClick(null) }
             }
         }
     }
@@ -447,11 +560,35 @@ class MainPanel(
         (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
     }
 
+    /** Toggles using only using God damage or healing in the output table & DPS calculations. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun trackDamageCheckBoxClick(e: ActionEvent?) {
+        combatTracker.trackDamage = trackDamageCheckBox.isSelected
+    }
+
+    /** Toggles using only using God damage or healing in the output table & DPS calculations. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun trackHealReceivedCheckBoxClick(e: ActionEvent?) {
+        combatTracker.trackHealReceived = trackHealReceivedCheckBox.isSelected
+    }
+
+    /** Toggles using only using God damage or healing in the output table & DPS calculations. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun trackHealAppliedCheckBoxClick(e: ActionEvent?) {
+        combatTracker.trackHealApplied = trackHealAppliedCheckBox.isSelected
+    }
+
+    /** Toggles using only using God damage or healing in the output table & DPS calculations. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun godsOnlyCheckBoxClick(e: ActionEvent?) {
+        combatTracker.godsOnly = godsOnlyCheckBox.isSelected
+    }
+
     /** Resets the name field. */
     @Suppress("UNUSED_PARAMETER")
     private fun nameFieldResetButtonClick(e: ActionEvent?) {
         nameField.text = "Searching..."
-        damageTracker.updateIGN("")
+        combatTracker.updateIGN("")
     }
 
     /** Sets the font size for the table rows. */
@@ -463,15 +600,17 @@ class MainPanel(
         table.rowHeight = table.font.size + 5
     }
 
-    /** Resets the timer used by the damage tracker. */
+    /** Resets the combat tracker. */
     @Suppress("UNUSED_PARAMETER")
-    private fun resetTimerButtonClick(e: ActionEvent?) { damageTracker.resetTimer() }
+    private fun resetCombatButtonClick(e: ActionEvent?) {
+        combatTracker.resetTracking()
+    }
 
     /** Resets the time and clears the table. */
     @Suppress("UNUSED_PARAMETER")
     private fun clearTableButtonClick(e: ActionEvent?) {
-        damageTracker.clearTable(false)
-        damageTracker.resetTimer()
+        combatTracker.clearTable(false)
+        combatTracker.resetTracking()
     }
 
     /** Reveals the sidebar. */
@@ -531,6 +670,30 @@ class MainPanel(
     @Suppress("UNUSED_PARAMETER")
     private fun totalMitigatedCheckBoxClick(actionEvent: ActionEvent?) {
         setColumnVisible("Σ Mitigated", totalMitigatedCheckBox.isSelected)
+    }
+
+    /** Toggles the table heal received column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun healReceivedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Heal Received", healReceivedCheckBox.isSelected)
+    }
+
+    /** Toggles the table total heal received column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun totalHealReceivedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Σ Heal Received", totalHealReceivedCheckBox.isSelected)
+    }
+
+    /** Toggles the table heal applied column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun healAppliedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Heal Applied", healAppliedCheckBox.isSelected)
+    }
+
+    /** Toggles the table total heal applied column. */
+    @Suppress("UNUSED_PARAMETER")
+    private fun totalHealAppliedCheckBoxClick(actionEvent: ActionEvent?) {
+        setColumnVisible("Σ Heal Applied", totalHealAppliedCheckBox.isSelected)
     }
 
     /** Toggles the table reason column. */

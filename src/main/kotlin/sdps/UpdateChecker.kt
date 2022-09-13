@@ -5,6 +5,7 @@
 package sdps
 
 import org.kohsuke.github.GitHub
+import sdps.ConfigManager.save
 import java.awt.Desktop
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -34,7 +35,7 @@ object UpdateChecker {
                         val c = GridBagConstraints()
                         c.gridx = 0
                         c.gridy = 0
-                        c.gridwidth = 2
+                        c.gridwidth = 3
                         c.anchor = GridBagConstraints.LINE_START
                         c.weightx = 1.0
                         c.weighty = 1.0
@@ -48,7 +49,7 @@ object UpdateChecker {
                         c.gridy++
                         c.gridwidth = 1
                         c.anchor = GridBagConstraints.CENTER
-                        c.insets = Insets(0, 10, 10, 10)
+                        c.insets = Insets(0, 10, 10, 5)
                         JButton("Download").apply {
                             addActionListener {
                                 Desktop.getDesktop()
@@ -57,9 +58,26 @@ object UpdateChecker {
                         }.also { add(it, c) }
 
                         c.gridx++
-                        c.insets = Insets(0, 0, 10, 10)
+                        c.insets = Insets(0, 5, 10, 5)
                         JButton("Ignore").apply {
                             addActionListener {
+                                jFrame.dispatchEvent(WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING))
+                            }
+                        }.also { add(it, c) }
+
+                        c.gridx++
+                        c.insets = Insets(0, 5, 10, 10)
+                        JButton("Always Ignore").apply {
+                            addActionListener {
+                                // update config & save config
+                                val configData =
+                                    if (ConfigManager.load() != null) ConfigManager.load()!!
+                                    else ConfigManager.ConfigData()
+
+                                configData.updateCheck = false
+
+                                configData.save()
+
                                 jFrame.dispatchEvent(WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING))
                             }
                         }.also { add(it, c) }

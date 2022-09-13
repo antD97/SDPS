@@ -43,6 +43,10 @@ object ConfigManager {
             sb.appendKeyValuePair("ign", ign)
             sb.appendKeyValuePair("sidebar", sidebar)
             sb.appendKeyValuePair("onTop", onTop)
+            sb.appendKeyValuePair("trackDamage", trackDamage)
+            sb.appendKeyValuePair("trackHealReceived", trackHealReceived)
+            sb.appendKeyValuePair("trackHealApplied", trackHealApplied)
+            sb.appendKeyValuePair("godsOnly", godsOnly)
             sb.appendKeyValuePair("columnOrder", columnOrder)
             sb.appendKeyValuePair("columnWidths", columnWidths)
             sb.appendKeyValuePair("rowSize", rowSize)
@@ -55,7 +59,7 @@ object ConfigManager {
 
     fun load(path: String = defaultSavePath): ConfigData? {
         val f = File(path)
-        val sd = ConfigData()
+        val cd = ConfigData()
 
         return if (f.isFile) {
             for (line in f.readLines()) {
@@ -66,19 +70,23 @@ object ConfigManager {
                     val value = lineData[1].trim()
 
                     when (key) {
-                        "loc" ->          sd.loc = value.toIntPairOrNull()?.toPoint()
-                        "size" ->         sd.size = value.toIntPairOrNull()?.toDimension()
-                        "ign" ->          sd.ign = value
-                        "sidebar" ->      sd.sidebar = value.toBoolean()
-                        "onTop" ->        sd.onTop = value.toBoolean()
-                        "columnOrder" ->  sd.columnOrder = value.split(",").map { it.trim() }
-                        "columnWidths" -> sd.columnWidths = value.toIntListOrNull()
-                        "rowSize" ->      sd.rowSize = value.toInt()
-                        "updateCheck" ->  sd.updateCheck = value.toBoolean()
+                        "loc" ->                cd.loc = value.toIntPairOrNull()?.toPoint()
+                        "size" ->               cd.size = value.toIntPairOrNull()?.toDimension()
+                        "ign" ->                cd.ign = value
+                        "sidebar" ->            cd.sidebar = value.toBoolean()
+                        "onTop" ->              cd.onTop = value.toBoolean()
+                        "trackDamage" ->        cd.trackDamage = value.toBoolean()
+                        "trackHealReceived" ->  cd.trackHealReceived = value.toBoolean()
+                        "trackHealApplied" ->   cd.trackHealApplied = value.toBoolean()
+                        "godsOnly" ->           cd.godsOnly = value.toBoolean()
+                        "columnOrder" ->        cd.columnOrder = value.split(",").map { it.trim() }
+                        "columnWidths" ->       cd.columnWidths = value.toIntListOrNull()
+                        "rowSize" ->            cd.rowSize = value.toInt()
+                        "updateCheck" ->        cd.updateCheck = value.toBoolean()
                     }
                 }
             }
-            sd
+            cd
         } else null
     }
 
@@ -87,6 +95,10 @@ object ConfigManager {
                           var ign: String? = null,
                           var sidebar: Boolean = true,
                           var onTop: Boolean = false,
+                          var trackDamage: Boolean = true,
+                          var trackHealReceived: Boolean = false,
+                          var trackHealApplied: Boolean = false,
+                          var godsOnly: Boolean = true,
                           var columnOrder: List<String>? = null,
                           var columnWidths: List<Int>? = null,
                           var rowSize: Int = 12,

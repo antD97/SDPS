@@ -14,21 +14,28 @@ fun main() {
     val version = object {}.javaClass.getResource("/version.txt").readText()
 
     PopupUncaughtExceptionHandler.set()
-    val damageTracker = DamageTracker()
+    val combatTracker = CombatTracker()
 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     val jFrame = JFrame()
     // min size of window with sidebar
-    val windowSidebarMinSize = Dimension(300, 437)
+    val windowSidebarMinSize = Dimension(300, 425)
     // min size of window without sidebar
     val windowSmallMinSize = Dimension(150, 100)
 
-    // load save data. if none, use defaults
-    val configData =
+    // load config data. if none, use defaults
+    val loadConfigData =
         if (ConfigManager.load() != null) ConfigManager.load()!!
         else ConfigManager.ConfigData()
 
-    val mainPanel = MainPanel(damageTracker, configData, windowSidebarMinSize, windowSmallMinSize)
+    combatTracker.godsOnly = loadConfigData.godsOnly
+    combatTracker.trackDamage = loadConfigData.trackDamage
+    combatTracker.trackHealReceived = loadConfigData.trackHealReceived
+    combatTracker.trackHealApplied = loadConfigData.trackHealApplied
+
+    if (loadConfigData.ign != null) combatTracker.updateIGN(loadConfigData.ign!!)
+
+    val mainPanel = MainPanel(combatTracker, loadConfigData, windowSidebarMinSize, windowSmallMinSize)
 
     SwingUtilities.invokeAndWait {
         PopupUncaughtExceptionHandler.set()
@@ -40,10 +47,10 @@ fun main() {
             add(mainPanel)
 
             // load saved window data
-            if (configData.size != null) size = configData.size else pack()
-            if (configData.loc != null) location = configData.loc!! else setLocationRelativeTo(null)
-            minimumSize = if (configData.sidebar) windowSidebarMinSize else windowSmallMinSize
-            isAlwaysOnTop = configData.onTop
+            if (loadConfigData.size != null) size = loadConfigData.size else pack()
+            if (loadConfigData.loc != null) location = loadConfigData.loc!! else setLocationRelativeTo(null)
+            minimumSize = if (loadConfigData.sidebar) windowSidebarMinSize else windowSmallMinSize
+            isAlwaysOnTop = loadConfigData.onTop
 
             isVisible = true
         }
@@ -52,24 +59,33 @@ fun main() {
     // save config on close
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
+            // reload config data
+            val saveConfigData =
+                if (ConfigManager.load() != null) ConfigManager.load()!!
+                else ConfigManager.ConfigData()
+
             ConfigManager.ConfigData(
                 jFrame.location,
                 jFrame.size,
                 if (mainPanel.ign != "Searching...") mainPanel.ign else null,
-                mainPanel.isSidebarEnabled,
-                mainPanel.isOnTopEnabled,
+                mainPanel.sidebarEnabled,
+                mainPanel.onTopEnabled,
+                mainPanel.trackDamageEnabled,
+                mainPanel.trackHealReceivedEnabled,
+                mainPanel.trackHealAppliedEnabled,
+                mainPanel.godsOnlyEnabled,
                 mainPanel.columnOrder,
                 mainPanel.columnWidths,
                 mainPanel.rowSize,
-                configData.updateCheck
+                saveConfigData.updateCheck
             ).save()
         }
     })
 
     // check for new release
-    if (configData.updateCheck) {
+    if (loadConfigData.updateCheck) {
         UpdateChecker.check(version)
     }
 
-    damageTracker.run()
+    combatTracker.run()
 }
