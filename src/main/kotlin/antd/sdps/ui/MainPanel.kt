@@ -1,9 +1,11 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps.ui
 
+import antd.sdps.combat.CombatTracker
+import antd.sdps.ConfigManager
 import java.awt.*
 import java.awt.event.*
 import java.io.File
@@ -79,6 +81,7 @@ class MainPanel(
             addActionListener(::trackDamageCheckBoxClick)
             toolTipText = "Track & print damage onto the table (1)"
             isSelected = true
+            background = OutputTable.damageColor
         }
 
     private val trackHealReceivedCheckBox = JCheckBox("Track Heal Received")
@@ -86,6 +89,7 @@ class MainPanel(
             addActionListener(::trackHealReceivedCheckBoxClick)
             toolTipText = "Track & print heal received onto the table (2)"
             isSelected = false
+            background = OutputTable.healReceivedColor
         }
 
     private val trackHealAppliedCheckBox = JCheckBox("Track Heal Applied")
@@ -93,6 +97,7 @@ class MainPanel(
             addActionListener(::trackHealAppliedCheckBoxClick)
             toolTipText = "Track & print heal applied onto the table (3)"
             isSelected = false
+            background = OutputTable.healAppliedColor
         }
 
     private val godsOnlyCheckBox = JCheckBox("Gods Only")
@@ -111,7 +116,7 @@ class MainPanel(
     private val nameFieldResetButton = JButton("↺")
         .apply {
             addActionListener(::nameFieldResetButtonClick)
-            toolTipText = "Resets the in-game name; will be set on the next tick of damage"
+            toolTipText = "Resets the in-game name tracked; will be set on the next tick of damage"
         }
 
     private val combatLogField = JTextField(13)
@@ -251,6 +256,7 @@ class MainPanel(
 
             // track damage checkbox
             c2.gridy++
+            c2.fill = GridBagConstraints.HORIZONTAL
             add(trackDamageCheckBox, c2)
 
             // track heal received checkbox
@@ -263,6 +269,7 @@ class MainPanel(
 
             // gods only checkbox
             c2.gridy++
+            c2.fill = GridBagConstraints.NONE
             c2.insets = Insets(0, 0, 10, 0)
             add(godsOnlyCheckBox, c2)
 
@@ -276,7 +283,8 @@ class MainPanel(
 
             // row size spinner
             c2.gridy++
-            add(LabelPanel(
+            add(
+                LabelPanel(
                 "Table Font Size",
                 rowSizeSpinner.apply { preferredSize = Dimension(40, preferredSize.height) },
                 gap = 71
@@ -299,7 +307,7 @@ class MainPanel(
             }.also { add(it, c2) }
 
             // checkboxes
-            c2.insets = Insets(40, 0, 0, 0) // ? not sure why top is required here
+            c2.gridy++
             c2.weighty = 1.0
             c2.fill = GridBagConstraints.BOTH
             c2.anchor = GridBagConstraints.PAGE_START

@@ -1,11 +1,11 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps
 
+import antd.sdps.ConfigManager.save
 import org.kohsuke.github.GitHub
-import sdps.ConfigManager.save
 import java.awt.Desktop
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -23,14 +23,14 @@ object UpdateChecker {
 
         if ("v$currVer" != latestTag) {
 
-            // create the message window
-            val jFrame = JFrame("New Version")
-
             SwingUtilities.invokeAndWait {
-                jFrame.apply {
-                    defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
 
-                    // window content
+                // create new window
+                val jFrame = JFrame("New Version")
+
+                jFrame.apply {
+
+                    // content
                     add(JPanel(GridBagLayout()).apply {
                         val c = GridBagConstraints()
                         c.gridx = 0
@@ -52,8 +52,9 @@ object UpdateChecker {
                         c.insets = Insets(0, 10, 10, 5)
                         JButton("Download").apply {
                             addActionListener {
-                                Desktop.getDesktop()
-                                    .browse(URI("https://github.com/antD97/SDPS/releases/tag/$latestTag"))
+                                Desktop.getDesktop().browse(
+                                    URI("https://github.com/antD97/SDPS/releases/tag/$latestTag")
+                                )
                             }
                         }.also { add(it, c) }
 
@@ -61,7 +62,9 @@ object UpdateChecker {
                         c.insets = Insets(0, 5, 10, 5)
                         JButton("Ignore").apply {
                             addActionListener {
-                                jFrame.dispatchEvent(WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING))
+                                jFrame.dispatchEvent(
+                                    WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING)
+                                )
                             }
                         }.also { add(it, c) }
 
@@ -69,22 +72,21 @@ object UpdateChecker {
                         c.insets = Insets(0, 5, 10, 10)
                         JButton("Always Ignore").apply {
                             addActionListener {
-                                // update config & save config
-                                val configData =
-                                    if (ConfigManager.load() != null) ConfigManager.load()!!
-                                    else ConfigManager.ConfigData()
-
+                                // update & save config
+                                val configData = ConfigManager.load() ?: ConfigManager.ConfigData()
                                 configData.updateCheck = false
-
                                 configData.save()
 
-                                jFrame.dispatchEvent(WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING))
+                                jFrame.dispatchEvent(
+                                    WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING)
+                                )
                             }
                         }.also { add(it, c) }
                     })
 
                     pack()
                     setLocationRelativeTo(null)
+                    defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
                     isAlwaysOnTop = true
                     isResizable = false
                     isVisible = true

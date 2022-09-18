@@ -1,12 +1,13 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps.combat
 
 import java.io.File
 import javax.swing.JFileChooser
 
+/** Used to find the combat log file. */
 object CombatLogFinder {
 
     private val documentsDir = JFileChooser().fileSystemView.defaultDirectory
@@ -15,18 +16,11 @@ object CombatLogFinder {
 
     /** Tries to locate the combat log file automatically. If it can't be found, returns null. */
     fun search(): File? {
-
-        if (defaultSmiteLogsDir.isDirectory) {
-
-            val combatLogs = mutableListOf<File>()
-            for (f in defaultSmiteLogsDir.listFiles()!!) {
-                if (f.name.contains("CombatLog_") && !f.name.contains("backup"))
-                    combatLogs.add(f)
-            }
-
-            return combatLogs.maxByOrNull { it.lastModified() }
-        }
-
-        return null
+        return if (defaultSmiteLogsDir.isDirectory) {
+            defaultSmiteLogsDir.listFiles()!!
+                .filter { it.name.contains("CombatLog_") }
+                .filterNot { it.name.contains("backup") }
+                .maxByOrNull { it.lastModified() }
+        } else null
     }
 }

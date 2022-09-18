@@ -1,8 +1,8 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps
 
 import java.awt.Dimension
 import java.awt.Point
@@ -18,25 +18,6 @@ object ConfigManager {
 
         return if (!f.exists() || f.isFile) {
             val sb = StringBuilder()
-
-            fun StringBuilder.appendKeyValuePair(key: String, point: Point?) {
-                if (point != null) append("$key=${point.x},${point.y}\n")
-            }
-            fun StringBuilder.appendKeyValuePair(key: String, dim: Dimension?) {
-                if (dim != null) append("$key=${dim.width},${dim.height}\n")
-            }
-            fun StringBuilder.appendKeyValuePair(key: String, str: String?) {
-                if (str != null) append("$key=$str\n")
-            }
-            fun StringBuilder.appendKeyValuePair(key: String, bool: Boolean?) {
-                if (bool != null) append("$key=$bool\n")
-            }
-            fun StringBuilder.appendKeyValuePair(key: String, list: List<*>?) {
-                if (list != null) append("$key=${list.joinToString(",")}\n")
-            }
-            fun StringBuilder.appendKeyValuePair(key: String, x: Int?) {
-                if (x != null) append("$key=$x\n")
-            }
 
             sb.appendKeyValuePair("loc", loc)
             sb.appendKeyValuePair("size", size)
@@ -105,6 +86,30 @@ object ConfigManager {
                           var updateCheck: Boolean = true)
 
 /* -------------------------------------------- Util -------------------------------------------- */
+
+    private fun StringBuilder.appendKeyValuePair(key: String, point: Point?) {
+        if (point != null) append("$key=${point.x},${point.y}\n")
+    }
+
+    private fun StringBuilder.appendKeyValuePair(key: String, dim: Dimension?) {
+        if (dim != null) append("$key=${dim.width},${dim.height}\n")
+    }
+
+    private fun StringBuilder.appendKeyValuePair(key: String, str: String?) {
+        if (str != null) append("$key=$str\n")
+    }
+
+    private fun StringBuilder.appendKeyValuePair(key: String, bool: Boolean?) {
+        if (bool != null) append("$key=$bool\n")
+    }
+
+    private fun StringBuilder.appendKeyValuePair(key: String, list: List<*>?) {
+        if (list != null) append("$key=${list.joinToString(",")}\n")
+    }
+
+    private fun StringBuilder.appendKeyValuePair(key: String, x: Int?) {
+        if (x != null) append("$key=$x\n")
+    }
 
     /**
      * Loads a [Pair]<Int, Int> from a comma separated [String]. Returns null, if the String format

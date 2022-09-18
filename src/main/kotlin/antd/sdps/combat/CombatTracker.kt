@@ -1,36 +1,37 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps.combat
 
+import antd.sdps.ConfigManager
 import java.io.File
 import javax.swing.JTextField
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableModel
 
 /** Monitors the newest combat log file and updates a table with damage information. */
-class CombatTracker {
+class CombatTracker(configData: ConfigManager.ConfigData) {
 
     // gui name field
     var nameField = JTextField()
 
-    /** Toggles only tracking combat involving gods. */
-    var godsOnly = true
-
     /** Toggles damage tracking. */
-    var trackDamage = true
+    var trackDamage = configData.trackDamage
     /** Toggles heal received tracking. */
-    var trackHealReceived = false
+    var trackHealReceived = configData.trackHealReceived
     /** Toggles heal applied tracking. */
-    var trackHealApplied = false
+    var trackHealApplied = configData.trackHealApplied
+
+    /** Toggles only tracking combat involving gods. */
+    var godsOnly = configData.godsOnly
 
     /** The table model that the tracker updates. */
     var tableModel = DefaultTableModel()
     private var tableListeners = mutableListOf<() -> Unit>()
 
     private var ign = ""
-    private var updatedIGN: String? = null
+    private var updatedIGN: String? = configData.ign
 
     private var combatLog: File? = null
         set(value) {
@@ -49,6 +50,8 @@ class CombatTracker {
 
     private var totalHealReceived = 0
     private var totalHealApplied = 0
+
+    private var lastRow: Array<String>? = null
 
     /** Tells the damage tracker to update the in-game name. */
     fun updateIGN(ign: String) { updatedIGN = ign }
@@ -87,6 +90,25 @@ class CombatTracker {
 
                     // all other lines
                     else if (line != null && line != "") {
+
+                        // remove asterisks from rows that indicate potential hidden damage
+                        if (lastRow?.get(3)?.endsWith("*") == true) {
+                            val tempRow = lastRow!!
+                            removeTableRow(tableModel.rowCount - 1)
+                            addTableRow(
+                                tempRow[0],
+                                tempRow[1].removeSuffix("*"),
+                                tempRow[2],
+                                tempRow[3].removeSuffix("*"),
+                                tempRow[4],
+                                tempRow[5],
+                                tempRow[6],
+                                tempRow[7],
+                                tempRow[8],
+                                tempRow[9],
+                                tempRow[10]
+                            )
+                        }
 
                         val lineData = readLineData(line)
                         val type = lineData[1]
@@ -151,16 +173,15 @@ class CombatTracker {
 
                                             addTableRow(
                                                 (time.msToSec() - startTime.msToSec()).timeFormat(),
-                                                calcDPS(startTime.msToSec(), time.msToSec(),
-                                                    totalDamage),
-                                                damage.toString(),
-                                                totalDamage.toString(),
-                                                mitigated.toString(),
-                                                totalMitigated.toString(),
+                                                "${calcDPS(startTime.msToSec(), time.msToSec(), totalDamage)}*",
+                                                "$damage",
+                                                "$totalDamage*",
+                                                "$mitigated",
+                                                "$totalMitigated",
                                                 "",
-                                                totalHealReceived.toString(),
+                                                "$totalHealReceived",
                                                 "",
-                                                totalHealApplied.toString(),
+                                                "$totalHealApplied",
                                                 reason)
 
                                             addTableRow("Reset", "Reset", "Reset", "Reset",
@@ -178,15 +199,15 @@ class CombatTracker {
 
                                         addTableRow(
                                             "0.00s",
-                                            "0.00",
-                                            damage.toString(),
-                                            totalDamage.toString(),
-                                            mitigated.toString(),
-                                            totalMitigated.toString(),
+                                            "0.00*",
+                                            "$damage",
+                                            "$totalDamage*",
+                                            "$mitigated",
+                                            "$totalMitigated",
                                             "",
-                                            totalHealReceived.toString(),
+                                            "$totalHealReceived",
                                             "",
-                                            totalHealApplied.toString(),
+                                            "$totalHealApplied",
                                             reason)
                                     }
                                 } else {
@@ -195,16 +216,15 @@ class CombatTracker {
 
                                     addTableRow(
                                         (time.msToSec() - startTime.msToSec()).timeFormat(),
-                                        calcDPS(startTime.msToSec(), time.msToSec(),
-                                            totalDamage),
-                                        damage.toString(),
-                                        totalDamage.toString(),
-                                        mitigated.toString(),
-                                        totalMitigated.toString(),
+                                        "${calcDPS(startTime.msToSec(), time.msToSec(), totalDamage)}*",
+                                        "$damage",
+                                        "$totalDamage*",
+                                        "$mitigated",
+                                        "$totalMitigated",
                                         "",
-                                        totalHealReceived.toString(),
+                                        "$totalHealReceived",
                                         "",
-                                        totalHealApplied.toString(),
+                                        "$totalHealApplied",
                                         reason)
                                 }
                             }
@@ -315,7 +335,7 @@ class CombatTracker {
             resetTimerTime = System.currentTimeMillis()
             addTableRow("Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset",
                 "Reset", "Reset", "Reset", false)
-            tableListeners.forEach { it() }
+            tableListeners.forEach { it.invoke() }
         }
     }
 
@@ -345,7 +365,7 @@ class CombatTracker {
 
     /**
      * Adds a row to the table.
-     * @param safe whether or not to invoke and wait on the EDT
+     * @param invokeAndWait whether to invoke and wait on the EDT
      */
     private fun addTableRow(time: String,
                             dps: String,
@@ -358,47 +378,35 @@ class CombatTracker {
                             healApplied: String,
                             totalHealApplied: String,
                             reason: String,
-                            safe: Boolean = true) {
+                            invokeAndWait: Boolean = true) {
 
-        if (safe) {
-            SwingUtilities.invokeAndWait {
-                tableModel.addRow(arrayOf(
-                    time,
-                    dps,
-                    damage,
-                    totalDamage,
-                    mitigated,
-                    totalMitigated,
-                    healReceived,
-                    totalHealReceived,
-                    healApplied,
-                    totalHealApplied,
-                    reason
-                ))
-            }
-        } else {
-            tableModel.addRow(arrayOf(
-                time,
-                dps,
-                damage,
-                totalDamage,
-                mitigated,
-                totalMitigated,
-                healReceived,
-                totalHealReceived,
-                healApplied,
-                totalHealApplied,
-                reason
-            ))
-        }
+        val rowArray = arrayOf(
+            time,
+            dps,
+            damage,
+            totalDamage,
+            mitigated,
+            totalMitigated,
+            healReceived,
+            totalHealReceived,
+            healApplied,
+            totalHealApplied,
+            reason
+        )
 
-        tableListeners.forEach { it() }
+        if (invokeAndWait) SwingUtilities.invokeAndWait { tableModel.addRow(rowArray) }
+        else tableModel.addRow(rowArray)
+
+        lastRow = rowArray
+        tableListeners.forEach { it.invoke() }
     }
 
     /** @param safe whether or not to invoke and wait on the EDT */
     private fun removeTableRow(i: Int, safe: Boolean = true) {
         if (safe) SwingUtilities.invokeAndWait { tableModel.removeRow(i) }
         else tableModel.removeRow(i)
+
+        lastRow = null
     }
 
     /** @param safe whether or not to invoke and wait on the EDT */
@@ -406,7 +414,7 @@ class CombatTracker {
     fun clearTable(safe: Boolean = true) {
         if (safe) SwingUtilities.invokeAndWait { tableModel.rowCount = 0 }
         else tableModel.rowCount = 0
-        tableListeners.forEach { it() }
+        tableListeners.forEach { it.invoke() }
     }
 
     /** Formats the value to look good in the table. */

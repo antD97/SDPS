@@ -16,16 +16,17 @@ repositories {
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation group: 'org.kohsuke', name: 'github-api', version: '1.129'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
 }
 
 jar {
     manifest {
-        attributes 'Main-Class': 'sdps.MainKt'
+        attributes 'Main-Class': 'antd.sdps.MainKt'
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
-mainClassName = 'sdps.MainKt'
+mainClassName = 'antd.sdps.MainKt'
 
 task createProperties() {
     doLast {
@@ -45,7 +46,7 @@ runtime {
 
 launch4j {
     headerType = 'gui'
-    mainClassName = 'sdps.MainKt'
+    mainClassName = 'antd.sdps.MainKt'
     outfile = "$project.name-${project.version}.exe"
     jar = "$buildDir/libs/$project.name-${project.version}.jar"
     bundledJrePath = 'jre'

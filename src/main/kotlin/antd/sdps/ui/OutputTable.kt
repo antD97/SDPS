@@ -1,8 +1,8 @@
 /*
- * Copyright © 2021 antD97
+ * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package sdps
+package antd.sdps.ui
 
 import java.awt.Color
 import java.awt.Component
@@ -13,6 +13,13 @@ import javax.swing.table.TableCellRenderer
 
 /** Customized table with output columns and colorized rows. */
 class OutputTable(rowSize: Int) : JTable() {
+
+    companion object {
+        val damageColor: Color = Color.decode("#eab4b7")
+        val darkDamageColor: Color = Color.decode("#cc9699")
+        val healReceivedColor: Color = Color.decode("#b8dfef")
+        val healAppliedColor: Color = Color.decode("#c0efb8")
+    }
 
     init {
         model = DefaultTableModel(arrayOf(), arrayOf(
@@ -38,10 +45,7 @@ class OutputTable(rowSize: Int) : JTable() {
     override fun prepareRenderer(renderer: TableCellRenderer?, row: Int, column: Int): Component {
         val c = super.prepareRenderer(renderer, row, column)
 
-        c.background = background   // default
-        val damageColor = Color.decode("#eab4b7")
-        val healReceivedColor = Color.decode("#b8dfef")
-        val healAppliedColor = Color.decode("#c0efb8")
+        c.background = background // default
 
         val modelRow = convertRowIndexToModel(row)
 
@@ -50,7 +54,12 @@ class OutputTable(rowSize: Int) : JTable() {
         val healApplied = model.getValueAt(modelRow, 8) as String
 
         when {
-            healReceived == "" && healApplied == "" -> c.background = damageColor
+            healReceived == "" && healApplied == "" -> {
+                c.background = damageColor
+                if ((model.getValueAt(modelRow, 3) as String).endsWith("*")) {
+                    c.background = darkDamageColor
+                }
+            }
             damage == "" && healApplied == "" -> c.background = healReceivedColor
             damage == "" && healReceived == "" -> c.background = healAppliedColor
         }
