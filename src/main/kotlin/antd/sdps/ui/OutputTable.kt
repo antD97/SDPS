@@ -15,31 +15,45 @@ import javax.swing.table.TableCellRenderer
 class OutputTable(rowSize: Int) : JTable() {
 
     companion object {
+        const val columnMaxWidth = Int.MAX_VALUE
+        const val columnMinWidth = 15
+
+        val columnNameGroups = listOf(
+            listOf(ColumnNames("Time")),
+            listOf(
+                ColumnNames("DPS"),
+                ColumnNames("Damage"),
+                ColumnNames("Total Damage", "Σ Damage"),
+                ColumnNames("Mitigated"),
+                ColumnNames("Total Mitigated", "Σ Mitigated"),
+            ),
+            listOf(
+                ColumnNames("Heal Received"),
+                ColumnNames("Total Heal Received", "Σ Heal Received"),
+                ColumnNames("Heal Applied"),
+                ColumnNames("Total Heal Applied", "Σ Heal Applied"),
+            ),
+            listOf(ColumnNames("Reason"))
+        )
+
         val damageColor: Color = Color.decode("#eab4b7")
         val darkDamageColor: Color = Color.decode("#cc9699")
         val healReceivedColor: Color = Color.decode("#b8dfef")
         val healAppliedColor: Color = Color.decode("#c0efb8")
+
+        data class ColumnNames(val full: String, val short: String = full)
     }
 
     init {
-        model = DefaultTableModel(arrayOf(), arrayOf(
-            "Time",
-            "DPS",
-            "Damage",
-            "Σ Damage",
-            "Mitigated",
-            "Σ Mitigated",
-            "Heal Received",
-            "Σ Heal Received",
-            "Heal Applied",
-            "Σ Heal Applied",
-            "Reason")
-        ).apply {
-            setDefaultEditor(Object::class.java, null)
-            font = Font(font.name, font.style, rowSize)
-            tableHeader.font = font
-            rowHeight = font.size + 5
-        }
+
+        model =
+            DefaultTableModel(arrayOf(), columnNameGroups.flatten().map { it.short }.toTypedArray())
+                .apply {
+                    setDefaultEditor(Object::class.java, null)
+                    font = Font(font.name, font.style, rowSize)
+                    tableHeader.font = font
+                    rowHeight = font.size + 5
+                }
     }
 
     override fun prepareRenderer(renderer: TableCellRenderer?, row: Int, column: Int): Component {
@@ -64,6 +78,6 @@ class OutputTable(rowSize: Int) : JTable() {
             damage == "" && healReceived == "" -> c.background = healAppliedColor
         }
 
-        return c;
+        return c
     }
 }

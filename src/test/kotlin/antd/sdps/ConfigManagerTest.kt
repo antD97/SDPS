@@ -15,7 +15,7 @@ class ConfigManagerTest {
 
     @Test
     fun configManager() {
-        val tempConfFile = File.createTempFile("sdps","conf")
+        val tempConfFile = File.createTempFile("sdps", "conf")
 
         val configData = ConfigManager.ConfigData(
             loc = Point(111, 222),

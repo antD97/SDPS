@@ -11,21 +11,22 @@ import antd.sdps.ui.MainJFrame
 class SaveConfigShutdownHook(private val mainJFrame: MainJFrame) : Thread() {
 
     override fun run() {
+        val mainPanel = mainJFrame.content
         val configData = ConfigManager.load() ?: ConfigManager.ConfigData()
 
         ConfigManager.ConfigData(
             loc = mainJFrame.location,
             size = mainJFrame.size,
-            ign = if (mainJFrame.content.ign != "Searching...") mainJFrame.content.ign else null,
-            sidebar = mainJFrame.content.sidebarEnabled,
-            onTop = mainJFrame.content.onTopEnabled,
-            trackDamage = mainJFrame.content.trackDamageEnabled,
-            trackHealReceived = mainJFrame.content.trackHealReceivedEnabled,
-            trackHealApplied = mainJFrame.content.trackHealAppliedEnabled,
-            godsOnly = mainJFrame.content.godsOnlyEnabled,
-            columnOrder = mainJFrame.content.columnOrder,
-            columnWidths = mainJFrame.content.columnWidths,
-            rowSize = mainJFrame.content.rowSize,
+            ign = if (mainPanel.getIgn() != "Searching...") mainPanel.getIgn() else null,
+            sidebar = mainPanel.isSidebarEnabled(),
+            onTop = mainPanel.isOnTopEnabled(),
+            trackDamage = mainPanel.isTrackDamageEnabled(),
+            trackHealReceived = mainPanel.isTrackHealReceivedEnabled(),
+            trackHealApplied = mainPanel.isTrackHealAppliedEnabled(),
+            godsOnly = mainPanel.isGodsOnlyEnabled(),
+            columnOrder = mainPanel.getColumnOrder(),
+            columnWidths = mainPanel.getColumnWidths(),
+            rowSize = mainPanel.getRowSize(),
             updateCheck = configData.updateCheck
         ).save()
     }

@@ -16,14 +16,16 @@ class MainJFrame(
     version: String
 ) : JFrame() {
 
-    private val sidebarDisabledMinSize = Dimension(300, 425)
-    private val sidebarEnabledMinSize = Dimension(150, 100)
+    companion object {
+        val sidebarDisabledMinSize = Dimension(300, 425)
+        val sidebarEnabledMinSize = Dimension(150, 100)
+    }
 
-    val content = MainPanel(combatTracker, configData, sidebarDisabledMinSize, sidebarEnabledMinSize)
+    val content = MainPanel(combatTracker, configData)
 
     init {
         title = "SDPS v$version - antD"
-        defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        defaultCloseOperation = EXIT_ON_CLOSE
         add(content)
 
         // load saved window data

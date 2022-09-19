@@ -51,19 +51,20 @@ object ConfigManager {
                     val value = lineData[1].trim()
 
                     when (key) {
-                        "loc" ->                cd.loc = value.toIntPairOrNull()?.toPoint()
-                        "size" ->               cd.size = value.toIntPairOrNull()?.toDimension()
-                        "ign" ->                cd.ign = value
-                        "sidebar" ->            cd.sidebar = value.toBoolean()
-                        "onTop" ->              cd.onTop = value.toBoolean()
-                        "trackDamage" ->        cd.trackDamage = value.toBoolean()
-                        "trackHealReceived" ->  cd.trackHealReceived = value.toBoolean()
-                        "trackHealApplied" ->   cd.trackHealApplied = value.toBoolean()
-                        "godsOnly" ->           cd.godsOnly = value.toBoolean()
-                        "columnOrder" ->        cd.columnOrder = value.split(",").map { it.trim() }
-                        "columnWidths" ->       cd.columnWidths = value.toIntListOrNull()
-                        "rowSize" ->            cd.rowSize = value.toInt()
-                        "updateCheck" ->        cd.updateCheck = value.toBoolean()
+                        "loc" -> cd.loc = value.toIntPairOrNull()?.toPoint()
+                        "size" -> cd.size = value.toIntPairOrNull()?.toDimension()
+                        "ign" -> cd.ign = value
+                        "sidebar" -> cd.sidebar = value.toBoolean()
+                        "onTop" -> cd.onTop = value.toBoolean()
+                        "trackDamage" -> cd.trackDamage = value.toBoolean()
+                        "trackHealReceived" -> cd.trackHealReceived = value.toBoolean()
+                        "trackHealApplied" -> cd.trackHealApplied = value.toBoolean()
+                        "godsOnly" -> cd.godsOnly = value.toBoolean()
+                        "columnOrder" -> cd.columnOrder = value.split(",")
+                            .map { it.trim() }
+                        "columnWidths" -> cd.columnWidths = value.toIntListOrNull()
+                        "rowSize" -> cd.rowSize = value.toInt()
+                        "updateCheck" -> cd.updateCheck = value.toBoolean()
                     }
                 }
             }
@@ -71,19 +72,21 @@ object ConfigManager {
         } else null
     }
 
-    data class ConfigData(var loc: Point? = null,
-                          var size: Dimension? = null,
-                          var ign: String? = null,
-                          var sidebar: Boolean = true,
-                          var onTop: Boolean = false,
-                          var trackDamage: Boolean = true,
-                          var trackHealReceived: Boolean = false,
-                          var trackHealApplied: Boolean = false,
-                          var godsOnly: Boolean = true,
-                          var columnOrder: List<String>? = null,
-                          var columnWidths: List<Int>? = null,
-                          var rowSize: Int = 12,
-                          var updateCheck: Boolean = true)
+    data class ConfigData(
+        var loc: Point? = null,
+        var size: Dimension? = null,
+        var ign: String? = null,
+        var sidebar: Boolean = true,
+        var onTop: Boolean = false,
+        var trackDamage: Boolean = true,
+        var trackHealReceived: Boolean = false,
+        var trackHealApplied: Boolean = false,
+        var godsOnly: Boolean = true,
+        var columnOrder: List<String>? = null,
+        var columnWidths: List<Int>? = null,
+        var rowSize: Int = 12,
+        var updateCheck: Boolean = true
+    )
 
 /* -------------------------------------------- Util -------------------------------------------- */
 
