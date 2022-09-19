@@ -5,7 +5,7 @@
 package antd.sdps.ui
 
 import antd.sdps.ConfigManager
-import antd.sdps.combat.CombatTracker
+import antd.sdps.combattracking.CombatTracker
 import java.awt.Dimension
 import javax.swing.JFrame
 

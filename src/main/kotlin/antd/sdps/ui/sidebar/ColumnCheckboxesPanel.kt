@@ -2,8 +2,9 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui
+package antd.sdps.ui.sidebar
 
+import antd.sdps.ui.OutputTable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets

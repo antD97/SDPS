@@ -36,16 +36,18 @@ class OutputTable(rowSize: Int) : JTable() {
             listOf(ColumnNames("Reason"))
         )
 
+        val darkResetColor: Color = Color.decode("#afafaf")
         val damageColor: Color = Color.decode("#eab4b7")
         val darkDamageColor: Color = Color.decode("#cc9699")
-        val healReceivedColor: Color = Color.decode("#b8dfef")
-        val healAppliedColor: Color = Color.decode("#c0efb8")
+        val healReceivedColor: Color = Color.decode("#b4dbea")
+        val darkHealReceivedColor: Color = Color.decode("#96bccc")
+        val healAppliedColor: Color = Color.decode("#bceab4")
+        val darkHealAppliedColor: Color = Color.decode("#9ecc96")
 
         data class ColumnNames(val full: String, val short: String = full)
     }
 
     init {
-
         model =
             DefaultTableModel(arrayOf(), columnNameGroups.flatten().map { it.short }.toTypedArray())
                 .apply {
@@ -68,14 +70,23 @@ class OutputTable(rowSize: Int) : JTable() {
         val healApplied = model.getValueAt(modelRow, 8) as String
 
         when {
+            // Reset* row
+            damage.contains("Reset*") -> c.background = darkResetColor
+            // damage row
             healReceived == "" && healApplied == "" -> {
-                c.background = damageColor
-                if ((model.getValueAt(modelRow, 3) as String).endsWith("*")) {
-                    c.background = darkDamageColor
-                }
+                if (damage.endsWith("*")) c.background = darkDamageColor
+                else c.background = damageColor
             }
-            damage == "" && healApplied == "" -> c.background = healReceivedColor
-            damage == "" && healReceived == "" -> c.background = healAppliedColor
+            // heal received row
+            damage == "" && healApplied == "" -> {
+                if (healReceived.endsWith("*")) c.background = darkHealReceivedColor
+                else c.background = healReceivedColor
+            }
+            // heal applied row
+            damage == "" && healReceived == "" -> {
+                if (healApplied.endsWith("*")) c.background = darkHealAppliedColor
+                else c.background = healAppliedColor
+            }
         }
 
         return c

@@ -2,7 +2,7 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.combat
+package antd.sdps.combattracking
 
 import java.io.File
 import javax.swing.JFileChooser

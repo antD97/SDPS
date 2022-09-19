@@ -5,7 +5,9 @@
 package antd.sdps.ui
 
 import antd.sdps.ConfigManager
-import antd.sdps.combat.CombatTracker
+import antd.sdps.combattracking.CombatTracker
+import antd.sdps.ui.sidebar.MinSidebarPanel
+import antd.sdps.ui.sidebar.SidebarPanel
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -130,8 +132,8 @@ class MainPanel(
         loadConfigData()
 
         // supply combat tracker with necessary ui components
-        combatTracker.nameField = sidebarPanel.nameField
-        combatTracker.tableModel = outputTable.model as DefaultTableModel
+        combatTracker.setNameField(sidebarPanel.nameField)
+        combatTracker.setTableModel(outputTable.model as DefaultTableModel)
 
         // combat tracker listeners
         combatTracker.addTableListener(::tableUpdate)

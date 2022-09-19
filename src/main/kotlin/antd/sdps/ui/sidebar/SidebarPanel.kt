@@ -2,10 +2,13 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui
+package antd.sdps.ui.sidebar
 
 import antd.sdps.ConfigManager
-import antd.sdps.combat.CombatTracker
+import antd.sdps.combattracking.CombatTracker
+import antd.sdps.ui.components.LabelPanel
+import antd.sdps.ui.MainJFrame
+import antd.sdps.ui.OutputTable
 import java.awt.*
 import java.awt.event.ActionEvent
 import javax.swing.*
@@ -215,28 +218,28 @@ class SidebarPanel(
 
     @Suppress("UNUSED_PARAMETER")
     fun trackDamageCheckBoxClick(e: ActionEvent?) {
-        combatTracker.trackDamage = trackDamageCheckBox.isSelected
+        combatTracker.setTrackDamage(trackDamageCheckBox.isSelected)
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun trackHealReceivedCheckBoxClick(e: ActionEvent?) {
-        combatTracker.trackHealReceived = trackHealReceivedCheckBox.isSelected
+        combatTracker.setTrackHealReceived(trackHealReceivedCheckBox.isSelected)
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun trackHealAppliedCheckBoxClick(e: ActionEvent?) {
-        combatTracker.trackHealApplied = trackHealAppliedCheckBox.isSelected
+        combatTracker.setTrackHealApplied(trackHealAppliedCheckBox.isSelected)
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun godsOnlyCheckBoxClick(e: ActionEvent?) {
-        combatTracker.godsOnly = godsOnlyCheckBox.isSelected
+        combatTracker.setGodsOnly(godsOnlyCheckBox.isSelected)
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun nameFieldResetButtonClick(e: ActionEvent?) {
         nameField.text = "Searching..."
-        combatTracker.updateIGN("")
+        combatTracker.updateIGN()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -249,12 +252,12 @@ class SidebarPanel(
 
     @Suppress("UNUSED_PARAMETER")
     fun resetCombatButtonClick(e: ActionEvent?) {
-        combatTracker.resetTracking()
+        combatTracker.resetPlayerTracking()
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun clearTableButtonClick(e: ActionEvent?) {
-        combatTracker.clearTable(false)
-        combatTracker.resetTracking()
+        combatTracker.clearTable()
+        combatTracker.resetPlayerTracking()
     }
 }

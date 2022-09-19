@@ -10,13 +10,13 @@ internal class UtilTest {
     fun edtInvokeAndWaitIfNeeded() {
 
         // main thread
-        edtInvokeAndWaitIfNeeded {
+        antd.sdps.util.edtInvokeAndWaitIfNeeded {
             assertTrue(SwingUtilities.isEventDispatchThread())
         }
 
         // on edt thread
         SwingUtilities.invokeAndWait {
-            edtInvokeAndWaitIfNeeded {
+            antd.sdps.util.edtInvokeAndWaitIfNeeded {
                 assertTrue(SwingUtilities.isEventDispatchThread())
             }
         }
