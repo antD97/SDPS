@@ -312,6 +312,8 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                         reason = reason
                     )
 
+                    if (damage != null) ObsPrinter.print("$damage damage!")
+
                     prevCombatLineTime = time
                 }
             }
@@ -333,6 +335,8 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                     reason = reason
                 )
 
+                if (damage != null) ObsPrinter.print("$damage damage!")
+
                 prevCombatLineTime = time
             }
         }
@@ -348,6 +352,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
         if (!resetTracking) {
             resetTracking = true
             addResetTableRow()
+            ObsPrinter.clear()
         }
     }
 

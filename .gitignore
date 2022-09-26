@@ -5,4 +5,5 @@
 build/
 releases/
 sdps.conf
+obs-source.txt
 bin/
