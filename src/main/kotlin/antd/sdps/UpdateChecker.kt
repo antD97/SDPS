@@ -19,7 +19,9 @@ object UpdateChecker {
 
     /** Displays a message if the newest version found on GitHub does not match [currVer]. */
     fun check(currVer: String) {
-        val latestTag = GitHub.connect().getRepository("antD97/SDPS").latestRelease.tagName
+        val latestTag = GitHub.connect().getRepository("antD97/SDPS").listReleases()
+            .find { !it.isPrerelease && !it.isDraft }!!
+            .tagName
 
         if ("v$currVer" != latestTag) {
 

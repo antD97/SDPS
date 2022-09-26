@@ -7,13 +7,13 @@ package antd.sdps.combattracking
 import antd.sdps.ConfigManager
 import antd.sdps.util.edtInvokeAndWaitIfNeeded
 import java.io.BufferedReader
+import java.util.*
 import javax.swing.JTextField
 import javax.swing.table.DefaultTableModel
+import kotlin.math.max
 
 /** Used to continuously track a player's combat and update a [DefaultTableModel]. */
-class PlayerTracker(
-    configData: ConfigManager.ConfigData
-) {
+class PlayerTracker(configData: ConfigManager.ConfigData) {
 
     enum class StopReason { LOG_CLOSED, EXIT_REQUESTED }
 
@@ -108,15 +108,11 @@ class PlayerTracker(
     private var totalHealReceived = 0
     private var totalHealApplied = 0
 
-    /** In-game time of first tick of DPS calculation damage. */
-    private var startGameTime = -1L
-    /** System time of first tick of DPS calculation damage. */
-    private var startSysTime = -1L
-    /** System time of when reset was clicked. */
-    private var resetSysTime = 0L
+    /** The in-game time of the first combat line for tracking DPS and heal/damage totals. */
+    private var combatStartTime = 0L
 
-    /** The last row in the table. */
-    private var lastRow: Array<String>? = null
+    /** The in-game time of the last tracked combat line. */
+    private var prevCombatLineTime = 0L
 
 /* ------------------------------------------ Main Loop ----------------------------------------- */
 
@@ -131,11 +127,9 @@ class PlayerTracker(
         totalHealReceived = 0
         totalHealApplied = 0
 
-        startGameTime = -1L
-        startSysTime = -1L
-        resetSysTime = 0L
-
         resetTracking = true
+        combatStartTime = 0
+        prevCombatLineTime = 0
 
         exitLoop = false
         while (!exitLoop) {
@@ -173,7 +167,13 @@ class PlayerTracker(
         }
         // heal
         else if (typeSplit.size == 2 && typeSplit[1] == "Healing") {
-            handleHealLine(lineData)
+            val source = lineData[9]
+            val target = lineData[11]
+
+            // healing received
+            if (ign != "" && target == ign) handleHealReceivedLine(lineData)
+            // healing applied
+            else if (ign != "" && source == ign && target != ign) handleHealAppliedLine(lineData)
         }
     }
 
@@ -194,222 +194,90 @@ class PlayerTracker(
 
         // damage dealt by user
         if (ign != "" && source == ign) {
-
-            // track damage & gods only check
-            if (trackDamage && (!godsOnly || !nonGodNames.contains(target))) {
-
-                if (resetTracking) {
-                    // time of when reset was clicked in game time
-                    val resetGameTime = resetSysTime - (startSysTime - startGameTime)
-
-                    // delayed combat log lines that have to go before the reset row
-                    if (time < resetGameTime) {
-                        // don't add the row if there's no reset row to place it before
-                        if (tableModel.rowCount != 0) {
-
-                            totalDamage += damage
-                            totalMitigated += mitigated
-
-                            replaceLastRow(
-                                time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                                dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                                damage = "$damage",
-                                totalDamage = "$totalDamage",
-                                mitigated = "$mitigated",
-                                totalMitigated = "$totalMitigated",
-                                healReceived = "",
-                                totalHealReceived = "$totalHealReceived",
-                                healApplied = "",
-                                totalHealApplied = "$totalHealApplied",
-                                reason = reason
-                            )
-
-                            // re-add the last reset row
-                            addResetTableRow()
-                        }
-                    }
-                    // timer reset on this hit
-                    else {
-                        resetTracking = false
-                        startGameTime = time
-                        startSysTime = System.currentTimeMillis()
-
-                        totalDamage = damage
-                        totalMitigated = mitigated
-                        totalHealReceived = 0
-                        totalHealApplied = 0
-
-                        addTableRow(
-                            time = "0.00s",
-                            dps = "0.00",
-                            damage = "$damage",
-                            totalDamage = "$totalDamage",
-                            mitigated = "$mitigated",
-                            totalMitigated = "$totalMitigated",
-                            healReceived = "",
-                            totalHealReceived = "0",
-                            healApplied = "",
-                            totalHealApplied = "0",
-                            reason = reason
-                        )
-                    }
-                }
-                // not reset tracking
-                else {
-                    totalDamage += damage
-                    totalMitigated += mitigated
-
-                    addTableRow(
-                        time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                        dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                        damage = "$damage",
-                        totalDamage = "$totalDamage",
-                        mitigated = "$mitigated",
-                        totalMitigated = "$totalMitigated",
-                        healReceived = "",
-                        totalHealReceived = "$totalHealReceived",
-                        healApplied = "",
-                        totalHealApplied = "$totalHealApplied",
-                        reason = reason
-                    )
-                }
-            }
-
-            // any damage caused by the player
-            addPotentialHiddenCombat()
+            addRowAndHandleResets(
+                trackDamage && (!godsOnly || !nonGodNames.contains(target)),
+                time,
+                reason,
+                damage = damage,
+                mitigated = mitigated
+            )
         }
-    }
-
-    /** Handles a single line of healing. */
-    private fun handleHealLine(lineData: List<String>) {
-        val source = lineData[9]
-        val target = lineData[11]
-
-        // healing received
-        if (ign != "" && target == ign) handleHealReceivedLine(lineData)
-        // healing applied
-        else if (ign != "" && source == ign && target != ign) handleHealAppliedLine(lineData)
     }
 
     /** Handles a single line of received healing. */
     private fun handleHealReceivedLine(lineData: List<String>) {
         val time = lineData[8].toDouble().secToMs()
-        val healAmount = lineData[12].toInt()
+        val healReceived = lineData[12].toInt()
         val reason = lineData[7]
 
-        // track heal received & gods only check
-        if (trackHealReceived && (!godsOnly || reason != "Jungle Practice Fountain")) {
-
-            if (resetTracking) {
-                // time of when reset was clicked in game time
-                val resetGameTime = resetSysTime - (startSysTime - startGameTime)
-
-                // delayed combat log lines that have to go before the reset row
-                if (time < resetGameTime) {
-                    // don't add the row if there's no reset row to place it before
-                    if (tableModel.rowCount != 0) {
-
-                        totalHealReceived += healAmount
-
-                        replaceLastRow(
-                            time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                            dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                            damage = "",
-                            totalDamage = "$totalDamage",
-                            mitigated = "",
-                            totalMitigated = "$totalMitigated",
-                            healReceived = "$healAmount",
-                            totalHealReceived = "$totalHealReceived",
-                            healApplied = "",
-                            totalHealApplied = "$totalHealApplied",
-                            reason = reason
-                        )
-
-                        // re-add the last reset row
-                        addResetTableRow()
-                    }
-                }
-                // timer reset on this hit
-                else {
-                    resetTracking = false
-                    startGameTime = time
-                    startSysTime = System.currentTimeMillis()
-
-                    totalDamage = 0
-                    totalMitigated = 0
-                    totalHealReceived = healAmount
-                    totalHealApplied = 0
-
-                    addTableRow(
-                        time = "0.00s",
-                        dps = "0.00",
-                        damage = "",
-                        totalDamage = "0",
-                        mitigated = "",
-                        totalMitigated = "0",
-                        healReceived = "$healAmount",
-                        totalHealReceived = "$totalHealReceived",
-                        healApplied = "",
-                        totalHealApplied = "0",
-                        reason = reason
-                    )
-                }
-            }
-            // not reset tracking
-            else {
-                totalHealReceived += healAmount
-
-                addTableRow(
-                    time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                    dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                    damage = "",
-                    totalDamage = "$totalDamage",
-                    mitigated = "",
-                    totalMitigated = "$totalMitigated",
-                    healReceived = "$healAmount",
-                    totalHealReceived = "$totalHealReceived",
-                    healApplied = "",
-                    totalHealApplied = "$totalHealApplied",
-                    reason = reason
-                )
-            }
-        }
-
-        // any healing received by the player (TODO probably?)
-        addPotentialHiddenCombat()
+        addRowAndHandleResets(
+            trackHealReceived && (!godsOnly || reason != "Jungle Practice Fountain"),
+            time,
+            reason,
+            healReceived = healReceived
+        )
     }
 
     /** Handles a single line of applied healing. */
     private fun handleHealAppliedLine(lineData: List<String>) {
         val target = lineData[11]
         val time = lineData[8].toDouble().secToMs()
-        val healAmount = lineData[12].toInt()
+        val healApplied = lineData[12].toInt()
         val reason = lineData[7]
 
-        // track heal applied & gods only check
-        if (trackHealApplied && (!godsOnly || !nonGodNames.contains(target))) {
+        addRowAndHandleResets(
+            trackHealApplied && (!godsOnly || !nonGodNames.contains(target)),
+            time,
+            reason,
+            healApplied = healApplied
+        )
+    }
+
+    /** Adds a new row to the table if [track] is true and appropriately handles hidden damage. */
+    private fun addRowAndHandleResets(
+        track: Boolean,
+        time: Long,
+        reason: String,
+        damage: Int? = null,
+        mitigated: Int? = null,
+        healReceived: Int? = null,
+        healApplied: Int? = null
+    ) {
+        fun updateTotals() {
+            if (damage != null) totalDamage += damage
+            if (mitigated != null) totalMitigated += mitigated
+            if (healReceived != null) totalHealReceived += healReceived
+            if (healApplied != null) totalHealApplied += healApplied
+        }
+
+        // track damage & gods only check
+        if (track) {
 
             if (resetTracking) {
-                // time of when reset was clicked in game time
-                val resetGameTime = resetSysTime - (startSysTime - startGameTime)
 
                 // delayed combat log lines that have to go before the reset row
-                if (time < resetGameTime) {
+                if (time == prevCombatLineTime) {
+
                     // don't add the row if there's no reset row to place it before
                     if (tableModel.rowCount != 0) {
 
-                        totalHealApplied += healAmount
+                        updateTotals()
 
-                        replaceLastRow(
-                            time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                            dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                            damage = "",
+                        replaceRow(
+                            tableModel.rowCount - 1,
+                            time = (time - combatStartTime).msToSec().timeFormat(),
+                            dps = calcDPS(
+                                combatStartTime.msToSec(),
+                                time.msToSec(),
+                                totalDamage
+                            ),
+                            damage = damage?.toString() ?: "",
                             totalDamage = "$totalDamage",
-                            mitigated = "",
+                            mitigated = mitigated?.toString() ?: "",
                             totalMitigated = "$totalMitigated",
-                            healReceived = "",
+                            healReceived = healReceived?.toString() ?: "",
                             totalHealReceived = "$totalHealReceived",
-                            healApplied = "$healAmount",
+                            healApplied = healApplied?.toString() ?: "",
                             totalHealApplied = "$totalHealApplied",
                             reason = reason
                         )
@@ -418,53 +286,58 @@ class PlayerTracker(
                         addResetTableRow()
                     }
                 }
-                // timer reset on this hit
+                // combat reset on this event
                 else {
                     resetTracking = false
-                    startGameTime = time
-                    startSysTime = System.currentTimeMillis()
+                    combatStartTime = time
 
                     totalDamage = 0
                     totalMitigated = 0
                     totalHealReceived = 0
-                    totalHealApplied = healAmount
+                    totalHealApplied = 0
+
+                    updateTotals()
 
                     addTableRow(
                         time = "0.00s",
                         dps = "0.00",
-                        damage = "",
-                        totalDamage = "0",
-                        mitigated = "",
-                        totalMitigated = "0",
-                        healReceived = "",
-                        totalHealReceived = "0",
-                        healApplied = "$healAmount",
+                        damage = damage?.toString() ?: "",
+                        totalDamage = "$totalDamage",
+                        mitigated = mitigated?.toString() ?: "",
+                        totalMitigated = "$totalMitigated",
+                        healReceived = healReceived?.toString() ?: "",
+                        totalHealReceived = "$totalHealReceived",
+                        healApplied = healApplied?.toString() ?: "",
                         totalHealApplied = "$totalHealApplied",
                         reason = reason
                     )
+
+                    prevCombatLineTime = time
                 }
             }
             // not reset tracking
             else {
-                totalHealApplied += healAmount
+                updateTotals()
 
                 addTableRow(
-                    time = (time.msToSec() - startGameTime.msToSec()).timeFormat(),
-                    dps = calcDPS(startGameTime.msToSec(), time.msToSec(), totalDamage),
-                    damage = "",
+                    time = (time - combatStartTime).msToSec().timeFormat(),
+                    dps = calcDPS(combatStartTime.msToSec(), time.msToSec(), totalDamage),
+                    damage = damage?.toString() ?: "",
                     totalDamage = "$totalDamage",
-                    mitigated = "",
+                    mitigated = mitigated?.toString() ?: "",
                     totalMitigated = "$totalMitigated",
-                    healReceived = "",
+                    healReceived = healReceived?.toString() ?: "",
                     totalHealReceived = "$totalHealReceived",
-                    healApplied = "$healAmount",
+                    healApplied = healApplied?.toString() ?: "",
                     totalHealApplied = "$totalHealApplied",
                     reason = reason
                 )
+
+                prevCombatLineTime = time
             }
         }
 
-        // any healing applied by the player (TODO probably?)
+        // anything caused by the player
         addPotentialHiddenCombat()
     }
 
@@ -474,13 +347,22 @@ class PlayerTracker(
     fun resetTracking() {
         if (!resetTracking) {
             resetTracking = true
-            resetSysTime = System.currentTimeMillis()
             addResetTableRow()
         }
     }
 
 /* ------------------------------------------- Helpers ------------------------------------------ */
 
+    /** Get the row at index [row] from [tableModel] as a [String] array. */
+    private fun getTableRow(row: Int): Array<String>? {
+        if (row >= tableModel.rowCount) return null
+
+        val result = Array(tableModel.columnCount) { "" }
+        for (i in 0 until tableModel.columnCount) {
+            result[i] = tableModel.getValueAt(row, i).toString()
+        }
+        return result
+    }
 
     /** Adds a row to the table. */
     private fun addTableRow(
@@ -488,15 +370,12 @@ class PlayerTracker(
         totalMitigated: String, healReceived: String, totalHealReceived: String,
         healApplied: String, totalHealApplied: String, reason: String
     ) {
-
         val rowArray = arrayOf(
             time, dps, damage, totalDamage, mitigated, totalMitigated,
             healReceived, totalHealReceived, healApplied, totalHealApplied, reason
         )
 
         edtInvokeAndWaitIfNeeded { tableModel.addRow(rowArray) }
-
-        lastRow = rowArray
         tableListeners.forEach { it.invoke() }
     }
 
@@ -507,56 +386,82 @@ class PlayerTracker(
 
     /** [addTableRow] with "Reset" in all columns. */
     private fun addResetTableRow() {
-
-        if (lastRow?.get(0)?.endsWith("*") == true) {
-            clearPotentialHiddenCombat()
-            addTableRow(
-                "Reset*", "Reset*", "Reset*", "Reset*", "Reset*", "Reset*", "Reset*", "Reset*",
-                "Reset*", "Reset*", "Reset*"
-            )
-        } else {
-            addTableRow(
-                "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset",
-                "Reset", "Reset"
-            )
-        }
+        addTableRow(
+            "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset", "Reset",
+            "Reset", "Reset", "Reset"
+        )
     }
 
     /** Removes all rows from the table. */
     fun clearTable() {
         edtInvokeAndWaitIfNeeded { tableModel.rowCount = 0 }
-        lastRow = null
         tableListeners.forEach { it.invoke() }
     }
 
-    /** Replaces the last row in the table. */
-    private fun replaceLastRow(
+    /** Replaces the [i]th row in the table. */
+    private fun replaceRow(
+        i: Int,
         time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
         totalMitigated: String, healReceived: String, totalHealReceived: String,
         healApplied: String, totalHealApplied: String, reason: String
     ) {
-        if (tableModel.rowCount > 0) {
-            edtInvokeAndWaitIfNeeded { tableModel.removeRow(tableModel.rowCount - 1) }
+        val removedRows = LinkedList<Array<String>>()
+
+        edtInvokeAndWaitIfNeeded {
+            // pop all the rows leading up to the ith row
+            for (j in (tableModel.rowCount - 1) downTo max(i, 0)) {
+                removedRows.add(getTableRow(j)!!)
+                tableModel.removeRow(j)
+            }
+
+            // add the replacement row
+            addTableRow(
+                time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
+                totalHealReceived, healApplied, totalHealApplied, reason
+            )
+
+            // discard the replaced row
+            removedRows.removeLast()
+
+            // push the remaining rows
+            while (removedRows.isNotEmpty()) {
+                val row = removedRows.removeLast()
+                addTableRow(
+                    row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
+                    row[9], row[10]
+                )
+            }
         }
-        addTableRow(time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
-            totalHealReceived, healApplied, totalHealApplied, reason)
     }
 
     /** Remove the trailing "*" indicator from the last row for potential hidden combat. */
     private fun clearPotentialHiddenCombat() {
-        if (lastRow?.get(3)?.endsWith("*") == true) {
-            replaceLastRow(
-                time = lastRow!![0].removeSuffix("*"),
-                dps = lastRow!![1].removeSuffix("*"),
-                damage = lastRow!![2].removeSuffix("*"),
-                totalDamage = lastRow!![3].removeSuffix(("*")),
-                mitigated = lastRow!![4].removeSuffix("*"),
-                totalMitigated = lastRow!![5].removeSuffix("*"),
-                healReceived = lastRow!![6].removeSuffix("*"),
-                totalHealReceived = lastRow!![7].removeSuffix("*"),
-                healApplied = lastRow!![8].removeSuffix("*"),
-                totalHealApplied = lastRow!![9].removeSuffix("*"),
-                reason = lastRow!![10].removeSuffix("*"),
+        // find the last non-reset row
+        var row: Array<String>? = null
+        var rowI = -1
+        for (i in (tableModel.rowCount - 1) downTo 0) {
+            if (getTableRow(i)?.get(0) != "Reset") {
+                row = getTableRow(i)
+                rowI = i
+                break
+            }
+        }
+
+        // remove "*" from that row
+        if (row != null && row[0].endsWith("*")) {
+            replaceRow(
+                rowI,
+                time = row[0].removeSuffix("*"),
+                dps = row[1].removeSuffix("*"),
+                damage = row[2].removeSuffix("*"),
+                totalDamage = row[3].removeSuffix(("*")),
+                mitigated = row[4].removeSuffix("*"),
+                totalMitigated = row[5].removeSuffix("*"),
+                healReceived = row[6].removeSuffix("*"),
+                totalHealReceived = row[7].removeSuffix("*"),
+                healApplied = row[8].removeSuffix("*"),
+                totalHealApplied = row[9].removeSuffix("*"),
+                reason = row[10].removeSuffix("*"),
             )
         }
     }
@@ -565,19 +470,32 @@ class PlayerTracker(
     private fun addPotentialHiddenCombat() {
         fun String.addAsterisksIfNotEmpty() = if (this.isNotEmpty()) "$this*" else ""
 
-        if (lastRow?.get(3)?.endsWith("*") == false) {
-            replaceLastRow(
-                time = lastRow!![0].addAsterisksIfNotEmpty(),
-                dps = lastRow!![1].addAsterisksIfNotEmpty(),
-                damage = lastRow!![2].addAsterisksIfNotEmpty(),
-                totalDamage = lastRow!![3].addAsterisksIfNotEmpty(),
-                mitigated = lastRow!![4].addAsterisksIfNotEmpty(),
-                totalMitigated = lastRow!![5].addAsterisksIfNotEmpty(),
-                healReceived = lastRow!![6].addAsterisksIfNotEmpty(),
-                totalHealReceived = lastRow!![7].addAsterisksIfNotEmpty(),
-                healApplied = lastRow!![8].addAsterisksIfNotEmpty(),
-                totalHealApplied = lastRow!![9].addAsterisksIfNotEmpty(),
-                reason = lastRow!![10].addAsterisksIfNotEmpty(),
+        // find the last non-reset row
+        var row: Array<String>? = null
+        var rowI = -1
+        for (i in (tableModel.rowCount - 1) downTo 0) {
+            if (getTableRow(i)?.get(0) != "Reset") {
+                row = getTableRow(i)
+                rowI = i
+                break
+            }
+        }
+
+        // add "*" to that row
+        if (row != null && !row[3].endsWith("*")) {
+            replaceRow(
+                rowI,
+                time = row[0].addAsterisksIfNotEmpty(),
+                dps = row[1].addAsterisksIfNotEmpty(),
+                damage = row[2].addAsterisksIfNotEmpty(),
+                totalDamage = row[3].addAsterisksIfNotEmpty(),
+                mitigated = row[4].addAsterisksIfNotEmpty(),
+                totalMitigated = row[5].addAsterisksIfNotEmpty(),
+                healReceived = row[6].addAsterisksIfNotEmpty(),
+                totalHealReceived = row[7].addAsterisksIfNotEmpty(),
+                healApplied = row[8].addAsterisksIfNotEmpty(),
+                totalHealApplied = row[9].addAsterisksIfNotEmpty(),
+                reason = row[10].addAsterisksIfNotEmpty(),
             )
         }
     }
