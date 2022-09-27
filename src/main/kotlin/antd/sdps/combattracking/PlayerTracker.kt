@@ -54,49 +54,34 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
 
     // --- tracking options --- //
 
-    /** Player to track. */
-    var ign: String = configData.ign ?: ""
-        set(value) = synchronized(ignLock) { field = value }
-        get() = synchronized(ignLock) { field }
-    private val ignLock = Any()
+    /** Player to track. **Must be synchronized with [loopControlLock].** */
+    var ign = configData.ign ?: ""
 
-    /** Toggles damage tracking. */
-    var trackDamage: Boolean = configData.trackDamage
-        set(value) = synchronized(trackDamageLock) { field = value }
-        get() = synchronized(trackDamageLock) { field }
-    private var trackDamageLock = Any()
+    /** Toggles damage tracking. **Must be synchronized with [loopControlLock].** */
+    var trackDamage = configData.trackDamage
 
-    /** Toggles heal received tracking. */
-    var trackHealReceived: Boolean = configData.trackHealReceived
-        set(value) = synchronized(trackHealReceivedLock) { field = value }
-        get() = synchronized(trackHealReceivedLock) { field }
-    private val trackHealReceivedLock = Any()
+    /** Toggles heal received tracking. **Must be synchronized with [loopControlLock].** */
+    var trackHealReceived = configData.trackHealReceived
 
-    /** Toggles heal applied tracking. */
-    var trackHealApplied: Boolean = configData.trackHealApplied
-        set(value) = synchronized(trackHealAppliedLock) { field = value }
-        get() = synchronized(trackHealAppliedLock) { field }
-    private val trackHealAppliedLock = Any()
+    /** Toggles heal applied tracking. **Must be synchronized with [loopControlLock].** */
+    var trackHealApplied = configData.trackHealApplied
 
-    /** Toggles only tracking combat involving gods. */
-    var godsOnly: Boolean = configData.godsOnly
-        set(value) = synchronized(godsOnlyLock) { field = value }
-        get() = synchronized(godsOnlyLock) { field }
-    private val godsOnlyLock = Any()
+    /** Toggles only tracking combat involving gods. **Must be synchronized with [loopControlLock].** */
+    var godsOnly = configData.godsOnly
 
     // --- loop control --- //
 
-    /** When true, starts DPS timer on next damage dealt and resets total damage/healing values. */
+    /**
+     * When true, starts DPS timer on next damage dealt and resets total damage/healing values.
+     * **Must be synchronized with [loopControlLock].**
+     */
     private var resetTracking = true
-        set(value) = synchronized(resetTrackingLock) { field = value }
-        get() = synchronized(resetTrackingLock) { field }
-    private val resetTrackingLock = Any()
 
-    /** When true, tells the loop to exit safely. */
+    /** When true, tells the loop to exit safely. **Must be synchronized with [loopControlLock].** */
     var exitLoop = false
-        set(value) = synchronized(exitLoopLock) { field = value }
-        get() = synchronized(resetTrackingLock) { field }
-    private val exitLoopLock = Any()
+
+    /** Lock used for synchronizing loop tracking options and control. */
+    var loopControlLock = Any()
 
     // --- other --- //
 
@@ -141,7 +126,11 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                 return StopReason.LOG_CLOSED
             }
             // combat line
-            else if (line != null && line != "") handleCombatLine(line, caughtUp)
+            else if (line != null && line != "") {
+                synchronized(loopControlLock) {
+                    handleCombatLine(line, caughtUp)
+                }
+            }
             // caught up
             else {
                 caughtUp = true
@@ -173,7 +162,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
             // healing received
             if (ign != "" && target == ign) handleHealReceivedLine(lineData)
             // healing applied
-            else if (ign != "" && source == ign && target != ign) handleHealAppliedLine(lineData)
+            else if (ign != "" && source == ign) handleHealAppliedLine(lineData)
         }
     }
 
@@ -279,7 +268,8 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                             totalHealReceived = "$totalHealReceived",
                             healApplied = healApplied?.toString() ?: "",
                             totalHealApplied = "$totalHealApplied",
-                            reason = reason
+                            reason = reason,
+                            obsReplaceLastRow = true
                         )
 
                         // re-add the last reset row
@@ -309,10 +299,9 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                         totalHealReceived = "$totalHealReceived",
                         healApplied = healApplied?.toString() ?: "",
                         totalHealApplied = "$totalHealApplied",
-                        reason = reason
+                        reason = reason,
+                        obsPrint = true
                     )
-
-                    if (damage != null) ObsPrinter.print("$damage damage!")
 
                     prevCombatLineTime = time
                 }
@@ -332,10 +321,9 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                     totalHealReceived = "$totalHealReceived",
                     healApplied = healApplied?.toString() ?: "",
                     totalHealApplied = "$totalHealApplied",
-                    reason = reason
+                    reason = reason,
+                    obsPrint = true
                 )
-
-                if (damage != null) ObsPrinter.print("$damage damage!")
 
                 prevCombatLineTime = time
             }
@@ -347,12 +335,22 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
 
 /* ---------------------------------------- Loop Control ---------------------------------------- */
 
-    /** Resets the DPS timer and total damage/heal values. */
+    /** Resets the DPS timer and total damage/heal values. Synchronized with [loopControlLock]. */
     fun resetTracking() {
-        if (!resetTracking) {
-            resetTracking = true
-            addResetTableRow()
-            ObsPrinter.clear()
+        synchronized(loopControlLock) {
+            if (!resetTracking) {
+                resetTracking = true
+                addResetTableRow()
+                ObsPrinter.clear()
+            }
+        }
+    }
+
+    /** Removes all rows from the table. Synchronized with [loopControlLock]. */
+    fun clearTable() {
+        synchronized(loopControlLock) {
+            edtInvokeAndWaitIfNeeded { tableModel.rowCount = 0 }
+            tableListeners.forEach { it.invoke() }
         }
     }
 
@@ -369,11 +367,15 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
         return result
     }
 
-    /** Adds a row to the table. */
+    /**
+     * Adds a row to the table.
+     * @param obsPrint Whether this line should be written with [ObsPrinter].
+     */
     private fun addTableRow(
         time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
         totalMitigated: String, healReceived: String, totalHealReceived: String,
-        healApplied: String, totalHealApplied: String, reason: String
+        healApplied: String, totalHealApplied: String, reason: String,
+        obsPrint: Boolean = false
     ) {
         val rowArray = arrayOf(
             time, dps, damage, totalDamage, mitigated, totalMitigated,
@@ -382,6 +384,11 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
 
         edtInvokeAndWaitIfNeeded { tableModel.addRow(rowArray) }
         tableListeners.forEach { it.invoke() }
+
+        if (obsPrint) ObsPrinter.addLine(
+            time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
+            totalHealReceived, healApplied, totalHealApplied, reason
+        )
     }
 
     /** [addTableRow] with "End" in all columns. */
@@ -397,18 +404,13 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
         )
     }
 
-    /** Removes all rows from the table. */
-    fun clearTable() {
-        edtInvokeAndWaitIfNeeded { tableModel.rowCount = 0 }
-        tableListeners.forEach { it.invoke() }
-    }
-
     /** Replaces the [i]th row in the table. */
     private fun replaceRow(
         i: Int,
         time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
         totalMitigated: String, healReceived: String, totalHealReceived: String,
-        healApplied: String, totalHealApplied: String, reason: String
+        healApplied: String, totalHealApplied: String, reason: String,
+        obsReplaceLastRow: Boolean = false
     ) {
         val removedRows = LinkedList<Array<String>>()
 
@@ -437,6 +439,11 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                 )
             }
         }
+
+        if (obsReplaceLastRow) ObsPrinter.replaceLastLine(
+            time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
+            totalHealReceived, healApplied, totalHealApplied, reason
+        )
     }
 
     /** Remove the trailing "*" indicator from the last row for potential hidden combat. */
@@ -467,6 +474,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                 healApplied = row[8].removeSuffix("*"),
                 totalHealApplied = row[9].removeSuffix("*"),
                 reason = row[10].removeSuffix("*"),
+                obsReplaceLastRow = true
             )
         }
     }
@@ -501,6 +509,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
                 healApplied = row[8].addAsterisksIfNotEmpty(),
                 totalHealApplied = row[9].addAsterisksIfNotEmpty(),
                 reason = row[10].addAsterisksIfNotEmpty(),
+                obsReplaceLastRow = true
             )
         }
     }

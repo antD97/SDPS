@@ -70,8 +70,10 @@ class CombatTracker(configData: ConfigManager.ConfigData) {
 
     /** Make the [playerTracker] update the in-game name to the source of the next god damage. */
     fun updateIGN() {
-        playerTracker.ign = ""
-        playerTracker.exitLoop = true
+        synchronized(playerTracker.loopControlLock) {
+            playerTracker.ign = ""
+            playerTracker.exitLoop = true
+        }
     }
 
     /** Resets [playerTracker]'s DPS timer and total damage/heal values. */
@@ -79,22 +81,30 @@ class CombatTracker(configData: ConfigManager.ConfigData) {
 
     /** Set whether [playerTracker] tracks damage. */
     fun setTrackDamage(trackDamage: Boolean) {
-        playerTracker.trackDamage = trackDamage
+        synchronized(playerTracker.loopControlLock) {
+            playerTracker.trackDamage = trackDamage
+        }
     }
 
     /** Set whether [playerTracker] tracks heal received. */
     fun setTrackHealReceived(trackHealReceived: Boolean) {
-        playerTracker.trackHealReceived = trackHealReceived
+        synchronized(playerTracker.loopControlLock) {
+            playerTracker.trackHealReceived = trackHealReceived
+        }
     }
 
     /** Set whether [playerTracker] tracks heal applied. */
     fun setTrackHealApplied(trackHealApplied: Boolean) {
-        playerTracker.trackHealApplied = trackHealApplied
+        synchronized(playerTracker.loopControlLock) {
+            playerTracker.trackHealApplied = trackHealApplied
+        }
     }
 
     /** Set whether [playerTracker] tracks gods only. */
     fun setGodsOnly(godsOnly: Boolean) {
-        playerTracker.godsOnly = godsOnly
+        synchronized(playerTracker.loopControlLock) {
+            playerTracker.godsOnly = godsOnly
+        }
     }
 
 /* -------------------------------------- Public Functions -------------------------------------- */
