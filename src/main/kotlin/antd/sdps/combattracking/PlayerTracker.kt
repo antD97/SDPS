@@ -13,7 +13,7 @@ import javax.swing.table.DefaultTableModel
 import kotlin.math.max
 
 /** Used to continuously track a player's combat and update a [DefaultTableModel]. */
-class PlayerTracker(configData: ConfigManager.ConfigData) {
+class PlayerTracker(configData: ConfigManager.ConfigData, private val obsWriter: ObsWriter) {
 
     enum class StopReason { LOG_CLOSED, EXIT_REQUESTED }
 
@@ -123,6 +123,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
             // log closed
             if (line == "end" || line == ",{\"eventType\":\"end\"}") {
                 addEndTableRow()
+                obsWriter.clear()
                 return StopReason.LOG_CLOSED
             }
             // combat line
@@ -197,7 +198,8 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
     private fun handleHealReceivedLine(lineData: List<String>) {
         val time = lineData[8].toDouble().secToMs()
         val healReceived = lineData[12].toInt()
-        val reason = lineData[7]
+        // todo confirm empty reason always means lifesteal
+        val reason = if (lineData[7] != "") lineData[7] else "Lifesteal"
 
         addRowAndHandleResets(
             trackHealReceived && (!godsOnly || reason != "Jungle Practice Fountain"),
@@ -341,7 +343,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
             if (!resetTracking) {
                 resetTracking = true
                 addResetTableRow()
-                ObsPrinter.clear()
+                obsWriter.clear()
             }
         }
     }
@@ -369,7 +371,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
 
     /**
      * Adds a row to the table.
-     * @param obsPrint Whether this line should be written with [ObsPrinter].
+     * @param obsPrint Whether this line should be written with [ObsWriter].
      */
     private fun addTableRow(
         time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
@@ -385,7 +387,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
         edtInvokeAndWaitIfNeeded { tableModel.addRow(rowArray) }
         tableListeners.forEach { it.invoke() }
 
-        if (obsPrint) ObsPrinter.addLine(
+        if (obsPrint) obsWriter.addLine(
             time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
             totalHealReceived, healApplied, totalHealApplied, reason
         )
@@ -440,7 +442,7 @@ class PlayerTracker(configData: ConfigManager.ConfigData) {
             }
         }
 
-        if (obsReplaceLastRow) ObsPrinter.replaceLastLine(
+        if (obsReplaceLastRow) obsWriter.replaceLastLine(
             time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
             totalHealReceived, healApplied, totalHealApplied, reason
         )

@@ -27,11 +27,20 @@ class OutputTable(rowSize: Int) : JTable() {
                 ColumnNames("Mitigated"),
                 ColumnNames("Total Mitigated", "Σ Mitigated"),
             ),
+            // todo
+//            listOf(
+//                ColumnNames("Damage Received"),
+//                ColumnNames("Total Damage Received", "Σ Damage Received"),
+//                ColumnNames("Mitigated Received"),
+//                ColumnNames("Total Mitigated Received", "Σ Mitigated Received")
+//            ),
             listOf(
                 ColumnNames("Heal Received"),
-                ColumnNames("Total Heal Received", "Σ Heal Received"),
+                ColumnNames("Total Heal Received", "Σ Heal Received")
+            ),
+            listOf(
                 ColumnNames("Heal Applied"),
-                ColumnNames("Total Heal Applied", "Σ Heal Applied"),
+                ColumnNames("Total Heal Applied", "Σ Heal Applied")
             ),
             listOf(ColumnNames("Reason"))
         )

@@ -6,6 +6,7 @@ package antd.sdps.ui.sidebar
 
 import antd.sdps.ConfigManager
 import antd.sdps.combattracking.CombatTracker
+import antd.sdps.combattracking.ObsWriter
 import antd.sdps.ui.components.LabelPanel
 import antd.sdps.ui.MainJFrame
 import antd.sdps.ui.OutputTable
@@ -15,8 +16,9 @@ import javax.swing.*
 import javax.swing.event.ChangeEvent
 
 class SidebarPanel(
-    private val combatTracker: CombatTracker,
     configData: ConfigManager.ConfigData,
+    obsWriter: ObsWriter,
+    private val combatTracker: CombatTracker,
     private val outputTable: OutputTable
 ) : JPanel(GridBagLayout()) {
 
@@ -106,7 +108,7 @@ class SidebarPanel(
             toolTipText = "Clears the table of all rows and resets (C)"
         }
 
-    val columnCheckboxesPanel = ColumnCheckboxesPanel(outputTable)
+    val columnCheckboxesPanel = ColumnCheckboxesPanel(obsWriter, outputTable)
 
 /* -------------------------------------------- Init -------------------------------------------- */
 

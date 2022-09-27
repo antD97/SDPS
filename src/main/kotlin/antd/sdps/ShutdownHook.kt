@@ -5,12 +5,15 @@
 package antd.sdps
 
 import antd.sdps.ConfigManager.save
+import antd.sdps.combattracking.ObsWriter
 import antd.sdps.ui.MainJFrame
 
 /** [Thread] that saves user configuration to file. */
-class SaveConfigShutdownHook(private val mainJFrame: MainJFrame) : Thread() {
+class ShutdownHook(private val obsWriter: ObsWriter, private val mainJFrame: MainJFrame) : Thread
+    () {
 
     override fun run() {
+        // save config data
         val mainPanel = mainJFrame.content
         val configData = ConfigManager.load() ?: ConfigManager.ConfigData()
 
@@ -27,7 +30,16 @@ class SaveConfigShutdownHook(private val mainJFrame: MainJFrame) : Thread() {
             columnOrder = mainPanel.getColumnOrder(),
             columnWidths = mainPanel.getColumnWidths(),
             rowSize = mainPanel.getRowSize(),
-            updateCheck = configData.updateCheck
+            updateCheck = configData.updateCheck,
+            obsEnabled = obsWriter.enabled,
+            obsPrintHeadersRow = obsWriter.printHeadersRow,
+            obsPrintTotalsRow = obsWriter.printTotalsRow,
+            obsColumnWidth = obsWriter.columnWidth,
+            obsReasonColumnWidth = obsWriter.reasonColumnWidth,
+            obsMaxLines = obsWriter.maxLines
         ).save()
+
+        // delete obs writer output file
+        obsWriter.deleteFile()
     }
 }

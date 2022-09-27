@@ -5,6 +5,7 @@
 package antd.sdps
 
 import antd.sdps.combattracking.CombatTracker
+import antd.sdps.combattracking.ObsWriter
 import antd.sdps.ui.MainJFrame
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
@@ -23,15 +24,18 @@ fun main() {
     // load config data. if none, use defaults
     val configData = ConfigManager.load() ?: ConfigManager.ConfigData()
 
+    // init obs writer
+    val obsWriter = ObsWriter(configData)
+
     // init combat tracker
-    val combatTracker = CombatTracker(configData)
+    val combatTracker = CombatTracker(configData, obsWriter)
 
     SwingUtilities.invokeAndWait {
         // create main window
-        val mainJFrame = MainJFrame(combatTracker, configData, version)
+        val mainJFrame = MainJFrame(configData, obsWriter, combatTracker, version)
 
         // add save config shutdown hook
-        Runtime.getRuntime().addShutdownHook(SaveConfigShutdownHook(mainJFrame))
+        Runtime.getRuntime().addShutdownHook(ShutdownHook(obsWriter, mainJFrame))
     }
 
     // check for new release

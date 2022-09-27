@@ -12,11 +12,11 @@ import javax.swing.table.DefaultTableModel
 /**
  * Monitors the newest combat log file and updates a [DefaultTableModel] with damage information.
  */
-class CombatTracker(configData: ConfigManager.ConfigData) {
+class CombatTracker(configData: ConfigManager.ConfigData, obsWriter: ObsWriter) {
 
     // --- helpers --- //
 
-    private val playerTracker = PlayerTracker(configData)
+    private val playerTracker = PlayerTracker(configData, obsWriter)
 
     // --- combat log --- //
 

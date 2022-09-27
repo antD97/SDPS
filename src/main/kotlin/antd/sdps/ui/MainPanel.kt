@@ -6,6 +6,7 @@ package antd.sdps.ui
 
 import antd.sdps.ConfigManager
 import antd.sdps.combattracking.CombatTracker
+import antd.sdps.combattracking.ObsWriter
 import antd.sdps.ui.sidebar.MinSidebarPanel
 import antd.sdps.ui.sidebar.SidebarPanel
 import java.awt.*
@@ -22,8 +23,9 @@ import javax.swing.table.DefaultTableModel
 
 /** The tool's main UI panel. */
 class MainPanel(
-    combatTracker: CombatTracker,
-    private val configData: ConfigManager.ConfigData
+    private val configData: ConfigManager.ConfigData,
+    obsWriter: ObsWriter,
+    combatTracker: CombatTracker
 ) : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
@@ -32,7 +34,7 @@ class MainPanel(
     private val outputTableScrollPane = JScrollPane(outputTable)
         .apply { preferredSize = Dimension(275, 300) }
 
-    private val sidebarPanel = SidebarPanel(combatTracker, configData, outputTable)
+    private val sidebarPanel = SidebarPanel(configData, obsWriter, combatTracker, outputTable)
 
     private val minSidebarPanel = MinSidebarPanel(sidebarPanel)
         .also { sidebarPanel.minimizedSidebar = it }
@@ -94,6 +96,21 @@ class MainPanel(
             if (initHiddenCols.contains(checkBox.text)) {
                 checkBox.isSelected = false
                 for (action in checkBox.actionListeners) action.actionPerformed(null)
+
+                // update obs writer print column
+                when (checkBox.text) {
+                    "Time" -> obsWriter.printTime = false
+                    "DPS" -> obsWriter.printDPS = false
+                    "Damage" -> obsWriter.printDamage = false
+                    "Total Damage" -> obsWriter.printTotalDamage = false
+                    "Mitigated" -> obsWriter.printMitigated = false
+                    "Total Mitigated" -> obsWriter.printTotalMitigated = false
+                    "Heal Received" -> obsWriter.printHealReceived = false
+                    "Total Heal Received" -> obsWriter.printTotalHealReceived = false
+                    "Heal Applied" -> obsWriter.printHealApplied = false
+                    "Total Heal Applied" -> obsWriter.printTotalHealApplied = false
+                    "Reason" -> obsWriter.printReason = false
+                }
             }
         }
 
@@ -129,7 +146,7 @@ class MainPanel(
             })
 
         // load user config
-        loadConfigData()
+        loadConfigData(obsWriter)
 
         // supply combat tracker with necessary ui components
         combatTracker.setNameField(sidebarPanel.nameField)
@@ -187,7 +204,7 @@ class MainPanel(
 /* ------------------------------------------- Helpers ------------------------------------------ */
 
     /** Update UI to match user config data. */
-    private fun loadConfigData() {
+    private fun loadConfigData(obsWriter: ObsWriter) {
         if (configData.ign != null) sidebarPanel.nameField.text = configData.ign
 
         sidebarPanel.isVisible = configData.sidebar
@@ -237,6 +254,21 @@ class MainPanel(
                 } else {
                     column.minWidth = 0
                     column.maxWidth = 0
+                }
+
+                // load printed columns for the obs writer
+                when (columnFullName) {
+                    "Time" -> obsWriter.printTime = selected
+                    "DPS" -> obsWriter.printDPS = selected
+                    "Damage" -> obsWriter.printDamage = selected
+                    "Total Damage" -> obsWriter.printTotalDamage = selected
+                    "Mitigated" -> obsWriter.printMitigated = selected
+                    "Total Mitigated" -> obsWriter.printTotalMitigated = selected
+                    "Heal Received" -> obsWriter.printHealReceived = selected
+                    "Total Heal Received" -> obsWriter.printTotalHealReceived = selected
+                    "Heal Applied" -> obsWriter.printHealApplied = selected
+                    "Total Heal Applied" -> obsWriter.printTotalHealApplied = selected
+                    "Reason" -> obsWriter.printReason = selected
                 }
             }
         }

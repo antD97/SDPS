@@ -32,6 +32,12 @@ object ConfigManager {
             sb.appendKeyValuePair("columnWidths", columnWidths)
             sb.appendKeyValuePair("rowSize", rowSize)
             sb.appendKeyValuePair("updateCheck", updateCheck)
+            sb.appendKeyValuePair("obsEnabled", obsEnabled)
+            sb.appendKeyValuePair("obsPrintHeadersRow", obsPrintHeadersRow)
+            sb.appendKeyValuePair("obsPrintTotalsRow", obsPrintTotalsRow)
+            sb.appendKeyValuePair("obsColumnWidth", obsColumnWidth)
+            sb.appendKeyValuePair("obsReasonColumnWidth", obsReasonColumnWidth)
+            sb.appendKeyValuePair("obsMaxLines", obsMaxLines)
 
             f.writeText(sb.toString())
             true
@@ -65,6 +71,12 @@ object ConfigManager {
                         "columnWidths" -> cd.columnWidths = value.toIntListOrNull()
                         "rowSize" -> cd.rowSize = value.toInt()
                         "updateCheck" -> cd.updateCheck = value.toBoolean()
+                        "obsEnabled" -> cd.obsEnabled = value.toBoolean()
+                        "obsPrintHeadersRow" -> cd.obsPrintHeadersRow = value.toBoolean()
+                        "obsPrintTotalsRow" -> cd.obsPrintTotalsRow = value.toBoolean()
+                        "obsColumnWidth" -> cd.obsColumnWidth = value.toInt()
+                        "obsReasonColumnWidth" -> cd.obsReasonColumnWidth = value.toInt()
+                        "obsMaxLines" -> cd.obsMaxLines = value.toInt()
                     }
                 }
             }
@@ -85,7 +97,13 @@ object ConfigManager {
         var columnOrder: List<String>? = null,
         var columnWidths: List<Int>? = null,
         var rowSize: Int = 12,
-        var updateCheck: Boolean = true
+        var updateCheck: Boolean = true,
+        var obsEnabled: Boolean = false,
+        var obsPrintHeadersRow: Boolean = true,
+        var obsPrintTotalsRow: Boolean = false,
+        var obsColumnWidth: Int = 10,
+        var obsReasonColumnWidth: Int = 20,
+        var obsMaxLines: Int = 10
     )
 
 /* -------------------------------------------- Util -------------------------------------------- */

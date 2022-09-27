@@ -4,6 +4,7 @@
  */
 package antd.sdps.ui.sidebar
 
+import antd.sdps.combattracking.ObsWriter
 import antd.sdps.ui.OutputTable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -13,7 +14,10 @@ import javax.swing.JPanel
 import javax.swing.JSeparator
 import javax.swing.table.TableColumn
 
-class ColumnCheckboxesPanel(private val outputTable: OutputTable) : JPanel(GridBagLayout()) {
+class ColumnCheckboxesPanel(
+    private val obsWriter: ObsWriter,
+    private val outputTable: OutputTable
+) : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
 
@@ -82,6 +86,21 @@ class ColumnCheckboxesPanel(private val outputTable: OutputTable) : JPanel(GridB
             else {
                 column.minWidth = 0
                 column.maxWidth = 0
+            }
+
+            // update obs writer print column
+            when (header) {
+                "Time" -> obsWriter.printTime = isVisible
+                "DPS" -> obsWriter.printDPS = isVisible
+                "Damage" -> obsWriter.printDamage = isVisible
+                "Σ Damage" -> obsWriter.printTotalDamage = isVisible
+                "Mitigated" -> obsWriter.printMitigated = isVisible
+                "Σ Mitigated" -> obsWriter.printTotalMitigated = isVisible
+                "Heal Received" -> obsWriter.printHealReceived = isVisible
+                "Σ Heal Received" -> obsWriter.printTotalHealReceived = isVisible
+                "Heal Applied" -> obsWriter.printHealApplied = isVisible
+                "Σ Heal Applied" -> obsWriter.printTotalHealApplied = isVisible
+                "Reason" -> obsWriter.printReason = isVisible
             }
         }
     }

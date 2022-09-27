@@ -6,13 +6,15 @@ package antd.sdps.ui
 
 import antd.sdps.ConfigManager
 import antd.sdps.combattracking.CombatTracker
+import antd.sdps.combattracking.ObsWriter
 import java.awt.Dimension
 import javax.swing.JFrame
 
 /** Main tool window. */
 class MainJFrame(
-    combatTracker: CombatTracker,
     configData: ConfigManager.ConfigData,
+    obsWriter: ObsWriter,
+    combatTracker: CombatTracker,
     version: String
 ) : JFrame() {
 
@@ -21,7 +23,7 @@ class MainJFrame(
         val sidebarEnabledMinSize = Dimension(150, 100)
     }
 
-    val content = MainPanel(combatTracker, configData)
+    val content = MainPanel(configData, obsWriter, combatTracker)
 
     init {
         title = "SDPS v$version - antD"
