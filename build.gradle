@@ -28,16 +28,17 @@ jar {
 
 mainClassName = 'antd.sdps.MainKt'
 
+ext.genOutputDir = file("$buildDir/resources")
+
 task createProperties() {
+    ext.outputFile = file("$genOutputDir/main/version.txt")
+    outputs.file(outputFile)
     doLast {
-        mkdir("$buildDir/resources/main")
-        new File("$buildDir/resources/main/version.txt").write("${project.version}")
+        outputFile.text = "${project.version}"
     }
 }
 
-classes {
-    dependsOn createProperties
-}
+sourceSets.main.output.dir genOutputDir, builtBy: createProperties
 
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']

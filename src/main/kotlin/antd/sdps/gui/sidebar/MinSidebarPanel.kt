@@ -2,25 +2,32 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui.sidebar
+package antd.sdps.gui.sidebar
 
-import antd.sdps.ui.MainJFrame
+import antd.sdps.SharedInstances.initConfig
+import antd.sdps.SharedInstances.mainJFrame
+import antd.sdps.SharedInstances.sidebarPanel
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.awt.event.ActionEvent
 import javax.swing.JButton
 import javax.swing.JPanel
 
-class MinSidebarPanel(private val sidebarPanel: SidebarPanel) : JPanel(GridBagLayout()) {
+/** Minimized sidebar panel. */
+class MinSidebarPanel : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
 
-    private val maximizeSidebarButton = JButton()
+    val maximizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(10, 20)
-            addActionListener(::maximizeSidebarButtonClick)
             toolTipText = "Maximize the sidebar (Escape)"
+
+            addActionListener {
+                sidebarPanel.isVisible = true
+                this@MinSidebarPanel.isVisible = false
+                mainJFrame.updateMinSize(true)
+            }
         }
 
 /* -------------------------------------------- Init -------------------------------------------- */
@@ -34,14 +41,8 @@ class MinSidebarPanel(private val sidebarPanel: SidebarPanel) : JPanel(GridBagLa
         add(maximizeSidebarButton, c)
 
         minimumSize = preferredSize
-    }
 
-/* ------------------------------------------ Listeners ----------------------------------------- */
-
-    @Suppress("UNUSED_PARAMETER")
-    fun maximizeSidebarButtonClick(e: ActionEvent?) {
-        sidebarPanel.isVisible = true
-        isVisible = false
-        topLevelAncestor.minimumSize = MainJFrame.sidebarDisabledMinSize
+        // load init config
+        if (initConfig.sidebar) isVisible = false
     }
 }

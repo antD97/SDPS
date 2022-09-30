@@ -4,6 +4,7 @@
  */
 package antd.sdps
 
+import antd.sdps.gui.OutputTable
 import java.awt.Dimension
 import java.awt.Point
 import java.io.File
@@ -12,6 +13,39 @@ import java.io.File
 object ConfigManager {
 
     private const val defaultSavePath = "sdps.conf"
+
+    data class ConfigData(
+        var loc: Point? = null,
+        var size: Dimension? = null,
+        var ign: String? = null,
+        var sidebar: Boolean = true,
+        var onTop: Boolean = false,
+        var trackDamage: Boolean = true,
+        var trackHealReceived: Boolean = false,
+        var trackHealApplied: Boolean = false,
+        var godsOnly: Boolean = true,
+        var columnOrder: List<String>? = null,
+        var columnWidths: List<Int>? = null,
+        var rowSize: Int = 12,
+        var autoReset: Boolean = false,
+        var updateCheck: Boolean = true,
+        var obsEnabled: Boolean = false,
+        var obsPrintHeadersRow: Boolean = true,
+        var obsPrintTotalsRow: Boolean = false,
+        var obsColumnWidth: Int = 10,
+        var obsReasonColumnWidth: Int = 20,
+        var obsMaxLines: Int = 10
+    ) {
+
+        /** Returns of a map of [OutputTable.ColumnNames] short name to its width. */
+        val colToWidthMap: Map<String, Int>? by lazy {
+            if (columnWidths != null && columnOrder != null)
+                columnOrder!!.zip(columnWidths!!).toMap()
+            else null
+        }
+    }
+
+/* -------------------------------------- Public Functions -------------------------------------- */
 
     fun ConfigData.save(path: String = defaultSavePath): Boolean {
         val f = File(path)
@@ -31,6 +65,7 @@ object ConfigManager {
             sb.appendKeyValuePair("columnOrder", columnOrder)
             sb.appendKeyValuePair("columnWidths", columnWidths)
             sb.appendKeyValuePair("rowSize", rowSize)
+            sb.appendKeyValuePair("autoReset", autoReset)
             sb.appendKeyValuePair("updateCheck", updateCheck)
             sb.appendKeyValuePair("obsEnabled", obsEnabled)
             sb.appendKeyValuePair("obsPrintHeadersRow", obsPrintHeadersRow)
@@ -70,6 +105,7 @@ object ConfigManager {
                             .map { it.trim() }
                         "columnWidths" -> cd.columnWidths = value.toIntListOrNull()
                         "rowSize" -> cd.rowSize = value.toInt()
+                        "autoReset" -> cd.autoReset = value.toBoolean()
                         "updateCheck" -> cd.updateCheck = value.toBoolean()
                         "obsEnabled" -> cd.obsEnabled = value.toBoolean()
                         "obsPrintHeadersRow" -> cd.obsPrintHeadersRow = value.toBoolean()
@@ -84,29 +120,7 @@ object ConfigManager {
         } else null
     }
 
-    data class ConfigData(
-        var loc: Point? = null,
-        var size: Dimension? = null,
-        var ign: String? = null,
-        var sidebar: Boolean = true,
-        var onTop: Boolean = false,
-        var trackDamage: Boolean = true,
-        var trackHealReceived: Boolean = false,
-        var trackHealApplied: Boolean = false,
-        var godsOnly: Boolean = true,
-        var columnOrder: List<String>? = null,
-        var columnWidths: List<Int>? = null,
-        var rowSize: Int = 12,
-        var updateCheck: Boolean = true,
-        var obsEnabled: Boolean = false,
-        var obsPrintHeadersRow: Boolean = true,
-        var obsPrintTotalsRow: Boolean = false,
-        var obsColumnWidth: Int = 10,
-        var obsReasonColumnWidth: Int = 20,
-        var obsMaxLines: Int = 10
-    )
-
-/* -------------------------------------------- Util -------------------------------------------- */
+/* ------------------------------------------- Helpers ------------------------------------------ */
 
     private fun StringBuilder.appendKeyValuePair(key: String, point: Point?) {
         if (point != null) append("$key=${point.x},${point.y}\n")

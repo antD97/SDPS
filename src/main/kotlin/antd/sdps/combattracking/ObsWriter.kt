@@ -4,409 +4,326 @@
  */
 package antd.sdps.combattracking
 
-import antd.sdps.ConfigManager
+import antd.sdps.PopupUncaughtExceptionHandler
+import antd.sdps.SharedInstances.initConfig
+import antd.sdps.gui.OutputTable
+import antd.sdps.util.StrCombatLine
 import java.io.File
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.LinkedBlockingQueue
+import javax.swing.SwingWorker
 
 /** Used to write formatted combat text to an output file that can be used as an OBS text source. */
-class ObsWriter(configData: ConfigManager.ConfigData) {
+class ObsWriter : SwingWorker<Unit, Unit>() {
 
+    /** The OBS source file this [ObsWriter] writes to. */
     private val outputFile = File("obs-source.txt")
 
-    /** Tracked combat lines. */
-    private var combatLines = mutableListOf<CombatLine>()
+    /** Tracked combat lines. **Only modify on [ObsWriter] worker thread**. */
+    private val combatLines = mutableListOf<StrCombatLine>()
 
-    // --- print settings --- //
+    /** Used to indicate when this task has been successfully cancelled. */
+    private val cancelledLatch = CountDownLatch(1)
 
-    private val controlLock = Any()
+    // --- write settings --- //
 
-    /** Whether this [ObsWriter] writes to the [outputFile]. */
-    private var _enabled = configData.obsEnabled
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_enabled].
-     */
-    var enabled: Boolean
-        set(value) = synchronized(controlLock) {
-            _enabled = value
-            if (!_enabled && outputFile.isFile) outputFile.delete()
-        }
-        get() = synchronized(controlLock) { _enabled }
+    /** Whether this [ObsWriter] writes to the [outputFile]. Modify with [enable] and [disable]. */
+    @Volatile
+    private var enabled = initConfig.obsEnabled
 
     /** Whether the first printed row contains headers for each printed column. */
-    private var _printHeadersRow = configData.obsPrintHeadersRow
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printHeadersRow].
-     */
-    var printHeadersRow: Boolean
-        set(value) = synchronized(controlLock) {
-            _printHeadersRow = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printHeadersRow }
+    @Volatile
+    var printHeadersRow = initConfig.obsPrintHeadersRow
 
     /** Whether the "time" column is printed. */
-    private var _printTime = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTime].
-     */
-    var printTime: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTime = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTime }
+    @Volatile
+    var printTime =
+        if (initConfig.colToWidthMap == null) !OutputTable.initHiddenColumns.contains("Time")
+        else initConfig.colToWidthMap!!["Time"] != 0
 
     /** Whether the "DPS" column is printed. */
-    private var _printDPS = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printDPS].
-     */
-    var printDPS: Boolean
-        set(value) = synchronized(controlLock) {
-            _printDPS = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printDPS }
+    @Volatile
+    var printDPS =
+        if (initConfig.colToWidthMap == null) !OutputTable.initHiddenColumns.contains("DPS")
+        else initConfig.colToWidthMap!!["DPS"] != 0
 
     /** Whether the "damage" column is printed. */
-    private var _printDamage = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printDamage].
-     */
-    var printDamage: Boolean
-        set(value) = synchronized(controlLock) {
-            _printDamage = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printDamage }
+    @Volatile
+    var printDamage =
+        if (initConfig.colToWidthMap == null) !OutputTable.initHiddenColumns.contains("Damage")
+        else initConfig.colToWidthMap!!["Damage"] != 0
 
     /** Whether the "total damage" column is printed. */
-    private var _printTotalDamage = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTotalDamage].
-     */
-    var printTotalDamage: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTotalDamage = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTotalDamage }
+    @Volatile
+    var printTotalDamage =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Total Damage")
+        else initConfig.colToWidthMap!!["Σ Damage"] != 0
 
     /** Whether the "mitigated" column is printed. */
-    private var _printMitigated = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printMitigated].
-     */
-    var printMitigated: Boolean
-        set(value) = synchronized(controlLock) {
-            _printMitigated = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printMitigated }
+    @Volatile
+    var printMitigated =
+        if (initConfig.colToWidthMap == null) !OutputTable.initHiddenColumns.contains("Mitigated")
+        else initConfig.colToWidthMap!!["Mitigated"] != 0
 
     /** Whether the "total mitigated" column is printed. */
-    private var _printTotalMitigated = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTotalMitigated].
-     */
-    var printTotalMitigated: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTotalMitigated = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTotalMitigated }
+    @Volatile
+    var printTotalMitigated =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Total Mitigated")
+        else initConfig.colToWidthMap!!["Σ Mitigated"] != 0
 
     /** Whether the "heal received" column is printed. */
-    private var _printHealReceived = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printHealReceived].
-     */
-    var printHealReceived: Boolean
-        set(value) = synchronized(controlLock) {
-            _printHealReceived = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printHealReceived }
+    @Volatile
+    var printHealReceived =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Heal Received")
+        else initConfig.colToWidthMap!!["Heal Received"] != 0
 
     /** Whether the "total heal received" column is printed. */
-    private var _printTotalHealReceived = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTotalHealReceived].
-     */
-    var printTotalHealReceived: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTotalHealReceived = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTotalHealReceived }
+    @Volatile
+    var printTotalHealReceived =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Total Heal Received")
+        else initConfig.colToWidthMap!!["Σ Heal Received"] != 0
 
     /** Whether the "heal applied" column is printed. */
-    private var _printHealApplied = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printHealApplied].
-     */
-    var printHealApplied: Boolean
-        set(value) = synchronized(controlLock) {
-            _printHealApplied = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printHealApplied }
+    @Volatile
+    var printHealApplied =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Heal Applied")
+        else initConfig.colToWidthMap!!["Heal Applied"] != 0
 
     /** Whether the "total heal applied" column is printed. */
-    private var _printTotalHealApplied = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTotalHealApplied].
-     */
-    var printTotalHealApplied: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTotalHealApplied = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTotalHealApplied }
+    @Volatile
+    var printTotalHealApplied =
+        if (initConfig.colToWidthMap == null)
+            !OutputTable.initHiddenColumns.contains("Total Heal Applied")
+        else initConfig.colToWidthMap!!["Σ Heal Applied"] != 0
 
     /** Whether the "reason" column is printed. */
-    private var _printReason = true
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printReason].
-     */
-    var printReason: Boolean
-        set(value) = synchronized(controlLock) {
-            _printReason = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printReason }
+    @Volatile
+    var printReason =
+        if (initConfig.colToWidthMap == null) !OutputTable.initHiddenColumns.contains("Reason")
+        else initConfig.colToWidthMap!!["Reason"] != 0
 
     /** Whether the last printed row contains the totals for each printed column. */
-    private var _printTotalsRow = configData.obsPrintTotalsRow
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_printTotalsRow].
-     */
-    var printTotalsRow: Boolean
-        set(value) = synchronized(controlLock) {
-            _printTotalsRow = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _printTotalsRow }
+    @Volatile
+    var printTotalsRow = initConfig.obsPrintTotalsRow
 
     /** The width of each printed column in number of characters (excludes reason column). */
-    private var _columnWidth = configData.obsColumnWidth
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_columnWidth].
-     */
-    var columnWidth: Int
-        set(value) = synchronized(controlLock) {
-            _columnWidth = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _columnWidth }
+    @Volatile
+    var columnWidth = initConfig.obsColumnWidth
 
     /** The width of the reason column in number of characters. */
-    private var _reasonColumnWidth = configData.obsReasonColumnWidth
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_reasonColumnWidth].
-     */
-    var reasonColumnWidth: Int
-        set(value) = synchronized(controlLock) {
-            _reasonColumnWidth = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _reasonColumnWidth }
+    @Volatile
+    var reasonColumnWidth = initConfig.obsReasonColumnWidth
 
     /** The number of line to write to the [outputFile]. */
-    private var _maxLines = configData.obsMaxLines
-    /**
-     * **Synchronized with [addLine], [replaceLastLine], [clear], and all other settings.** See
-     * [_maxLines].
-     */
-    var maxLines: Int
-        set(value) = synchronized(controlLock) {
-            _maxLines = value
-            writeToFile()
-        }
-        get() = synchronized(controlLock) { _maxLines }
+    @Volatile
+    var maxLines = initConfig.obsMaxLines
+
+    // --- writer task --- //
+
+    /** Queue of [WriterTask]s for this [ObsWriter] to process. */
+    private val writeTaskQueue: BlockingQueue<WriterTask> = LinkedBlockingQueue()
+
+    /** A task for this [ObsWriter] to process. */
+    sealed class WriterTask {
+        /** [WriterTask] to add a line to [combatLines] and write it to [outputFile]. */
+        data class AddCombat(val combatLine: StrCombatLine) : WriterTask()
+
+        /** [WriterTask] to replace the last line in [combatLines] and write it to [outputFile]. */
+        data class ReplaceLastCombat(val combatLine: StrCombatLine) : WriterTask()
+
+        /** [WriterTask] to clear [combatLines] and write "" to [outputFile]. */
+        object Clear : WriterTask()
+
+        /** [WriterTask] to rewrite the [outputFile]. */
+        object Rewrite : WriterTask()
+    }
 
 /* -------------------------------------- Public Functions -------------------------------------- */
 
-    /** Adds a line of combat to be written to the OBS output file. */
-    fun addLine(
-        time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
-        totalMitigated: String, healReceived: String, totalHealReceived: String,
-        healApplied: String, totalHealApplied: String, reason: String
-    ) {
-        synchronized(controlLock) {
+    /** Set this [ObsWriter] to accept [WriterTask]s. */
+    fun enable() { enabled = true }
 
-            combatLines.add(CombatLine(time, dps, damage, totalDamage, mitigated, totalMitigated,
-                healReceived, totalHealReceived, healApplied, totalHealApplied, reason))
-
-            writeToFile()
-        }
+    /** Set this [ObsWriter] to not accept [WriterTask]s and queue a [ClearTask]. */
+    fun disable() {
+        enabled = false
+        writeTaskQueue.add(WriterTask.Clear)
     }
 
-    /** Replaces the last line of combat written to the OBS output file. */
-    fun replaceLastLine(
-        time: String, dps: String, damage: String, totalDamage: String, mitigated: String,
-        totalMitigated: String, healReceived: String, totalHealReceived: String,
-        healApplied: String, totalHealApplied: String, reason: String
-    ) {
-        synchronized(controlLock) {
+    /** Adds [task] to the [writeTaskQueue]. */
+    fun queueTask(task: WriterTask) {
+        if (enabled) writeTaskQueue.add(task)
+    }
 
-            if (combatLines.isNotEmpty()) {
-                combatLines[combatLines.lastIndex] = CombatLine(
-                    time, dps, damage, totalDamage, mitigated, totalMitigated, healReceived,
-                    totalHealReceived, healApplied, totalHealApplied, reason
-                )
+/* ------------------------------------------ Main Loop ----------------------------------------- */
+
+    /** Continuously processes [writeTaskQueue]. */
+    override fun doInBackground() {
+        // uncaught exception handlers
+        Thread.currentThread().uncaughtExceptionHandler = PopupUncaughtExceptionHandler
+
+        while (!isCancelled) {
+
+            // wait for new tasks
+            val tasks = mutableListOf<WriterTask>()
+            try { tasks.add(writeTaskQueue.take()) }
+            catch (_: InterruptedException) { break }
+
+            // collect all tasks to process
+            while (writeTaskQueue.isNotEmpty()) tasks.add(writeTaskQueue.remove())
+
+            // process tasks
+            for (task in tasks) {
+                when (task) {
+                    is WriterTask.AddCombat -> combatLines.add(task.combatLine)
+                    is WriterTask.ReplaceLastCombat ->
+                        combatLines[combatLines.lastIndex] = task.combatLine
+                    is WriterTask.Clear -> combatLines.clear()
+                    is WriterTask.Rewrite -> { /* do nothing. rewrite is always done at the end */ }
+                }
             }
 
-            writeToFile()
+            // rewrite output file
+            writeOutputFile()
         }
+
+        // clear the output file
+        outputFile.writeText("")
+
+        // cancellation completed
+        cancelledLatch.countDown()
     }
 
-    /** Clears all combat. */
-    fun clear() {
-        synchronized(controlLock) {
-            combatLines.clear()
-            writeToFile()
-        }
-    }
-
-    /** Deletes the [outputFile]. */
-    fun deleteFile() {
-        synchronized(controlLock) {
-            if (outputFile.isFile) outputFile.delete()
-        }
-    }
-
-/* ------------------------------------------- Helpers ------------------------------------------ */
-
-    /**
-     * Writes combat to [outputFile] using the set settings. **Must be called [synchronized] with
-     * [controlLock].**
-     */
-    private fun writeToFile() {
-        if (!_enabled) return
-
+    /** Write formatted [combatLines] to [outputFile] with the set settings. */
+    private fun writeOutputFile() {
         val sb = StringBuilder()
 
         if (combatLines.size != 0) {
 
+            // copy volatile settings
+            val printHeadersRowCopy = printHeadersRow
+            val printTimeCopy = printTime
+            val printDPSCopy = printDPS
+            val printDamageCopy = printDamage
+            val printTotalDamageCopy = printTotalDamage
+            val printMitigatedCopy = printMitigated
+            val printTotalMitigatedCopy = printTotalMitigated
+            val printHealReceivedCopy = printHealReceived
+            val printTotalHealReceivedCopy = printTotalHealReceived
+            val printHealAppliedCopy = printHealApplied
+            val printTotalHealAppliedCopy = printTotalHealApplied
+            val printReasonCopy = printReason
+            val printTotalsRowCopy = printTotalsRow
+            val columnWidthCopy = columnWidth
+            val reasonColumnWidthCopy = reasonColumnWidth
+            val maxLinesCopy = maxLines
+
             // row headers
-            if (_printHeadersRow) {
-                if (_printTime) sb.append("Time".setLength(_columnWidth))
-                if (_printDPS) sb.append("DPS".setLength(_columnWidth))
-                if (_printDamage) sb.append("Damage".setLength(_columnWidth))
-                if (_printTotalDamage) sb.append("Σ Damage".setLength(_columnWidth))
-                if (_printMitigated) sb.append("Mitigated".setLength(_columnWidth))
-                if (_printTotalMitigated) sb.append("Σ Mitigated".setLength(_columnWidth))
-                if (_printHealReceived) sb.append("Heal Received".setLength(_columnWidth))
-                if (_printTotalHealReceived) sb.append("Σ Heal Received".setLength(_columnWidth))
-                if (_printHealApplied) sb.append("Heal Applied".setLength(_columnWidth))
-                if (_printTotalHealApplied) sb.append("Σ Heal Applied".setLength(_columnWidth))
-                if (_printReason) sb.append("Reason".setLength(_reasonColumnWidth, false))
+            if (printHeadersRowCopy) {
+                if (printTimeCopy) sb.append("Time".setLength(columnWidthCopy))
+                if (printDPSCopy) sb.append("DPS".setLength(columnWidthCopy))
+                if (printDamageCopy) sb.append("Damage".setLength(columnWidthCopy))
+                if (printTotalDamageCopy) sb.append("Σ Damage".setLength(columnWidthCopy))
+                if (printMitigatedCopy) sb.append("Mitigated".setLength(columnWidthCopy))
+                if (printTotalMitigatedCopy) sb.append("Σ Mitigated".setLength(columnWidthCopy))
+                if (printHealReceivedCopy) sb.append("Heal Received".setLength(columnWidthCopy))
+                if (printTotalHealReceivedCopy)
+                    sb.append("Σ Heal Received".setLength(columnWidthCopy))
+                if (printHealAppliedCopy) sb.append("Heal Applied".setLength(columnWidthCopy))
+                if (printTotalHealAppliedCopy)
+                    sb.append("Σ Heal Applied".setLength(columnWidthCopy))
+                if (printReasonCopy) sb.append("Reason".setLength(reasonColumnWidthCopy, false))
                 sb.append("\n")
             }
 
-            val numCombatLines = _maxLines -
-                    (if (_printHeadersRow) 1 else 0) -
-                    (if (_printTotalsRow) 1 else 0)
+            val numCombatLines = maxLinesCopy -
+                    (if (printHeadersRowCopy) 1 else 0) -
+                    (if (printTotalsRowCopy) 1 else 0)
 
             // combat lines
-            for ((i, combatLine) in combatLines.withIndex().toList().takeLast(numCombatLines)) {
+            for (combatLine in combatLines.takeLast(numCombatLines)) {
 
-                if (_printTime) sb.append(combatLine.time.setLength(_columnWidth))
-                if (_printDPS) sb.append(combatLine.dps.setLength(_columnWidth))
-                if (_printDamage) sb.append(combatLine.damage.setLength(_columnWidth))
-                if (_printTotalDamage) sb.append(combatLine.totalDamage.setLength(_columnWidth))
-                if (_printMitigated) sb.append(combatLine.mitigated.setLength(_columnWidth))
-                if (_printTotalMitigated) sb.append(combatLine.totalMitigated.setLength(_columnWidth))
-                if (_printHealReceived) sb.append(combatLine.healReceived.setLength(_columnWidth))
-                if (_printTotalHealReceived)
-                    sb.append(combatLine.totalHealReceived.setLength(_columnWidth))
-                if (_printHealApplied) sb.append(combatLine.healApplied.setLength(_columnWidth))
-                if (_printTotalHealApplied)
-                    sb.append(combatLine.totalHealApplied.setLength(_columnWidth))
-                if (_printReason) sb.append(combatLine.reason.setLength(_reasonColumnWidth, false))
+                if (printTimeCopy) sb.append(combatLine.time.setLength(columnWidthCopy))
+                if (printDPSCopy) sb.append(combatLine.dps.setLength(columnWidthCopy))
+                if (printDamageCopy) sb.append(combatLine.damage.setLength(columnWidthCopy))
+                if (printTotalDamageCopy)
+                    sb.append(combatLine.totalDamage.setLength(columnWidthCopy))
+                if (printMitigatedCopy) sb.append(combatLine.mitigated.setLength(columnWidthCopy))
+                if (printTotalMitigatedCopy)
+                    sb.append(combatLine.totalMitigated.setLength(columnWidthCopy))
+                if (printHealReceivedCopy)
+                    sb.append(combatLine.healReceived.setLength(columnWidthCopy))
+                if (printTotalHealReceivedCopy)
+                    sb.append(combatLine.totalHealReceived.setLength(columnWidthCopy))
+                if (printHealAppliedCopy)
+                    sb.append(combatLine.healApplied.setLength(columnWidthCopy))
+                if (printTotalHealAppliedCopy)
+                    sb.append(combatLine.totalHealApplied.setLength(columnWidthCopy))
+                if (printReasonCopy)
+                    sb.append(combatLine.reason.setLength(reasonColumnWidthCopy, false))
 
                 sb.append("\n")
             }
 
             // blank lines
             for (i in 0 until (numCombatLines - combatLines.size)) {
-                if (_printTime) sb.append("".setLength(_columnWidth))
-                if (_printDPS) sb.append("".setLength(_columnWidth))
-                if (_printDamage) sb.append("".setLength(_columnWidth))
-                if (_printTotalDamage) sb.append("".setLength(_columnWidth))
-                if (_printMitigated) sb.append("".setLength(_columnWidth))
-                if (_printTotalMitigated) sb.append("".setLength(_columnWidth))
-                if (_printHealReceived) sb.append("".setLength(_columnWidth))
-                if (_printTotalHealReceived) sb.append("".setLength(_columnWidth))
-                if (_printHealApplied) sb.append("".setLength(_columnWidth))
-                if (_printTotalHealApplied) sb.append("".setLength(_columnWidth))
-                if (_printReason) sb.append("".setLength(_reasonColumnWidth, false))
+                if (printTimeCopy) sb.append("".setLength(columnWidthCopy))
+                if (printDPSCopy) sb.append("".setLength(columnWidthCopy))
+                if (printDamageCopy) sb.append("".setLength(columnWidthCopy))
+                if (printTotalDamageCopy) sb.append("".setLength(columnWidthCopy))
+                if (printMitigatedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printTotalMitigatedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printHealReceivedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printTotalHealReceivedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printHealAppliedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printTotalHealAppliedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printReasonCopy) sb.append("".setLength(reasonColumnWidthCopy, false))
 
-                if (i != numCombatLines - combatLines.size - 1 || _printTotalsRow) sb.append("\n")
+                if (i != numCombatLines - combatLines.size - 1 || printTotalsRowCopy)
+                    sb.append("\n")
             }
 
             val lastCombatLine = combatLines.last()
 
             // totals row
-            if (_printTotalsRow) {
-                if (_printTime) sb.append("".setLength(_columnWidth))
-                if (_printDPS) sb.append("".setLength(_columnWidth))
-                if (_printDamage) sb.append(lastCombatLine.totalDamage.setLength(_columnWidth))
-                if (_printTotalDamage) sb.append("".setLength(_columnWidth))
-                if (_printMitigated) sb.append(lastCombatLine.totalMitigated.setLength(_columnWidth))
-                if (_printTotalMitigated) sb.append("".setLength(_columnWidth))
-                if (_printHealReceived)
-                    sb.append(lastCombatLine.totalHealReceived.setLength(_columnWidth))
-                if (_printTotalHealReceived) sb.append("".setLength(_columnWidth))
-                if (_printHealApplied)
-                    sb.append(lastCombatLine.totalHealApplied.setLength(_columnWidth))
-                if (_printTotalHealApplied) sb.append("".setLength(_columnWidth))
-                if (_printReason) sb.append("".setLength(_reasonColumnWidth, false))
+            if (printTotalsRowCopy) {
+                if (printTimeCopy) sb.append("".setLength(columnWidthCopy))
+                if (printDPSCopy) sb.append("".setLength(columnWidthCopy))
+                if (printDamageCopy)
+                    sb.append(lastCombatLine.totalDamage.setLength(columnWidthCopy))
+                if (printTotalDamageCopy) sb.append("".setLength(columnWidthCopy))
+                if (printMitigatedCopy)
+                    sb.append(lastCombatLine.totalMitigated.setLength(columnWidthCopy))
+                if (printTotalMitigatedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printHealReceivedCopy)
+                    sb.append(lastCombatLine.totalHealReceived.setLength(columnWidthCopy))
+                if (printTotalHealReceivedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printHealAppliedCopy)
+                    sb.append(lastCombatLine.totalHealApplied.setLength(columnWidthCopy))
+                if (printTotalHealAppliedCopy) sb.append("".setLength(columnWidthCopy))
+                if (printReasonCopy) sb.append("".setLength(reasonColumnWidthCopy, false))
             }
         }
 
         outputFile.writeText(sb.toString())
     }
 
-    /**
-     * Pads the end of [this] with spaces to reach [targetLength]. [String]s longer than
+    fun awaitCancellation() = cancelledLatch.await()
+
+/* ------------------------------------------- Helpers ------------------------------------------ */
+
+    /** Pads the end of [this] with spaces to reach [targetLength]. [String]s longer than
      * [targetLength] are shortened with a trailing "…".
-     * @param trailingGap whether there should be a two space gap at the end
-     */
+     * @param trailingGap whether there should be a two space gap at the end. */
     private fun String.setLength(targetLength: Int, trailingGap: Boolean = true): String {
         val trailingGapSize = if (trailingGap) 2 else 0
         return if (length > targetLength - trailingGapSize)
             "${substring(0, targetLength - trailingGapSize - 1).trimEnd()}…".padEnd(targetLength)
         else padEnd(targetLength)
     }
-
-    private data class CombatLine(
-        val time: String,
-        val dps: String,
-        val damage: String,
-        val totalDamage: String,
-        val mitigated: String,
-        val totalMitigated: String,
-        val healReceived: String,
-        val totalHealReceived: String,
-        val healApplied: String,
-        val totalHealApplied: String,
-        val reason: String
-    )
 }

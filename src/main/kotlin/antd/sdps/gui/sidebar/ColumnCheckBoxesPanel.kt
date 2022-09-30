@@ -2,10 +2,13 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui.sidebar
+package antd.sdps.gui.sidebar
 
+import antd.sdps.SharedInstances.initConfig
+import antd.sdps.SharedInstances.obsWriter
+import antd.sdps.SharedInstances.outputTable
 import antd.sdps.combattracking.ObsWriter
-import antd.sdps.ui.OutputTable
+import antd.sdps.gui.OutputTable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
@@ -14,18 +17,16 @@ import javax.swing.JPanel
 import javax.swing.JSeparator
 import javax.swing.table.TableColumn
 
-class ColumnCheckboxesPanel(
-    private val obsWriter: ObsWriter,
-    private val outputTable: OutputTable
-) : JPanel(GridBagLayout()) {
+/** Panel of checkboxes for controlling [OutputTable] columns in [SidebarPanel]. */
+class ColumnCheckBoxesPanel : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
 
-    val columnCheckBoxGroups = OutputTable.columnNameGroups
+    private val columnCheckBoxGroups = OutputTable.columnNameGroups
         .map { group ->
             group.map { columnName ->
                 JCheckBox(columnName.full).apply {
-                    addActionListener { setColumnVisible(columnName.short, this.isSelected) }
+                    addActionListener { checkBoxAction(columnName.short, this.isSelected) }
                     isSelected = true
                 }
             }
@@ -65,12 +66,32 @@ class ColumnCheckboxesPanel(
                 c.gridy++
             }
         }
+
+        // load init config
+        if (initConfig.colToWidthMap != null) {
+            val colToWidthMapFullNames = initConfig.colToWidthMap!!.map { (k, v) ->
+                OutputTable.columnNameGroups.flatten()
+                    .find { it.short == k }!!
+                    .full to v
+            }.toMap()
+
+            for (checkBox in columnCheckBoxGroups.flatten()) {
+                checkBox.isSelected = colToWidthMapFullNames[checkBox.text] != 0
+            }
+        }
+        // load defaults
+        else {
+            for (checkBox in columnCheckBoxGroups.flatten()) {
+                checkBox.isSelected = !OutputTable.initHiddenColumns.contains(checkBox.text)
+            }
+        }
     }
 
 /* ------------------------------------------- Helpers ------------------------------------------ */
 
     /** Shows or hides the specified column.  */
-    private fun setColumnVisible(header: String, isVisible: Boolean) {
+    private fun checkBoxAction(header: String, isVisible: Boolean) {
+
         var column: TableColumn? = null
         for (c in outputTable.columnModel.columns)
             if (c.headerValue as String == header) column = c
@@ -102,6 +123,7 @@ class ColumnCheckboxesPanel(
                 "Σ Heal Applied" -> obsWriter.printTotalHealApplied = isVisible
                 "Reason" -> obsWriter.printReason = isVisible
             }
+            obsWriter.queueTask(ObsWriter.WriterTask.Rewrite)
         }
     }
 }

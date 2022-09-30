@@ -2,7 +2,7 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui.components
+package antd.sdps.gui.components
 
 import java.awt.Dimension
 import java.awt.GridBagConstraints
@@ -12,7 +12,8 @@ import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-/** JPanel with a [JLabel] followed by the specified [JComponent]s. */
+/** JPanel with a [JLabel] followed by the specified [JComponent]s.
+ * @param gap Additional spacing after the initial [JLabel]. */
 class LabelPanel(
     label: String,
     vararg components: JComponent,

@@ -2,113 +2,162 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.ui.sidebar
+package antd.sdps.gui.sidebar
 
-import antd.sdps.ConfigManager
-import antd.sdps.combattracking.CombatTracker
-import antd.sdps.combattracking.ObsWriter
-import antd.sdps.ui.components.LabelPanel
-import antd.sdps.ui.MainJFrame
-import antd.sdps.ui.OutputTable
+import antd.sdps.SharedInstances.columnCheckBoxesPanel
+import antd.sdps.SharedInstances.combatTracker
+import antd.sdps.SharedInstances.initConfig
+import antd.sdps.SharedInstances.mainJFrame
+import antd.sdps.SharedInstances.minSidebarPanel
+import antd.sdps.SharedInstances.outputTable
+import antd.sdps.gui.components.LabelPanel
+import antd.sdps.gui.OutputTable
 import java.awt.*
-import java.awt.event.ActionEvent
 import javax.swing.*
-import javax.swing.event.ChangeEvent
 
-class SidebarPanel(
-    configData: ConfigManager.ConfigData,
-    obsWriter: ObsWriter,
-    private val combatTracker: CombatTracker,
-    private val outputTable: OutputTable
-) : JPanel(GridBagLayout()) {
-
-    // minimized sidebar is instantiated after this sidebar panel
-    var minimizedSidebar: JPanel? = null
+/** Sidebar panel containing the majority of the user controls. */
+class SidebarPanel : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
 
-    private val minimizeSidebarButton = JButton()
+    val minimizeSidebarButton = JButton()
         .apply {
             preferredSize = Dimension(20, 10)
-            addActionListener(::minimizeSidebarButtonClick)
             toolTipText = "Minimize the sidebar (Esc)"
+
+            addActionListener {
+                minSidebarPanel.isVisible = true
+                this@SidebarPanel.isVisible = false
+                mainJFrame.updateMinSize(false)
+            }
         }
 
     val onTopCheckBox = JCheckBox("Window Always On Top")
         .apply {
-            addActionListener(::onTopCheckBoxClick)
             toolTipText = "Force this window to display on top of Smite and other windows (T)"
+            isSelected = initConfig.onTop
+
+            addActionListener {
+                mainJFrame.isAlwaysOnTop = (it.source as JCheckBox).isSelected
+            }
         }
 
     val trackDamageCheckBox = JCheckBox("Track Damage")
         .apply {
-            addActionListener(::trackDamageCheckBoxClick)
             toolTipText = "Track & print damage onto the table (1)"
-            isSelected = true
             background = OutputTable.damageColor
+            isSelected = initConfig.trackDamage
+
+            addActionListener {
+                combatTracker.trackDamage = (it.source as JCheckBox).isSelected
+            }
         }
 
     val trackHealReceivedCheckBox = JCheckBox("Track Heal Received")
         .apply {
-            addActionListener(::trackHealReceivedCheckBoxClick)
             toolTipText = "Track & print heal received onto the table (2)"
-            isSelected = false
             background = OutputTable.healReceivedColor
+            isSelected = initConfig.trackHealReceived
+
+            addActionListener {
+                combatTracker.trackHealReceived = (it.source as JCheckBox).isSelected
+            }
         }
 
     val trackHealAppliedCheckBox = JCheckBox("Track Heal Applied")
         .apply {
-            addActionListener(::trackHealAppliedCheckBoxClick)
             toolTipText = "Track & print heal applied onto the table (3)"
-            isSelected = false
             background = OutputTable.healAppliedColor
+            isSelected = initConfig.trackHealApplied
+
+            addActionListener {
+                combatTracker.trackHealApplied = (it.source as JCheckBox).isSelected
+            }
         }
 
     val godsOnlyCheckBox = JCheckBox("Gods Only")
         .apply {
-            addActionListener(::godsOnlyCheckBoxClick)
             toolTipText = "Ignore minions/structures (G)"
-            isSelected = true
+            isSelected = initConfig.godsOnly
+
+            addActionListener {
+                combatTracker.godsOnly = (it.source as JCheckBox).isSelected
+            }
         }
 
-    val nameField = JTextField(8)
+    val autoResetCheckBox = JCheckBox("Auto-Reset")
         .apply {
-            text = "Searching..."
+            toolTipText = "Automatically reset after 5 seconds of inactivity (Ctrl+R)"
+            isSelected = initConfig.autoReset
+
+            addActionListener {
+                TODO()
+            }
+        }
+
+    val nameField = JTextField(10)
+        .apply {
+            text = initConfig.ign ?: "Searching..."
             isEditable = false
         }
 
     private val nameFieldResetButton = JButton("↺")
         .apply {
-            addActionListener(::nameFieldResetButtonClick)
             toolTipText = "Resets the in-game name tracked; will be set on the next tick of damage"
+
+            addActionListener {
+                nameField.text = "Searching..."
+                combatTracker.updateIGN()
+            }
         }
 
-    val combatLogField = JTextField(13)
+    val combatLogField = JTextField(10)
         .apply {
-            text = "no file"
+            text = "No file"
             isEditable = false
         }
 
-    private val rowSizeSpinner = JSpinner(SpinnerNumberModel(configData.rowSize, 1, 100, 1))
+    private val combatLogResetButton = JButton("↺")
         .apply {
-            addChangeListener(::rowSizeSpinnerChange)
-            toolTipText = "Adjust table font size"
+            toolTipText = "Loads the most recent combat log file"
+
+            addActionListener {
+                combatTracker.reloadCombatLog()
+            }
         }
 
-    private val resetCombatButton = JButton("Reset")
+    private val rowSizeSpinner = JSpinner(SpinnerNumberModel(initConfig.rowSize, 1, 100, 1))
         .apply {
-            addActionListener(::resetCombatButtonClick)
+            toolTipText = "Adjust table font size"
+            model.value = initConfig.rowSize
+
+            addChangeListener {
+                val rowSize = ((it.source as JSpinner).model as SpinnerNumberModel).number.toInt()
+                outputTable.font = Font(font.name, font.style, rowSize)
+                outputTable.tableHeader.font = outputTable.font
+                outputTable.rowHeight = outputTable.font.size + 5
+            }
+        }
+
+    val resetCombatButton = JButton("Reset")
+        .apply {
             toolTipText = "Makes your next tick of damage reset the DPS timer and resets damage " +
                     "& healing totals (R)"
+
+            addActionListener {
+                combatTracker.resetTracking()
+            }
         }
 
-    private val clearTableButton = JButton("Clear Table")
+    val clearTableButton = JButton("Clear Table")
         .apply {
-            addActionListener(::clearTableButtonClick)
             toolTipText = "Clears the table of all rows and resets (C)"
-        }
 
-    val columnCheckboxesPanel = ColumnCheckboxesPanel(obsWriter, outputTable)
+            addActionListener {
+                outputTable.clearTable()
+                combatTracker.resetTracking()
+            }
+        }
 
 /* -------------------------------------------- Init -------------------------------------------- */
 
@@ -158,20 +207,24 @@ class SidebarPanel(
         // gods only checkbox
         c.gridy++
         c.fill = GridBagConstraints.NONE
-        c.insets = Insets(0, 0, 10, 0)
         add(godsOnlyCheckBox, c)
+
+        // auto-reset checkbox
+        c.gridy++
+        c.insets = Insets(0, 0, 10, 0)
+        add(autoResetCheckBox, c)
 
         // in-game name field
         c.gridy++
-        add(LabelPanel("In-game name", nameField, nameFieldResetButton), c)
+        add(LabelPanel("In-Game Name", nameField, nameFieldResetButton), c)
 
-        // combat log file
+        // combat log
         c.gridy++
-        add(LabelPanel("Combat log file", combatLogField), c)
+        add(LabelPanel("Combat Log", combatLogField, combatLogResetButton, gap = 14), c)
 
         // row size spinner
         c.gridy++
-        add(LabelPanel("Table Font Size", rowSizeSpinner, gap = 0), c)
+        add(LabelPanel("Table Font Size", rowSizeSpinner, gap = 82), c)
 
         // 2x button group
         c.gridy++
@@ -194,7 +247,7 @@ class SidebarPanel(
         c.weighty = 1.0
         c.fill = GridBagConstraints.BOTH
         c.anchor = GridBagConstraints.PAGE_START
-        JScrollPane(columnCheckboxesPanel).apply {
+        JScrollPane(columnCheckBoxesPanel).apply {
             horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
             verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
             minimumSize = Dimension(0, 0)
@@ -202,64 +255,8 @@ class SidebarPanel(
         }.also { add(it, c) }
 
         minimumSize = preferredSize
-    }
 
-/* ------------------------------------------ Listeners ----------------------------------------- */
-
-    @Suppress("UNUSED_PARAMETER")
-    fun minimizeSidebarButtonClick(e: ActionEvent?) {
-        topLevelAncestor.minimumSize = MainJFrame.sidebarEnabledMinSize
-        isVisible = false
-        minimizedSidebar?.isVisible = true
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun onTopCheckBoxClick(e: ActionEvent?) {
-        (topLevelAncestor as JFrame).isAlwaysOnTop = onTopCheckBox.isSelected
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun trackDamageCheckBoxClick(e: ActionEvent?) {
-        combatTracker.setTrackDamage(trackDamageCheckBox.isSelected)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun trackHealReceivedCheckBoxClick(e: ActionEvent?) {
-        combatTracker.setTrackHealReceived(trackHealReceivedCheckBox.isSelected)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun trackHealAppliedCheckBoxClick(e: ActionEvent?) {
-        combatTracker.setTrackHealApplied(trackHealAppliedCheckBox.isSelected)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun godsOnlyCheckBoxClick(e: ActionEvent?) {
-        combatTracker.setGodsOnly(godsOnlyCheckBox.isSelected)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun nameFieldResetButtonClick(e: ActionEvent?) {
-        nameField.text = "Searching..."
-        combatTracker.updateIGN()
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    private fun rowSizeSpinnerChange(e: ChangeEvent) {
-        val rowSize = (rowSizeSpinner.model as SpinnerNumberModel).number.toInt()
-        outputTable.font = Font(font.name, font.style, rowSize)
-        outputTable.tableHeader.font = outputTable.font
-        outputTable.rowHeight = outputTable.font.size + 5
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun resetCombatButtonClick(e: ActionEvent?) {
-        combatTracker.resetPlayerTracking()
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun clearTableButtonClick(e: ActionEvent?) {
-        combatTracker.clearTable()
-        combatTracker.resetPlayerTracking()
+        // load init config
+        if (!initConfig.sidebar) isVisible = false
     }
 }
