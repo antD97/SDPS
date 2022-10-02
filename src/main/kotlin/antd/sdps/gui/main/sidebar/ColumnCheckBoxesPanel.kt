@@ -2,13 +2,14 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.gui.sidebar
+package antd.sdps.gui.main.sidebar
 
 import antd.sdps.SharedInstances.initConfig
 import antd.sdps.SharedInstances.obsWriter
 import antd.sdps.SharedInstances.outputTable
-import antd.sdps.combattracking.ObsWriter
-import antd.sdps.gui.OutputTable
+import antd.sdps.workers.ObsWriter
+import antd.sdps.gui.main.OutputTable
+import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets

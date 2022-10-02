@@ -2,7 +2,7 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.gui
+package antd.sdps.gui.main
 
 import antd.sdps.SharedInstances.minSidebarPanel
 import antd.sdps.SharedInstances.outputTable
@@ -17,13 +17,13 @@ import javax.swing.JScrollPane
 import javax.swing.JTextField
 import javax.swing.SwingUtilities
 
-/** The tool's main UI panel. */
+/** The tool's main window content panel. */
 class MainPanel : JPanel(GridBagLayout()) {
 
 /* ----------------------------------------- UI Content ----------------------------------------- */
 
     private val outputTableScrollPane = JScrollPane(outputTable)
-        .apply { preferredSize = Dimension(275, 300) }
+        .apply { preferredSize = Dimension(400, 300) }
 
 /* -------------------------------------------- Init -------------------------------------------- */
 
@@ -90,11 +90,6 @@ class MainPanel : JPanel(GridBagLayout()) {
             val scrollBar = outputTableScrollPane.verticalScrollBar
             scrollBar.value = scrollBar.maximum
         }
-//        // delayed task seems to help with edt scheduling, otherwise scroll doesn't reach maximum
-//        DelayedTask(0) {
-//            val scrollBar = outputTableScrollPane.verticalScrollBar
-//            scrollBar.value = scrollBar.maximum
-//        }.execute()
     }
 
 /* ------------------------------------------- Helpers ------------------------------------------ */

@@ -2,29 +2,27 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.combattracking
+package antd.sdps.workers
 
 import antd.sdps.PopupUncaughtExceptionHandler
 import antd.sdps.SharedInstances.initConfig
-import antd.sdps.gui.OutputTable
+import antd.sdps.gui.main.OutputTable
 import antd.sdps.util.StrCombatLine
 import java.io.File
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import javax.swing.SwingWorker
+import kotlin.math.sqrt
 
 /** Used to write formatted combat text to an output file that can be used as an OBS text source. */
-class ObsWriter : SwingWorker<Unit, Unit>() {
+class ObsWriter : ExceptionHandlingSwingWorker<Unit, Unit>(PopupUncaughtExceptionHandler) {
 
     /** The OBS source file this [ObsWriter] writes to. */
-    private val outputFile = File("obs-source.txt")
+    val outputFile = File("obs-source.txt")
 
     /** Tracked combat lines. **Only modify on [ObsWriter] worker thread**. */
     private val combatLines = mutableListOf<StrCombatLine>()
-
-    /** Used to indicate when this task has been successfully cancelled. */
-    private val cancelledLatch = CountDownLatch(1)
 
     // --- write settings --- //
 
@@ -131,6 +129,13 @@ class ObsWriter : SwingWorker<Unit, Unit>() {
 
     /** A task for this [ObsWriter] to process. */
     sealed class WriterTask {
+        /** [WriterTask] to enable writing to [outputFile]. */
+        object Enable : WriterTask()
+
+        /** [WriterTask] to write "" to [outputFile] and stop writing for proceeding
+         * [WriterTask]s. */
+        object Disable : WriterTask()
+
         /** [WriterTask] to add a line to [combatLines] and write it to [outputFile]. */
         data class AddCombat(val combatLine: StrCombatLine) : WriterTask()
 
@@ -144,35 +149,14 @@ class ObsWriter : SwingWorker<Unit, Unit>() {
         object Rewrite : WriterTask()
     }
 
-/* -------------------------------------- Public Functions -------------------------------------- */
-
-    /** Set this [ObsWriter] to accept [WriterTask]s. */
-    fun enable() { enabled = true }
-
-    /** Set this [ObsWriter] to not accept [WriterTask]s and queue a [ClearTask]. */
-    fun disable() {
-        enabled = false
-        writeTaskQueue.add(WriterTask.Clear)
-    }
-
-    /** Adds [task] to the [writeTaskQueue]. */
-    fun queueTask(task: WriterTask) {
-        if (enabled) writeTaskQueue.add(task)
-    }
-
 /* ------------------------------------------ Main Loop ----------------------------------------- */
 
     /** Continuously processes [writeTaskQueue]. */
-    override fun doInBackground() {
-        // uncaught exception handlers
-        Thread.currentThread().uncaughtExceptionHandler = PopupUncaughtExceptionHandler
-
+    override fun doInBackgroundCatchExceptions() {
         while (!isCancelled) {
 
             // wait for new tasks
-            val tasks = mutableListOf<WriterTask>()
-            try { tasks.add(writeTaskQueue.take()) }
-            catch (_: InterruptedException) { break }
+            val tasks = mutableListOf(writeTaskQueue.take())
 
             // collect all tasks to process
             while (writeTaskQueue.isNotEmpty()) tasks.add(writeTaskQueue.remove())
@@ -180,23 +164,23 @@ class ObsWriter : SwingWorker<Unit, Unit>() {
             // process tasks
             for (task in tasks) {
                 when (task) {
+                    is WriterTask.Enable -> enabled = true
+                    is WriterTask.Disable -> {
+                        enabled = false
+                        outputFile.writeText("")
+                    }
                     is WriterTask.AddCombat -> combatLines.add(task.combatLine)
                     is WriterTask.ReplaceLastCombat ->
-                        combatLines[combatLines.lastIndex] = task.combatLine
+                        if (combatLines.isNotEmpty())
+                            combatLines[combatLines.lastIndex] = task.combatLine
                     is WriterTask.Clear -> combatLines.clear()
                     is WriterTask.Rewrite -> { /* do nothing. rewrite is always done at the end */ }
                 }
             }
 
             // rewrite output file
-            writeOutputFile()
+            if (enabled) writeOutputFile()
         }
-
-        // clear the output file
-        outputFile.writeText("")
-
-        // cancellation completed
-        cancelledLatch.countDown()
     }
 
     /** Write formatted [combatLines] to [outputFile] with the set settings. */
@@ -313,7 +297,10 @@ class ObsWriter : SwingWorker<Unit, Unit>() {
         outputFile.writeText(sb.toString())
     }
 
-    fun awaitCancellation() = cancelledLatch.await()
+/* -------------------------------------- Public Functions -------------------------------------- */
+
+    /** Adds [task] to the [writeTaskQueue]. */
+    fun queueTask(task: WriterTask) { writeTaskQueue.add(task) }
 
 /* ------------------------------------------- Helpers ------------------------------------------ */
 

@@ -2,9 +2,10 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.combattracking
+package antd.sdps.workers
 
 import antd.sdps.PopupUncaughtExceptionHandler
+import antd.sdps.SharedInstances.autoCombatResetWorker
 import antd.sdps.SharedInstances.initConfig
 import antd.sdps.SharedInstances.mainPanel
 import antd.sdps.SharedInstances.obsWriter
@@ -21,7 +22,8 @@ import kotlin.properties.Delegates
 
 /** Monitors the newest combat log file and updates a [DefaultTableModel] with damage
  *  information. */
-class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
+class CombatTracker :
+    ExceptionHandlingSwingWorker<Unit, CombatTracker.ProcessTask>(PopupUncaughtExceptionHandler) {
 
     // --- gui --- //
 
@@ -99,9 +101,6 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
         /** [ProcessTask] to add a table row to [tableModel]. */
         data class AddCombat(val strCombatLine: StrCombatLine) : ProcessTask()
 
-        /** [ProcessTask] to replace the last table row in [tableModel]. */
-        data class ReplaceLastCombat(val strCombatLine: StrCombatLine) : ProcessTask()
-
         /** [ProcessTask] to mark the last combat with the hidden combat "*". */
         object AddPotentialHiddenCombat : ProcessTask()
 
@@ -145,16 +144,13 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
     /** The in-game time of the first combat line for tracking DPS and heal/damage totals. */
     private var combatStartTime = 0.0
 
-    /** The in-game time of the last tracked combat line. */
-    private var prevCombatLineTime = 0.0
+    /** Whether there could be hidden combat following the last tracked combat. */
+    private var potentialHiddenCombat = true
 
 /* ------------------------------------------ Main Loop ----------------------------------------- */
 
     /** Continuously tracks combat using [combatLog] to generate [ProcessTask]s for [process]. */
-    override fun doInBackground() {
-        // uncaught exception handlers
-        Thread.currentThread().uncaughtExceptionHandler = PopupUncaughtExceptionHandler
-
+    override fun doInBackgroundCatchExceptions() {
         while (!isCancelled) {
 
             // track player
@@ -204,10 +200,11 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
 
         resetTracking = true
         combatStartTime = 0.0
-        prevCombatLineTime = 0.0
+
+        potentialHiddenCombat = false
 
         exitLoop = false
-        while (!exitLoop) {
+        while (!exitLoop && !isCancelled) {
             val line = br.readLine()
 
             // log closed
@@ -254,6 +251,7 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
     ) {
         var ignCopy = ignCopy
 
+        potentialHiddenCombat = false
         publish(ProcessTask.ClearPotentialHiddenCombat)
 
         val lineData = readLineData(lineCopy)
@@ -332,7 +330,11 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
         // cc
         else if (typeSplit.size == 2 && typeSplit[1] == "Status") {
             val source = lineData[9]
-            if (source == ignCopy) publish(ProcessTask.AddPotentialHiddenCombat)
+
+            if (source == ignCopy) {
+                potentialHiddenCombat = true
+                publish(ProcessTask.AddPotentialHiddenCombat)
+            }
         }
     }
 
@@ -373,53 +375,28 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
 
         // track damage & gods only check
         if (track) {
-
             if (resetTrackingCopy) {
+                this.resetTracking = false
+                combatStartTime = time
 
-                // delayed combat log lines that have to go before the reset row
-                if (time == prevCombatLineTime) {
+                totalDamage = 0
+                totalMitigated = 0
+                totalHealReceived = 0
+                totalHealApplied = 0
 
-                    // don't add the row if there's no reset row to place it before
-                    if (tableModel.rowCount != 0) {
+                updateTotals()
 
-                        updateTotals()
-
-                        // replace reset row
-                        tasksToPublish.add(
-                            ProcessTask.ReplaceLastCombat(makeCombatLine().toStrCombatLine())
-                        )
-                        // re-add reset row
-                        tasksToPublish.add(ProcessTask.AddCombat(StrCombatLine("Reset")))
-                    }
-                }
-                // combat reset on this event
-                else {
-                    this.resetTracking = false
-                    combatStartTime = time
-
-                    totalDamage = 0
-                    totalMitigated = 0
-                    totalHealReceived = 0
-                    totalHealApplied = 0
-
-                    updateTotals()
-
-                    tasksToPublish.add(ProcessTask.AddCombat(makeCombatLine().toStrCombatLine()))
-
-                    prevCombatLineTime = time
-                }
+                tasksToPublish.add(ProcessTask.AddCombat(makeCombatLine().toStrCombatLine()))
             }
             // not reset tracking
             else {
                 updateTotals()
-
                 tasksToPublish.add(ProcessTask.AddCombat(makeCombatLine().toStrCombatLine()))
-
-                prevCombatLineTime = time
             }
         }
 
         // anything caused by the player
+        potentialHiddenCombat = true
         tasksToPublish.add(ProcessTask.AddPotentialHiddenCombat)
 
         // publish all created tasks
@@ -437,18 +414,19 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
                 is ProcessTask.AddCombat -> {
                     tableModel.addRow(task.strCombatLine.toArray())
                     mainPanel.scrollTableToBottom()
+
                     if (task.strCombatLine.time.contains("Reset"))
                         obsWriter.queueTask(ObsWriter.WriterTask.Clear)
                     else obsWriter.queueTask(ObsWriter.WriterTask.AddCombat(task.strCombatLine))
                 }
-                is ProcessTask.ReplaceLastCombat -> {
-                    tableModel.removeRow(tableModel.rowCount - 1)
-                    tableModel.addRow(task.strCombatLine.toArray())
-                    mainPanel.scrollTableToBottom()
-                    obsWriter.queueTask(ObsWriter.WriterTask.ReplaceLastCombat(task.strCombatLine))
+                is ProcessTask.AddPotentialHiddenCombat -> {
+                    addPotentialHiddenCombat()
+                    autoCombatResetWorker.hiddenCombatState()
                 }
-                is ProcessTask.AddPotentialHiddenCombat -> addPotentialHiddenCombat()
-                is ProcessTask.ClearPotentialHiddenCombat -> clearPotentialHiddenCombat()
+                is ProcessTask.ClearPotentialHiddenCombat -> {
+                    clearPotentialHiddenCombat()
+                    autoCombatResetWorker.reset()
+                }
                 is ProcessTask.UpdateCombatLogField -> {
                     sidebarPanel.combatLogField.text = task.fileName
                 }
@@ -485,28 +463,6 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
                     )
                 }
             }
-            // last row is reset row
-            else {
-                // check second to last line
-                val secondToLastRow = tableModel.getRow(tableModel.rowCount - 2)
-                if (secondToLastRow != null && !secondToLastRow[0].endsWith("*")) {
-
-                    // remove reset & the combat row after it
-                    tableModel.removeRow(tableModel.rowCount - 1)
-                    tableModel.removeRow(tableModel.rowCount - 1)
-
-                    val newRow = lastRow.toList()
-                        .map { if (it.isNotEmpty()) "$it*" else "" }
-                        .toTypedArray()
-
-                    tableModel.addRow(newRow)
-                    tableModel.addRow(StrCombatLine("Reset").toArray())
-                    mainPanel.scrollTableToBottom()
-                    obsWriter.queueTask(
-                        ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
-                    )
-                }
-            }
         }
     }
 
@@ -532,27 +488,6 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
                     )
                 }
             }
-            // last row is reset row
-            else {
-                // check second to last line
-                val secondToLastRow = tableModel.getRow(tableModel.rowCount - 2)
-                if (secondToLastRow != null && secondToLastRow[0].endsWith("*")) {
-
-                    // remove reset & the combat row after it
-                    tableModel.removeRow(tableModel.rowCount - 1)
-                    tableModel.removeRow(tableModel.rowCount - 1)
-
-                    val newRow = secondToLastRow.toList().map { it.removeSuffix("*") }
-                        .toTypedArray()
-
-                    tableModel.addRow(newRow)
-                    tableModel.addRow(StrCombatLine("Reset").toArray())
-                    mainPanel.scrollTableToBottom()
-                    obsWriter.queueTask(
-                        ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
-                    )
-                }
-            }
         }
     }
 
@@ -571,7 +506,7 @@ class CombatTracker : SwingWorker<Unit, CombatTracker.ProcessTask>() {
 
     /** Resets the DPS timer and total damage/heal values. */
     fun resetTracking() {
-        if (!resetTracking) {
+        if (!resetTracking && !potentialHiddenCombat) {
             resetTracking = true
             publish(ProcessTask.AddCombat(StrCombatLine("Reset")))
         }

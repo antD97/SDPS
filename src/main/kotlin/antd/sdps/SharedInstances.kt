@@ -4,14 +4,17 @@
  */
 package antd.sdps
 
-import antd.sdps.combattracking.CombatTracker
-import antd.sdps.combattracking.ObsWriter
-import antd.sdps.gui.MainJFrame
-import antd.sdps.gui.MainPanel
-import antd.sdps.gui.OutputTable
-import antd.sdps.gui.sidebar.ColumnCheckBoxesPanel
-import antd.sdps.gui.sidebar.MinSidebarPanel
-import antd.sdps.gui.sidebar.SidebarPanel
+import antd.sdps.gui.main.MainFrame
+import antd.sdps.gui.main.MainPanel
+import antd.sdps.gui.main.OutputTable
+import antd.sdps.gui.main.sidebar.ColumnCheckBoxesPanel
+import antd.sdps.gui.main.sidebar.MinSidebarPanel
+import antd.sdps.gui.main.sidebar.SidebarPanel
+import antd.sdps.gui.obs.ObsDialog
+import antd.sdps.gui.obs.ObsPanel
+import antd.sdps.workers.AutoCombatResetWorker
+import antd.sdps.workers.CombatTracker
+import antd.sdps.workers.ObsWriter
 import java.awt.Component
 import javax.swing.SwingUtilities
 
@@ -26,6 +29,7 @@ object SharedInstances {
 
     var combatTrackerInitializer by initializers
     var obsWriterInitializer by initializers
+    var autoCombatResetWorkerInitializer by initializers
 
     var mainJFrameInitializer by guiInitializers
     var mainPanelInitializer by guiInitializers
@@ -34,13 +38,19 @@ object SharedInstances {
     var minSidebarPanelInitializer by guiInitializers
     var outputTableInitializer by guiInitializers
 
+    var obsJFrameInitializer by guiInitializers
+    var obsPanelInitializer by guiInitializers
+
     val version by lazy { versionInitializer() as String }
     val initConfig by lazy { initConfigInitializer() as ConfigManager.ConfigData }
 
     val combatTracker by lazy { combatTrackerInitializer() as CombatTracker }
     val obsWriter by lazy { obsWriterInitializer() as ObsWriter }
+    val autoCombatResetWorker by lazy {
+        autoCombatResetWorkerInitializer() as AutoCombatResetWorker
+    }
 
-    val mainJFrame by lazy { edtInvokeAndWaitIfNeeded { mainJFrameInitializer() as MainJFrame } }
+    val mainFrame by lazy { edtInvokeAndWaitIfNeeded { mainJFrameInitializer() as MainFrame } }
     val mainPanel by lazy { edtInvokeAndWaitIfNeeded { mainPanelInitializer() as MainPanel } }
     val sidebarPanel by lazy {
         edtInvokeAndWaitIfNeeded { sidebarPanelInitializer() as SidebarPanel }
@@ -52,6 +62,9 @@ object SharedInstances {
         edtInvokeAndWaitIfNeeded { minSidebarPanelInitializer() as MinSidebarPanel }
     }
     val outputTable by lazy { edtInvokeAndWaitIfNeeded { outputTableInitializer() as OutputTable } }
+
+    val obsDialog by lazy { edtInvokeAndWaitIfNeeded { obsJFrameInitializer() as ObsDialog } }
+    val obsPanel by lazy { edtInvokeAndWaitIfNeeded { obsPanelInitializer() as ObsPanel } }
 
     /** Invoke and wait [doRun] on the EDT if not already on the EDT. */
     private fun <T>edtInvokeAndWaitIfNeeded(doRun: () -> T): T {

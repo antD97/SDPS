@@ -2,7 +2,7 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.gui
+package antd.sdps.gui.main
 
 import antd.sdps.SharedInstances.initConfig
 import antd.sdps.SharedInstances.mainPanel
@@ -11,7 +11,7 @@ import java.awt.Dimension
 import javax.swing.JFrame
 
 /** Main tool window. */
-class MainJFrame : JFrame() {
+class MainFrame : JFrame() {
 
     init {
         title = "SDPS v$version - antD"
@@ -32,7 +32,7 @@ class MainJFrame : JFrame() {
     /** Updates the minimum size of the [JFrame] window according to [sidebarEnabled]. */
     fun updateMinSize(sidebarEnabled: Boolean) {
         minimumSize =
-            if (sidebarEnabled) Dimension(300, 425)
+            if (sidebarEnabled) Dimension(300, 450)
             else Dimension(150, 100)
     }
 }

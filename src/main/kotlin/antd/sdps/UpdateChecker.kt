@@ -5,6 +5,7 @@
 package antd.sdps
 
 import antd.sdps.ConfigManager.save
+import antd.sdps.SharedInstances.mainFrame
 import org.kohsuke.github.GitHub
 import java.awt.Desktop
 import java.awt.GridBagConstraints
@@ -28,9 +29,10 @@ object UpdateChecker {
             SwingUtilities.invokeAndWait {
 
                 // create new window
-                val jFrame = JFrame("New Version")
+                val dialog = JDialog(mainFrame, true)
 
-                jFrame.apply {
+                dialog.apply {
+                    title = "New Version"
 
                     // content
                     add(JPanel(GridBagLayout()).apply {
@@ -64,8 +66,8 @@ object UpdateChecker {
                         c.insets = Insets(0, 5, 10, 5)
                         JButton("Ignore").apply {
                             addActionListener {
-                                jFrame.dispatchEvent(
-                                    WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING)
+                                dialog.dispatchEvent(
+                                    WindowEvent(dialog, WindowEvent.WINDOW_CLOSING)
                                 )
                             }
                         }.also { add(it, c) }
@@ -79,8 +81,8 @@ object UpdateChecker {
                                 configData.updateCheck = false
                                 configData.save()
 
-                                jFrame.dispatchEvent(
-                                    WindowEvent(jFrame, WindowEvent.WINDOW_CLOSING)
+                                dialog.dispatchEvent(
+                                    WindowEvent(dialog, WindowEvent.WINDOW_CLOSING)
                                 )
                             }
                         }.also { add(it, c) }

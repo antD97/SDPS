@@ -18,8 +18,7 @@ object PopupUncaughtExceptionHandler : Thread.UncaughtExceptionHandler {
     override fun uncaughtException(t: Thread?, e: Throwable?) {
         if (e != null) {
             e.printStackTrace()
-            if (SwingUtilities.isEventDispatchThread()) ErrorPopup(e)
-            else SwingUtilities.invokeAndWait { ErrorPopup(e) }
+            SwingUtilities.invokeLater { ErrorPopup(e) }
         }
     }
 

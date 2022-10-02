@@ -2,7 +2,7 @@
  * Copyright © 2021-2022 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-package antd.sdps.gui
+package antd.sdps.gui.main
 
 import antd.sdps.SharedInstances.initConfig
 import antd.sdps.SharedInstances.mainPanel

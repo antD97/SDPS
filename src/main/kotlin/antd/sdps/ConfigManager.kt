@@ -4,7 +4,7 @@
  */
 package antd.sdps
 
-import antd.sdps.gui.OutputTable
+import antd.sdps.gui.main.OutputTable
 import java.awt.Dimension
 import java.awt.Point
 import java.io.File
@@ -31,7 +31,7 @@ object ConfigManager {
         var updateCheck: Boolean = true,
         var obsEnabled: Boolean = false,
         var obsPrintHeadersRow: Boolean = true,
-        var obsPrintTotalsRow: Boolean = false,
+        var obsPrintTotalsRow: Boolean = true,
         var obsColumnWidth: Int = 10,
         var obsReasonColumnWidth: Int = 20,
         var obsMaxLines: Int = 10
