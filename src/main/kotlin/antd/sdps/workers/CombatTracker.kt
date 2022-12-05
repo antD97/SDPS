@@ -11,6 +11,7 @@ import antd.sdps.SharedInstances.mainPanel
 import antd.sdps.SharedInstances.obsWriter
 import antd.sdps.SharedInstances.outputTable
 import antd.sdps.SharedInstances.sidebarPanel
+import antd.sdps.SharedInstances.statusLabel
 import antd.sdps.util.CombatLine
 import antd.sdps.util.StrCombatLine
 import java.io.BufferedReader
@@ -34,6 +35,9 @@ class CombatTracker :
 
     /** Combat log line names for damage. */
     private val damageTypes = listOf("Damage", "CritDamage", "Backstab", "HolyCrit")
+
+    /** Combat log line names for crowd control. */
+    private val crowdControlTypes = listOf("Status", "CrowdControl")
 
     /** Source/targets to ignore while [godsOnly] is true. */
     private val nonGodNames = listOf(
@@ -328,7 +332,7 @@ class CombatTracker :
             }
         }
         // cc
-        else if (typeSplit.size == 2 && typeSplit[1] == "Status") {
+        else if (typeSplit.size == 2 && crowdControlTypes.contains(typeSplit[1])) {
             val source = lineData[9]
 
             if (source == ignCopy) {
@@ -411,6 +415,7 @@ class CombatTracker :
 
         for (task in tasks) {
             when (task) {
+
                 is ProcessTask.AddCombat -> {
                     tableModel.addRow(task.strCombatLine.toArray())
                     mainPanel.scrollTableToBottom()
@@ -419,73 +424,65 @@ class CombatTracker :
                         obsWriter.queueTask(ObsWriter.WriterTask.Clear)
                     else obsWriter.queueTask(ObsWriter.WriterTask.AddCombat(task.strCombatLine))
                 }
+
                 is ProcessTask.AddPotentialHiddenCombat -> {
-                    addPotentialHiddenCombat()
+                    val lastRow = tableModel.getRow(tableModel.rowCount - 1)
+
+                    if (lastRow != null
+                        && !lastRow[0].contains("Reset")
+                        && !lastRow[0].endsWith("*")
+                    ) {
+
+                        tableModel.removeRow(tableModel.rowCount - 1)
+
+                        val newRow = lastRow.toList()
+                            .map { if (it.isNotEmpty()) "$it*" else "" }
+                            .toTypedArray()
+                        tableModel.addRow(newRow)
+                        mainPanel.scrollTableToBottom()
+                        obsWriter.queueTask(
+                            ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
+                        )
+                    }
+
+                    statusLabel.text = "Potentially hidden combat (hover for details)"
+                    statusLabel.toolTipText = "Resetting is disabled when there is potentially " +
+                            "hidden combat. Starting and then cancelling a back will reveal any " +
+                            "hidden combat. See the readme for additional details."
+
                     autoCombatResetWorker.hiddenCombatState()
                 }
+
                 is ProcessTask.ClearPotentialHiddenCombat -> {
-                    clearPotentialHiddenCombat()
-                    autoCombatResetWorker.reset()
+                    val lastRow = tableModel.getRow(tableModel.rowCount - 1)
+
+                    if (lastRow == null) autoCombatResetWorker.reset()
+                    else if (!lastRow[0].contains("Reset") && lastRow[0].endsWith("*")) {
+
+                        tableModel.removeRow(tableModel.rowCount - 1)
+
+                        val newRow = lastRow.toList().map { it.removeSuffix("*") }.toTypedArray()
+                        tableModel.addRow(newRow)
+                        mainPanel.scrollTableToBottom()
+                        obsWriter.queueTask(
+                            ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
+                        )
+
+                        statusLabel.reset()
+
+                        autoCombatResetWorker.reset()
+                    }
                 }
+
                 is ProcessTask.UpdateCombatLogField -> {
                     sidebarPanel.combatLogField.text = task.fileName
                 }
+
                 is ProcessTask.UpdateNameField -> sidebarPanel.nameField.text = task.ign
+
                 is ProcessTask.ClearTable -> {
                     outputTable.clearTable()
                     obsWriter.queueTask(ObsWriter.WriterTask.Clear)
-                }
-            }
-        }
-    }
-
-    /** Mark the last combat row with the hidden combat "*". */
-    private fun addPotentialHiddenCombat() {
-
-        val lastRow = tableModel.getRow(tableModel.rowCount - 1)
-
-        if (lastRow != null) {
-
-            // last row is not reset row
-            if (!lastRow[0].contains("Reset")) {
-
-                if (!lastRow[0].endsWith("*")) {
-
-                    tableModel.removeRow(tableModel.rowCount - 1)
-
-                    val newRow = lastRow.toList()
-                        .map { if (it.isNotEmpty()) "$it*" else "" }
-                        .toTypedArray()
-                    tableModel.addRow(newRow)
-                    mainPanel.scrollTableToBottom()
-                    obsWriter.queueTask(
-                        ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
-                    )
-                }
-            }
-        }
-    }
-
-    /** Remove the hidden combat "*" from the last combat row. */
-    private fun clearPotentialHiddenCombat() {
-
-        val lastRow = tableModel.getRow(tableModel.rowCount - 1)
-
-        if (lastRow != null) {
-
-            // last row is not reset row
-            if (!lastRow[0].contains("Reset")) {
-
-                if (lastRow[0].endsWith("*")) {
-
-                    tableModel.removeRow(tableModel.rowCount - 1)
-
-                    val newRow = lastRow.toList().map { it.removeSuffix("*") }.toTypedArray()
-                    tableModel.addRow(newRow)
-                    mainPanel.scrollTableToBottom()
-                    obsWriter.queueTask(
-                        ObsWriter.WriterTask.ReplaceLastCombat(StrCombatLine(newRow))
-                    )
                 }
             }
         }

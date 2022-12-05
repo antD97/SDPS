@@ -19,7 +19,11 @@ class MainFrame : JFrame() {
         add(mainPanel)
 
         // load init config
-        if (initConfig.size != null) size = initConfig.size else pack()
+        size = if (initConfig.size != null) initConfig.size
+        else {
+            pack()
+            Dimension(size.width, size.height + 100)
+        }
         if (initConfig.loc != null) location = initConfig.loc else setLocationRelativeTo(null)
         isAlwaysOnTop = initConfig.onTop
         updateMinSize(initConfig.sidebar)

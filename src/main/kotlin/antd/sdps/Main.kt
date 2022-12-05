@@ -22,11 +22,13 @@ import antd.sdps.SharedInstances.obsWriter
 import antd.sdps.SharedInstances.obsWriterInitializer
 import antd.sdps.SharedInstances.outputTableInitializer
 import antd.sdps.SharedInstances.sidebarPanelInitializer
+import antd.sdps.SharedInstances.statusLabelInitializer
 import antd.sdps.SharedInstances.version
 import antd.sdps.SharedInstances.versionInitializer
 import antd.sdps.gui.main.MainFrame
 import antd.sdps.gui.main.MainPanel
 import antd.sdps.gui.main.OutputTable
+import antd.sdps.gui.main.StatusLabel
 import antd.sdps.gui.main.sidebar.ColumnCheckBoxesPanel
 import antd.sdps.gui.main.sidebar.MinSidebarPanel
 import antd.sdps.gui.main.sidebar.SidebarPanel
@@ -37,6 +39,7 @@ import antd.sdps.workers.CombatTracker
 import antd.sdps.workers.ObsWriter
 import java.util.concurrent.CancellationException
 import javax.swing.SwingUtilities
+import javax.swing.ToolTipManager
 import javax.swing.UIManager
 
 fun main() {
@@ -49,6 +52,8 @@ fun main() {
 
     // look and feel
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+
+    ToolTipManager.sharedInstance().dismissDelay = Int.MAX_VALUE
 
     // shared instances initializers
     versionInitializer = {
@@ -66,6 +71,7 @@ fun main() {
     columnCheckBoxesPanelInitializer = { ColumnCheckBoxesPanel() }
     minSidebarPanelInitializer = { MinSidebarPanel() }
     outputTableInitializer = { OutputTable() }
+    statusLabelInitializer = { StatusLabel() }
 
     obsJFrameInitializer = { ObsDialog() }
     obsPanelInitializer = { ObsPanel() }

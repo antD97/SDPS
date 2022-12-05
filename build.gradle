@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'antD'
-version '2.5.0 (dev)'
+version '2.5.0'
 
 repositories {
     mavenCentral()

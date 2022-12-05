@@ -61,6 +61,6 @@ class ShutdownHook : Thread() {
         catch (_: Exception) {}
 
         // clear the obs writer output file
-        obsWriter.outputFile.writeText("")
+        if (obsWriter.outputFile.isFile) obsWriter.outputFile.writeText("")
     }
 }

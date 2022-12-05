@@ -7,6 +7,7 @@ package antd.sdps.gui.main
 import antd.sdps.SharedInstances.minSidebarPanel
 import antd.sdps.SharedInstances.outputTable
 import antd.sdps.SharedInstances.sidebarPanel
+import antd.sdps.SharedInstances.statusLabel
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -44,11 +45,32 @@ class MainPanel : JPanel(GridBagLayout()) {
         c.insets = Insets(10, 5, 10, 5)
         add(minSidebarPanel, c)
 
-        // main table
+        // table + status message
         c.gridx = 2
         c.weightx = 1.0
         c.insets = Insets(10, 0, 10, 10)
-        add(outputTableScrollPane, c)
+        add(
+            JPanel(GridBagLayout()).apply {
+                val c2 = GridBagConstraints()
+
+                // main table
+                c2.gridx = 0
+                c2.gridy = 0
+                c2.fill = GridBagConstraints.BOTH
+                c2.weightx = 1.0
+                c2.weighty = 1.0
+
+                add(outputTableScrollPane, c2)
+
+                // status message
+                c2.gridy++
+                c2.weighty = 0.0
+                c2.insets = Insets(5, 0, 0, 0)
+
+                add(statusLabel, c2)
+            },
+            c
+        )
 
         // keyboard shortcuts
         isFocusable = true

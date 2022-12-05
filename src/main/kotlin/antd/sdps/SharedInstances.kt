@@ -7,6 +7,7 @@ package antd.sdps
 import antd.sdps.gui.main.MainFrame
 import antd.sdps.gui.main.MainPanel
 import antd.sdps.gui.main.OutputTable
+import antd.sdps.gui.main.StatusLabel
 import antd.sdps.gui.main.sidebar.ColumnCheckBoxesPanel
 import antd.sdps.gui.main.sidebar.MinSidebarPanel
 import antd.sdps.gui.main.sidebar.SidebarPanel
@@ -37,6 +38,7 @@ object SharedInstances {
     var columnCheckBoxesPanelInitializer by guiInitializers
     var minSidebarPanelInitializer by guiInitializers
     var outputTableInitializer by guiInitializers
+    var statusLabelInitializer by guiInitializers
 
     var obsJFrameInitializer by guiInitializers
     var obsPanelInitializer by guiInitializers
@@ -62,6 +64,7 @@ object SharedInstances {
         edtInvokeAndWaitIfNeeded { minSidebarPanelInitializer() as MinSidebarPanel }
     }
     val outputTable by lazy { edtInvokeAndWaitIfNeeded { outputTableInitializer() as OutputTable } }
+    val statusLabel by lazy { edtInvokeAndWaitIfNeeded { statusLabelInitializer() as StatusLabel } }
 
     val obsDialog by lazy { edtInvokeAndWaitIfNeeded { obsJFrameInitializer() as ObsDialog } }
     val obsPanel by lazy { edtInvokeAndWaitIfNeeded { obsPanelInitializer() as ObsPanel } }

@@ -12,8 +12,8 @@ import antd.sdps.SharedInstances.mainFrame
 import antd.sdps.SharedInstances.minSidebarPanel
 import antd.sdps.SharedInstances.obsDialog
 import antd.sdps.SharedInstances.outputTable
-import antd.sdps.gui.main.OutputTable
 import antd.sdps.gui.components.LabelPanel
+import antd.sdps.gui.main.OutputTable
 import java.awt.*
 import javax.swing.*
 
@@ -73,7 +73,7 @@ class SidebarPanel : JPanel(GridBagLayout()) {
     }
 
     val godsOnlyCheckBox = JCheckBox("Gods Only").apply {
-        toolTipText = "Ignore minions/structures (G)"
+        toolTipText = "Ignore minions/structures (currently works in jungle practice only) (G)"
         isSelected = initConfig.godsOnly
 
         addActionListener {
@@ -130,7 +130,7 @@ class SidebarPanel : JPanel(GridBagLayout()) {
     }
 
     val resetCombatButton = JButton("Reset").apply {
-        toolTipText = "Makes your next tick of damage reset the DPS timer and resets damage  & " +
+        toolTipText = "Makes your next tick of damage reset the DPS timer and resets damage & " +
                 "healing totals (R)"
 
         addActionListener {
@@ -142,8 +142,13 @@ class SidebarPanel : JPanel(GridBagLayout()) {
         toolTipText = "Clears the table of all rows and resets (C)"
 
         addActionListener {
-            outputTable.clearTable()
-            combatTracker.resetTracking()
+            if (outputTable.model.rowCount > 0
+                && !outputTable.model.getValueAt(outputTable.model.rowCount - 1, 0).toString()
+                    .endsWith("*")
+            ) {
+                outputTable.clearTable()
+                combatTracker.resetTracking()
+            }
         }
     }
 
@@ -253,8 +258,9 @@ class SidebarPanel : JPanel(GridBagLayout()) {
         JScrollPane(columnCheckBoxesPanel).apply {
             horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
             verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+            verticalScrollBar.unitIncrement = 10
             minimumSize = Dimension(0, 0)
-            preferredSize = Dimension(preferredSize.width, 100)
+            preferredSize = Dimension(preferredSize.width, 0)
         }.also { add(it, c) }
 
         minimumSize = preferredSize
