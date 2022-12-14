@@ -447,8 +447,8 @@ class CombatTracker :
 
                     statusLabel.text = "Potentially hidden combat (hover for details)"
                     statusLabel.toolTipText = "Resetting is disabled when there is potentially " +
-                            "hidden combat. Starting and then cancelling a back will reveal any " +
-                            "hidden combat. See the readme for additional details."
+                            "hidden combat. Starting and then cancelling a recall will reveal " +
+                            "any hidden combat. See the readme for additional details."
 
                     autoCombatResetWorker.hiddenCombatState()
                 }

@@ -1,20 +1,20 @@
 # Hidden Combat
 
-Hidden combat is an issue that is caused by the way Smite outputs its combat log. Under certain 
-scenarios, the combat log will not output a line of combat until the log is updated again. An 
-example of this would be damage ticks that occur at the exact same time (e.g. Qin's Sais along 
-with its basic attack hit).
+Hidden combat is an issue that is caused by the way Smite outputs its combat log. Under certain
+scenarios, the combat log will not output a line of combat and that line will be hidden until the
+log is updated again. An example of this would be damage ticks that occur at the exact same time
+(e.g. Qin's Sais along with its corresponding basic attack hit).
 
 My solution to this problem was to add an indicator whenever there could be hidden combat that is
-not being displayed. If there is potentially hidden combat, the last row in the table will 
-contain asterisks and there will be a status message below the table. There are a number of ways to
+not being displayed. If there is potentially hidden combat, there will be a status message below
+the table and the last row in the table will contain asterisks. There are a number of ways to
 update the combat log to leave the potential hidden combat state, the easiest being to start and
 cancel a recall.
 
 If you find any issues with this system or would like to recommend a change, make a post on the
 [issues page](https://github.com/antD97/SDPS/issues).
 
-Click the thumbnail below for a demonstration.
+## Video Demonstration
 
 ---
 

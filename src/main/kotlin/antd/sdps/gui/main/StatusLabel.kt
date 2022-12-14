@@ -8,6 +8,6 @@ class StatusLabel : JLabel(" ") {
     /** Makes the label empty. */
     fun reset() {
         text = "Ready"
-        toolTipText = ""
+        toolTipText = null
     }
 }
