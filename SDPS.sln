@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SDPS", "SDPS.csproj", "{39DE8D38-19B9-4E14-8449-CD34FFEAA803}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39DE8D38-19B9-4E14-8449-CD34FFEAA803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39DE8D38-19B9-4E14-8449-CD34FFEAA803}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39DE8D38-19B9-4E14-8449-CD34FFEAA803}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39DE8D38-19B9-4E14-8449-CD34FFEAA803}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A93FC22-32F9-4F8F-B8EE-042BEFCA9578}
+	EndGlobalSection
+EndGlobal
