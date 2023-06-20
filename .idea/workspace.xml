@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ba9c8f38-2176-49e2-b013-f140af5b3779" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/App.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/App.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/CombatTableWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/View/CombatTableWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/CombatTableWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/View/CombatTableWindow.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/View/MainWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/MainWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/View/MainWindow.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/Styles/Style.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/View/Styles/Style.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/UserControls/ControlMenus/CombatTableControls.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/View/UserControls/ControlMenus/CombatTableControls.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/UserControls/ControlMenus/CombatTableControls.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/View/UserControls/ControlMenus/CombatTableControls.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/UserControls/TopBar.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/View/UserControls/TopBar.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/View/Util/WindowServices.cs" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2RRSSk6MknpHuqZDw4Z6qaj7OeT" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ba9c8f38-2176-49e2-b013-f140af5b3779" name="Changes" comment="" />
+      <created>1687211405683</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1687211405683</updated>
+    </task>
+    <servers />
+  </component>
+</project>

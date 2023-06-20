@@ -42,18 +42,21 @@ Licensed under the MIT License https://antD.mit-license.org/
             <Separator Margin="0,15,0,0"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button Content="&lt;" Width="20" Height="20" Style="{StaticResource ThemeColor}" />
-                <TextBlock Text="Combat Table" Margin="15,0,15,0" Style="{StaticResource Header2}" VerticalAlignment="Center" />
-                <Button Content="&gt;" Width="20" Height="20" Style="{StaticResource ThemeColor}" />
+                <Button Click="SubWindowSelectorLeft_Click" Content="&lt;" Width="20" Height="20" Style="{StaticResource ThemeColor}" />
+                <TextBlock Name="SubWindowName" Margin="15,0,15,0" Style="{StaticResource Header2}" VerticalAlignment="Center" />
+                <Button Click="SubWindowSelectorRight_Click" Content="&gt;" Width="20" Height="20" Style="{StaticResource ThemeColor}" />
             </StackPanel>
 
-            <CheckBox Content="Enabled" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                <CheckBox Name="ChkboxEnabled" Click="ChkboxEnabled_Click" Content="Enabled" Margin="0,0,5,0" />
+                <CheckBox Name="ChkboxOverlayMode" Click="ChkboxOverlayMode_Click" Content="Overlay Mode" Margin="5,0,0,0" />
+            </StackPanel>
 
             <Separator Margin="0,10,0,0"/>
         </StackPanel>
 
         <Grid Margin="20,15,20,20" Grid.Row="2">
-            <controlmenus:CombatTableControls IsEnabled="False" Opacity="0.5" />
+            <controlmenus:CombatTableControls x:Name="CombatTableControls" />
         </Grid>
     </Grid>
 </Window>

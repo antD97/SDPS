@@ -8,6 +8,7 @@ Licensed under the MIT License https://antD.mit-license.org/
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SDPS.View.UserControls.ControlMenus"
+             xmlns:usercontrols="clr-namespace:SDPS.View.UserControls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -23,14 +24,15 @@ Licensed under the MIT License https://antD.mit-license.org/
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="1" Margin="0,0,10,0">
-                <CheckBox Content="Overlay Mode" Margin="0,0,0,12" />
-                
-                <CheckBox Content="Track Damage" Foreground="#eab4b7" Background="#eab4b7" />
-                <CheckBox Content="Track Heal Received" Foreground="#b4dbea" Background="#b4dbea" />
-                <CheckBox Content="Track Heal Applied" Foreground="#bceab4" Background="#bceab4" Margin="0,0,0,12" />
 
-                <CheckBox Content="Gods Only" />
-                <CheckBox Content="Auto-Reset" Margin="0,0,0,12" />
+                <usercontrols:LabelledIntegerSpinner x:Name="IntSpinnerTextSize" Width="100" Margin="0,0,0,12" HorizontalAlignment="Left" LabelText="Text Size" />
+
+                <CheckBox Name="ChkboxTrackDamage" Content="Track Damage" Foreground="#eab4b7" Background="#eab4b7" />
+                <CheckBox Name="ChkboxTrackHealReceived" Content="Track Heal Received" Foreground="#b4dbea" Background="#b4dbea" />
+                <CheckBox Name="ChkboxTrackHealApplied" Content="Track Heal Applied" Foreground="#bceab4" Background="#bceab4" Margin="0,0,0,12" />
+
+                <CheckBox Name="ChkboxGodsOnly" Content="Gods Only" />
+                <CheckBox Name="ChkboxAutoReset" Content="Auto-Reset" Margin="0,0,0,12" />
 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -62,21 +64,21 @@ Licensed under the MIT License https://antD.mit-license.org/
                             </Style>
                         </StackPanel.Resources>
 
-                        <CheckBox Content="Time" />
+                        <CheckBox Name="ChkboxTimeCol" Content="Time" />
                         <Separator />
-                        <CheckBox Content="DPS" />
-                        <CheckBox Content="Damage" />
-                        <CheckBox Content="Total Damage" />
-                        <CheckBox Content="Mitigated" />
-                        <CheckBox Content="Total Mitigated" />
+                        <CheckBox Name="ChkboxDpsCol" Content="DPS" />
+                        <CheckBox Name="ChkboxDamageCol" Content="Damage" />
+                        <CheckBox Name="ChkboxTotalDamageCol" Content="Total Damage" />
+                        <CheckBox Name="ChkboxMitigatedCol" Content="Mitigated" />
+                        <CheckBox Name="ChkboxTotalMitigatedCol" Content="Total Mitigated" />
                         <Separator />
-                        <CheckBox Content="Heal Received" />
-                        <CheckBox Content="Total Heal Received" />
+                        <CheckBox Name="ChkboxHealReceivedCol" Content="Heal Received" />
+                        <CheckBox Name="ChkboxTotalHealReceivedCol" Content="Total Heal Received" />
                         <Separator />
-                        <CheckBox Content="Heal Applied" />
-                        <CheckBox Content="Total Heal Applied" />
+                        <CheckBox Name="ChkboxHealAppliedCol" Content="Heal Applied" />
+                        <CheckBox Name="ChkboxTotalHealAppliedCol" Content="Total Heal Applied" />
                         <Separator />
-                        <CheckBox Content="Reason" />
+                        <CheckBox Name="ChkboxReasonCol" Content="Reason" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>
