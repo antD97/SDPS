@@ -6,9 +6,10 @@ using System.Windows.Controls;
 
 namespace SDPS.View.UserControls.ControlMenus
 {
-    public partial class CombatTableControls : UserControl
+
+    public partial class DamageTableControls : UserControl
     {
-        public CombatTableControls()
+        public DamageTableControls()
         {
             InitializeComponent();
         }

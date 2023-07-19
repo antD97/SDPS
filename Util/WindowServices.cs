@@ -1,9 +1,13 @@
-﻿using System.Runtime.InteropServices;
-using System.Windows.Interop;
-using System.Windows;
+﻿/*
+ * Copyright © 2023 antD97
+ * Licensed under the MIT License https://antD.mit-license.org/
+ */
 using System;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 
-namespace SDPS.View.Util
+namespace SDPS.Util
 {
     // https://stackoverflow.com/questions/2842667/how-to-create-a-semi-transparent-window-in-wpf-that-allows-mouse-events-to-pass
     internal static class WindowsServices

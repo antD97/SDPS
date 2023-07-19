@@ -10,8 +10,15 @@ Licensed under the MIT License https://antD.mit-license.org/
              xmlns:local="clr-namespace:SDPS.View.UserControls"
              mc:Ignorable="d" 
              d:DesignHeight="20" d:DesignWidth="400">
-    <DockPanel>
-        <TextBlock Text="{Binding LabelText}" Margin="0,0,10,0" Style="{StaticResource StandardText}" />
-        <TextBox />
-    </DockPanel>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="{Binding LabelText}" Margin="0,0,10,0" Style="{StaticResource StandardText}"/>
+        <TextBox Grid.Column="1"/>
+        <Button Grid.Column="2" Content="{Binding ExtraBtnContent}" Width="18" Margin="5,0,0,0" Visibility="{Binding ExtraBtnVisibility}"/>
+    </Grid>
 </UserControl>

@@ -11,7 +11,7 @@ Licensed under the MIT License https://antD.mit-license.org/
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="View/Styles/Style.xaml" />
+                <ResourceDictionary Source="View/Style/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

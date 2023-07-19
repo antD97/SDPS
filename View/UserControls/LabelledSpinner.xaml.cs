@@ -6,9 +6,9 @@ using System.Windows.Controls;
 
 namespace SDPS.View.UserControls
 {
-    public partial class LabelledTextBox : UserControl
+    public partial class LabelledSpinner : UserControl
     {
-        public LabelledTextBox()
+        public LabelledSpinner()
         {
             InitializeComponent();
         }
