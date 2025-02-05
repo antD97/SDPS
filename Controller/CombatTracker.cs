@@ -7,9 +7,8 @@ using System.Threading;
 
 namespace SDPS.Controller
 {
-    internal class CombatTracker
+    class CombatTracker
     {
-
         internal void run(object cancellationToken)
         {
             while (!((CancellationToken)cancellationToken).IsCancellationRequested)

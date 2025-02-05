@@ -1,0 +1,40 @@
+﻿<!--
+Copyright © 2023 antD97
+Licensed under the MIT License https://antD.mit-license.org/
+-->
+<UserControl x:Class="SDPS.View.UserControls.LabelledSpinner"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SDPS.View.UserControls"
+             mc:Ignorable="d" 
+             d:DesignHeight="20" d:DesignWidth="200">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="{Binding LabelText}" Margin="0,0,10,0" Style="{StaticResource StandardText}"/>
+        <TextBox Grid.Column="1" Text="{Binding FieldText, UpdateSourceTrigger=PropertyChanged}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="TextChanged">
+                    <i:InvokeCommandAction Command="{Binding TextChangedCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Button Command="{Binding IncreaseCommand}" Width="16" Height="8"/>
+            <Button Grid.Row="1" Command="{Binding DecreaseCommand}" Width="16" Height="8"/>
+        </Grid>
+    </Grid>
+</UserControl>

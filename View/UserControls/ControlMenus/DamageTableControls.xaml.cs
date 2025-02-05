@@ -15,12 +15,17 @@ using System.Windows.Shapes;
 
 namespace SDPS.View.UserControls.ControlMenus
 {
+<<<<<<< HEAD:View/UserControls/ControlMenus/CombatTableControls.xaml.cs
     /// <summary>
     /// Interaction logic for CombatTableControls.xaml
     /// </summary>
     public partial class CombatTableControls : UserControl
+=======
+
+    public partial class DamageTableControls : UserControl
+>>>>>>> 3acdf97c70c7637d5123d7a3465018c689606147:View/UserControls/ControlMenus/DamageTableControls.xaml.cs
     {
-        public CombatTableControls()
+        public DamageTableControls()
         {
             InitializeComponent();
         }

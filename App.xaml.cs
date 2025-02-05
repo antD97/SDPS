@@ -11,10 +11,10 @@ namespace SDPS
 {
     public partial class App : Application
     {
-        internal static string Version = "v3.0";
+        public static readonly string Version = "v3.0";
 
-        private readonly CancellationTokenSource cts = new();
         private Task combatTrackerTask;
+        private readonly CancellationTokenSource cts = new();
 
         // Starts all parallel tasks.
         protected override void OnStartup(StartupEventArgs e)
