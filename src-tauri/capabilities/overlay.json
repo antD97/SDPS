@@ -1,0 +1,31 @@
+{
+    "$schema": "../gen/schemas/desktop-schema.json",
+    "identifier": "overlay",
+    "description": "Capability for overlay windows",
+    "windows": [
+        "overlay-0",
+        "overlay-1",
+        "overlay-2",
+        "overlay-3",
+        "overlay-4",
+        "overlay-5",
+        "overlay-6",
+        "overlay-7",
+        "overlay-8",
+        "overlay-9",
+        "overlay-10",
+        "overlay-11",
+        "overlay-12",
+        "overlay-13",
+        "overlay-14",
+        "overlay-15"
+    ],
+    "permissions": [
+        "core:default",
+        "core:window:allow-set-always-on-top",
+        "core:window:allow-minimize",
+        "core:window:allow-toggle-maximize",
+        "core:window:allow-close",
+        "core:window:allow-start-dragging"
+    ]
+}
