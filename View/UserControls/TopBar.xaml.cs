@@ -2,7 +2,6 @@
  * Copyright © 2023 antD97
  * Licensed under the MIT License https://antD.mit-license.org/
  */
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -25,26 +24,16 @@ namespace SDPS.View.UserControls
             }
         }
 
-        private Action? closeAction;
 
         public TopBar() {
             DataContext = this;
             InitializeComponent();
-
-            closeAction = () => Window.GetWindow(this).Close();
+            Trace.WriteLine(DataContext as string);
         }
 
         private void TopBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e) { Window.GetWindow(this).DragMove(); }
 
-        private void CloseBtn_Click(object sender, RoutedEventArgs e)
-        {
-            closeAction?.Invoke();
-        }
-
-        public void OverrideCloseAction(Action action)
-        {
-            closeAction = action;
-        }
+        private void CloseBtn_Click(object sender, RoutedEventArgs e) { Window.GetWindow(this).Close(); }
 
         protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
