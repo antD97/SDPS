@@ -1,12 +1,13 @@
 import { ButtonHTMLAttributes, FC, useState } from "react";
 import { VscChromeClose } from "react-icons/vsc";
+import { twMerge } from "tailwind-merge";
 
 interface NavButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   selected?: boolean;
   onClose?: () => void;
 }
 
-const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, ...props }) => {
+const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, className, ...props }) => {
   const [hovered, setIsHovered] = useState(false);
   return (
     <div
@@ -15,7 +16,10 @@ const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, ...props }
       className="relative grid"
     >
       <button
-        className={`px-4 py-0 ${selected ? 'bg-neutral-700' : 'active:bg-neutral-700'} ${hovered && 'bg-neutral-800'}`}
+        className={twMerge(
+          `px-4 py-0 ${selected ? 'bg-neutral-700' : 'active:bg-neutral-700'} ${hovered && 'bg-neutral-800'}`,
+          className
+        )}
         {...props}
       >
         {children}

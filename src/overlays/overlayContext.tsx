@@ -1,21 +1,60 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { emit } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from "../mainwindow/mainWindowContext";
 import OverlayData from "./overlayData";
 
-type OverlayStateType = {
-  windowState: 'overlay' | 'draggable' | 'hidden';
-  type: OverlayData['type'];
-};
+const OverlayContext = createContext<OverlayData | null>(null);
 
-const defaultState: OverlayStateType = {
-  windowState: 'draggable',
+const defaultOverlayData: OverlayData = {
+  windowLabel: '',
+  overlayName: '',
+  windowState: 'adjust',
   type: 'empty'
 };
 
-const OverlayContext = createContext<[OverlayStateType, (overlayState: OverlayStateType) => void] | null>(null);
+let unlistenToOverlayUpdates: (() => void) | null = null;
 
 export const OverlayContextProvider = ({ children }: { children: ReactNode }) => {
-  const [overlayState, setOverlayState] = useState<OverlayStateType>(defaultState);
-  return (<OverlayContext value={[overlayState, setOverlayState]}>{children}</OverlayContext>);
+  const [overlayData, setOverlayData] = useState<OverlayData>(defaultOverlayData);
+  const { overlayName, windowState } = overlayData;
+
+  const window = useMemo(getCurrentWindow, []);
+
+  // on first render
+  useEffect(() => {
+    // update the OVERLAY_UPDATE listener
+    if (unlistenToOverlayUpdates) {
+      unlistenToOverlayUpdates();
+      unlistenToOverlayUpdates = null;
+    }
+    window.listen<OverlayData>(OVERLAY_UPDATE, (event) => { setOverlayData(event.payload); })
+      .then((unlistenFn) => unlistenToOverlayUpdates = unlistenFn);
+
+    emit(OVERLAY_UPDATE_REQUEST, window.label);
+  }, []);
+
+  // on overlay name change
+  useEffect(() => {
+    const title = `SDPS Overlay: ${overlayName}`;
+    window.setTitle(title);
+    document.title = title;
+  }, [overlayName])
+
+  // on window state change
+  useEffect(() => {
+    switch (windowState) {
+      case 'adjust':
+        window.setIgnoreCursorEvents(false);
+        break;
+      case 'hide':
+      case 'overlay':
+        window.setIgnoreCursorEvents(true);
+        break;
+    }
+  }, [windowState]);
+
+  return (<OverlayContext value={overlayData}>{children}</OverlayContext>);
 };
 
 export const useOverlayContext = () => {

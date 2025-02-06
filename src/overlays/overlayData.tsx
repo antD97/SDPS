@@ -1,16 +1,17 @@
-import { CombatTableData } from "../mainwindow/overlaysettings/combatTableSettings";
-import { EmptyOverlayData } from "../mainwindow/overlaysettings/emptyOverlaySettings";
+import CombatTableData from "./combattable/combatTableData";
+import EmptyOverlayData from "./emptyoverlay/emptyOverlayData";
 
 export interface BaseOverlayData {
   windowLabel: string;
-  windowState: 'hidden' | 'draggable' | 'overlay';
+  overlayName: string;
+  windowState: 'hide' | 'adjust' | 'overlay';
 }
 
 type OverlayData =
   EmptyOverlayData
   | CombatTableData;
 
-export const overlayStates: BaseOverlayData['windowState'][] = ['hidden', 'draggable', 'overlay'];
+export const overlayStates: BaseOverlayData['windowState'][] = ['hide', 'adjust', 'overlay'];
 
 export const overlayNames: Record<OverlayData['type'], { shortName: string, longName: string }> = {
   empty: {

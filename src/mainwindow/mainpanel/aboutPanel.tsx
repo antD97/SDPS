@@ -7,7 +7,7 @@ import Container from '../../components/ui/container';
 import { useMainWindowContext } from '../mainWindowContext';
 
 export default function AboutPanel() {
-  const { state: { version } } = useMainWindowContext();
+  const { version } = useMainWindowContext();
 
   const [attribution, setAttribution] = useState('');
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function AboutPanel() {
           <li>A fun combo counter to see how long you can continuously deal damage to enemy gods</li>
         </ul>
 
-        <h2 className="self-center text-lg border-b border-cyan-600">Usage</h2>
+        <h2 className="self-center text-lg border-b border-cyan-600">How to Use</h2>
         <p>TODO more</p>
         <ol className="list-decimal ml-6">
           <li>
@@ -90,7 +90,7 @@ export default function AboutPanel() {
           <div>Source: <A href="https://github.com/antD97/SDPS">https://github.com/antD97/SDPS</A></div>
         </div>
         <div className="flex flex-col gap-1">
-          <div>Legal:</div>
+          <div>Legal notices:</div>
           <div className="grid">
             <p className="min-h-48 h-48 resize-y border p-1 border-neutral-700 overflow-auto whitespace-pre">
               SDPS<br />

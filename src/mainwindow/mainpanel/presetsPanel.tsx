@@ -1,8 +1,8 @@
 
-export default function SettingsPanel() {
+export default function PresetsPanel() {
   return (
     <div className="flex flex-col items-center justify-center overflow-auto">
-      <h1>TODO Settings</h1>
+      <h1>TODO Presets</h1>
     </div>
   );
 }

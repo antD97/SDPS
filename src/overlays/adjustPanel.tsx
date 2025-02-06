@@ -1,10 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { GoArrowDownLeft, GoArrowDownRight, GoArrowUpLeft, GoArrowUpRight } from "react-icons/go";
-import { useOverlayContext } from "./overlayContext";
 
-function DragOverlay() {
-  const [{ windowState }] = useOverlayContext();
+function AdjustPanel() {
   const window = getCurrentWindow();
 
   const [windowSize, setWindowSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
@@ -13,10 +11,10 @@ function DragOverlay() {
   });
   window.innerSize
 
-  return windowState === 'draggable' ? (
+  return (
     <div
       onMouseDown={(e) => { e.stopPropagation(); window.startDragging(); }}
-      className="absolute w-full h-full flex items-center justify-center bg-neutral-900/95 border-4 border-cyan-600 text-center text-2xl"
+      className="absolute w-full h-full flex items-center justify-center bg-neutral-900/97 border-4 border-cyan-600 text-center text-2xl"
     >
       Adjust
       {windowSize.width > 160 && windowSize.height > 160 && (
@@ -32,7 +30,7 @@ function DragOverlay() {
         </div>
       )}
     </div>
-  ) : (<></>);
+  );
 }
 
-export default DragOverlay;
+export default AdjustPanel;

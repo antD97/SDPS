@@ -1,21 +1,24 @@
 import Container from "../../components/ui/container";
 import OverlayData from "../../overlays/overlayData";
 import { useMainWindowContext } from "../mainWindowContext";
+import BaseOverlaySettings from "../overlaysettings/baseOverlaySettings";
 import CombatTableSettings from "../overlaysettings/combatTableSettings";
-import CommonOverlaySettings from "../overlaysettings/commonOverlaySettings";
 import EmptyOverlaySettings from "../overlaysettings/emptyOverlaySettings";
 import AboutPanel from "./aboutPanel";
+import PresetsPanel from "./presetsPanel";
 import SettingsPanel from "./settingsPanel";
 
 export default function MainPanel() {
-  const { state: { selectedMenu, overlays } } = useMainWindowContext()
+  const { selectedMenu, overlays } = useMainWindowContext();
+
   switch (selectedMenu.id) {
     case 'About': return (<AboutPanel />);
+    case 'Presets': return (<PresetsPanel />);
     case 'Settings': return (<SettingsPanel />);
     case 'Overlay':
       return (
         <Container>
-          <CommonOverlaySettings />
+          <BaseOverlaySettings />
           <OverlaySettings type={overlays[selectedMenu.index].type} />
         </Container>
       );

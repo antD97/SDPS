@@ -1,77 +1,110 @@
 import { app } from "@tauri-apps/api";
+import { emitTo } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import OverlayData from "../overlays/overlayData";
+import updateOverlayNames from "../util/updateOverlayNames";
 
-type SelectedMenu = { id: 'About' } | { id: 'Settings' } | { id: 'Overlay', index: number };
+type SelectedMenu = { id: 'About' } | { id: 'Presets' } | { id: 'Settings' } | { id: 'Overlay', index: number };
 
-type StateType = {
+type ContextType = {
   version: string;
   selectedMenu: SelectedMenu;
   overlays: OverlayData[];
-};
-
-const defaultState: StateType = {
-  version: '...',
-  selectedMenu: { id: 'About' },
-  overlays: []
-};
-
-type ContextType = {
-  state: StateType;
   setSelectedMenu: (selectedMenu: SelectedMenu) => void;
   newOverlay: () => void;
+  updateSelectedOverlay: (mutator: (prevOverlayData: OverlayData) => OverlayData) => void;
 }
 
 const MAX_OVERLAYS = 16;
+export const OVERLAY_UPDATE = 'sdps-update-overlays';
+export const OVERLAY_UPDATE_REQUEST = 'sdps-request-overlay-update';
+
+let unlistenToOverlayUpdates: (() => void) | null = null;
 
 const MainWindowContext = createContext<ContextType | null>(null);
 
 export const MainWindowContextProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState(defaultState);
+  const [version, setVersion] = useState<ContextType['version']>('');
+  const [{ selectedMenu, overlays }, setOverlaysState] = useState<{
+    selectedMenu: ContextType['selectedMenu'];
+    overlays: ContextType['overlays'];
+  }>({
+    selectedMenu: { id: 'About' },
+    overlays: []
+  });
 
+  // on first render
+  useEffect(() => { app.getVersion().then((result) => setVersion(result)); }, []);
+
+  // on overlays change
   useEffect(() => {
-    app.getVersion().then((result) => setState((prevState) => ({ ...prevState, version: result })));
+    // notify overlay windows of changes
+    overlays.forEach((overlayData) => {
+      emitTo(overlayData.windowLabel, OVERLAY_UPDATE, overlayData);
+    });
+
+    // update the OVERLAY_UPDATE_REQUEST listener
+    if (unlistenToOverlayUpdates) {
+      unlistenToOverlayUpdates();
+      unlistenToOverlayUpdates = null;
+    }
+    getCurrentWindow().listen<string>(
+      OVERLAY_UPDATE_REQUEST,
+      (event) => {
+        const windowLabel = event.payload;
+        const overlay = overlays.find((overlay) => overlay.windowLabel === windowLabel);
+        if (overlay) {
+          emitTo(windowLabel, OVERLAY_UPDATE, overlay);
+        }
+      }
+    ).then((unlistenFn) => unlistenToOverlayUpdates = unlistenFn);
+
+  }, [overlays]);
+
+  const setSelectedMenu = useCallback((selectedMenu: SelectedMenu) => {
+    setOverlaysState((prevOverlaysState) => ({ ...prevOverlaysState, selectedMenu }));
   }, []);
 
   const newOverlay = useCallback(() => {
+    // new window label
     const availableWindowLabels = Array(MAX_OVERLAYS).fill(undefined).map((_, i) => i)
-      .filter((i) => !state.overlays.some(({ windowLabel }) => windowLabel === `overlay-${i}`));
-
+      .filter((i) => !overlays.some(({ windowLabel }) => windowLabel === `overlay-${i}`));
     // do nothing if max overlay count reached
     if (availableWindowLabels.length === 0) { return; }
+    const windowLabel = `overlay-${availableWindowLabels[0]}`;
 
-    const overlayIndex = availableWindowLabels[0];
-    const windowLabel = `overlay-${overlayIndex}`;
+    // add new overlay to overlays
+    setOverlaysState({
+      selectedMenu: { id: 'Overlay', index: overlays.length },
+      overlays: updateOverlayNames([
+        ...overlays,
+        { windowLabel, overlayName: '', windowState: 'adjust', type: 'empty' } as OverlayData
+      ])
+    });
+
     const window = new WebviewWindow(windowLabel, {
-      title: `SDPS Overlay ${overlayIndex + 1}`,
+      title: 'SDPS Overlay',
       minWidth: 64,
       minHeight: 64,
       transparent: true,
       decorations: false,
       shadow: false,
       dragDropEnabled: false,
-      zoomHotkeysEnabled: true
-    });
-
-    window.setAlwaysOnTop(true);
-    window.setIgnoreCursorEvents(true);
-
-    // save the overlay to state
-    setState({
-      ...state,
-      overlays: [...state.overlays, { windowLabel, windowState: 'draggable', type: 'empty' }]
+      zoomHotkeysEnabled: true,
+      skipTaskbar: true,
+      alwaysOnTop: true
     });
 
     // when the window is destroyed...
     window.once('tauri://destroyed', () => {
-
-      setState((prevState) => {
-
-        const newOverlays: OverlayData[] = prevState.overlays
+      // update overlays & selectedMenu
+      setOverlaysState(({ selectedMenu: prevSelectedMenu, overlays: prevOverlays }) => {
+        const newOverlays: OverlayData[] = prevOverlays
           .filter((overlay) => overlay.windowLabel !== window.label);
 
-        let newSelectedMenu: StateType['selectedMenu'] = prevState.selectedMenu;
+        let newSelectedMenu: ContextType['selectedMenu'] = prevSelectedMenu;
         // if the selected menu was an overlay...
         if (newSelectedMenu.id === 'Overlay') {
           // if there are no overlays...
@@ -80,8 +113,7 @@ export const MainWindowContextProvider = ({ children }: { children: ReactNode })
           }
           // if there are overlays...
           else {
-            const closedWindowMenuIndex = prevState.overlays
-              .findIndex((overlay) => overlay.windowLabel === window.label);
+            const closedWindowMenuIndex = prevOverlays.findIndex((overlay) => overlay.windowLabel === window.label);
             // if the selected menu was below the closed overlay window...
             if (newSelectedMenu.index > closedWindowMenuIndex) {
               newSelectedMenu = { id: 'Overlay', index: Math.max(newSelectedMenu.index - 1, 0) };
@@ -93,17 +125,24 @@ export const MainWindowContextProvider = ({ children }: { children: ReactNode })
           }
         }
 
-        return { ...prevState, overlays: newOverlays, selectedMenu: newSelectedMenu };
+        return { selectedMenu: newSelectedMenu, overlays: newOverlays };
       });
     });
-  }, [state]);
+  }, [overlays]);
 
-  const setSelectedMenu = useCallback((selectedMenu: SelectedMenu) => {
-    setState({ ...state, selectedMenu });
-  }, [state]);
+  const updateSelectedOverlay = useCallback<ContextType['updateSelectedOverlay']>((mutator) => {
+    setOverlaysState(({ selectedMenu: prevSelectedMenu, overlays: prevOverlays }) => ({
+      selectedMenu: prevSelectedMenu,
+      overlays: prevOverlays.map((prevOverlayData, i) => (
+        prevSelectedMenu.id === 'Overlay' && prevSelectedMenu.index === i
+          ? mutator(prevOverlayData)
+          : prevOverlayData
+      ))
+    }));
+  }, []);
 
   return (
-    <MainWindowContext value={{ state, setSelectedMenu, newOverlay }}>
+    <MainWindowContext value={{ version, selectedMenu, overlays, setSelectedMenu, newOverlay, updateSelectedOverlay }}>
       {children}
     </MainWindowContext>
   );

@@ -1,8 +1,3 @@
-import { BaseOverlayData } from "../../overlays/overlayData";
-
-export interface EmptyOverlayData extends BaseOverlayData {
-  type: 'empty'
-}
 
 export default function EmptyOverlaySettings() {
   return (
