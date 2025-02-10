@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/plugin-process";
 import React from "react";
@@ -11,6 +12,13 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 );
 
 const window = getCurrentWindow();
+
 if (window.label === 'main') {
-  window.onCloseRequested(() => exit());
+
+  invoke('monitor_start');
+
+  window.onCloseRequested(() => {
+    invoke('monitor_stop');
+    exit();
+  });
 }

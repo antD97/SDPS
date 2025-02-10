@@ -3,7 +3,7 @@ import { VscChromeClose, VscChromeMaximize, VscChromeMinimize } from "react-icon
 
 export default function TitleBar() {
   const window = getCurrentWindow();
-  const btnClassName = "h-full px-2 hover:bg-cyan-600";
+  const btnClassName = "h-full px-2 hover:bg-cyan-500";
   return (
     <div
       onMouseDown={() => { window.startDragging(); }}

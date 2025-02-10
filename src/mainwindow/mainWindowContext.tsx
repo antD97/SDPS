@@ -20,6 +20,7 @@ type ContextType = {
 const MAX_OVERLAYS = 16;
 export const OVERLAY_UPDATE = 'sdps-update-overlays';
 export const OVERLAY_UPDATE_REQUEST = 'sdps-request-overlay-update';
+export const MONITOR_UPDATE = 'sdps-monitor-update';
 
 let unlistenToOverlayUpdates: (() => void) | null = null;
 
@@ -36,7 +37,16 @@ export const MainWindowContextProvider = ({ children }: { children: ReactNode })
   });
 
   // on first render
-  useEffect(() => { app.getVersion().then((result) => setVersion(result)); }, []);
+  useEffect(() => {
+    app.getVersion().then((result) => setVersion(result));
+
+    const window = getCurrentWindow();
+    window.listen<{ Combat: [string, [number, string][]] }>(MONITOR_UPDATE, (event) => {
+      const { Combat: [filename, lines] } = event.payload;
+      console.log(filename);
+      lines.forEach(([n, line]) => { console.log(`${n} -> ${line}`); });
+    });
+  }, []);
 
   // on overlays change
   useEffect(() => {

@@ -18,22 +18,6 @@
     "core:webview:allow-create-webview-window",
     "fs:default",
     "fs:allow-resource-read-recursive",
-    {
-      "identifier": "fs:allow-read-text-file",
-      "allow": [
-        {
-          "path": "$DOCUMENT/My Games/Smite/BattleGame/Logs/*"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-read-dir",
-      "allow": [
-        {
-          "path": "$DOCUMENT/My Games/Smite/BattleGame/Logs"
-        }
-      ]
-    },
     "log:default"
   ]
 }
