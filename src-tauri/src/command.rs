@@ -82,11 +82,6 @@ pub fn monitor_start(app: AppHandle, state: State<'_, Mutex<CombatLogMonitorStat
 
                     // load most recently updated ("newest") combat log file
                     if let Some(newest_dir_entry) = newest_dir_entry {
-                        println!(
-                            "NEW FILE FOUND: {}",
-                            newest_dir_entry.file_name().into_string().unwrap()
-                        );
-
                         let file = File::open(newest_dir_entry.path()).expect(
                             format!(
                                 "Failed to open combat log: {}",
