@@ -9,14 +9,21 @@ import { useMainWindowContext } from '../mainWindowContext';
 export default function AboutPanel() {
   const { version } = useMainWindowContext();
 
+  const [sdpsLicense, setSdpsLicense] = useState('');
   const [attribution, setAttribution] = useState('');
+
   useEffect(() => {
+    resolveResource('resources/oss-attribution/sdps-license.txt').then(async licensePath => {
+      setSdpsLicense(await readTextFile(licensePath));
+    })
     resolveResource('resources/oss-attribution/attribution.txt').then(async attributionPath => {
       setAttribution(await readTextFile(attributionPath));
     })
   }, []);
 
-  const copyrightYear = `2021-${new Date().getFullYear()}`;
+  const copyrightYear = new Date().getFullYear() === 2025
+    ? '2025'
+    : `2025-${new Date().getFullYear()}`;
 
   return (
     <Container>
@@ -93,7 +100,8 @@ export default function AboutPanel() {
           <div>Legal notices:</div>
           <div className="grid">
             <p className="min-h-48 h-48 resize-y border p-1 border-neutral-700 overflow-auto whitespace-pre">
-              SDPS<br />
+
+              {/* SDPS<br />
               {version} <A href="https://github.com/antD97/SDPS">https://github.com/antD97/SDPS</A><br />
               authors: antD97<br />
               The MIT License (MIT)<br />
@@ -116,6 +124,14 @@ export default function AboutPanel() {
               COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER<br />
               IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN<br />
               CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.<br />
+              <br />
+              ******************************<br />
+              <br /> */}
+              SDPS v{version}<br />
+              <A href="https://github.com/antD97/SDPS">https://github.com/antD97/SDPS</A><br />
+              Copyright © {copyrightYear} antD<br />
+              <br />
+              {sdpsLicense}
               <br />
               ******************************<br />
               <br />

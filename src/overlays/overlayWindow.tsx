@@ -3,7 +3,7 @@ import { useOverlayContext } from "./overlayContext";
 import OverlaySwitcher from "./overlaySwitcher";
 
 function OverlayWindow() {
-  const { windowState } = useOverlayContext();
+  const { overlayData: { windowState } } = useOverlayContext();
 
   if (windowState === 'hide') { return (<></>); }
 

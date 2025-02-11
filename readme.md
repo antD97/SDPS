@@ -11,3 +11,17 @@ This template should help get you started developing with Tauri, React and Types
 
 Update oss attribution: `npx oss-attribution-generator generate-attribution`  
 must be moved to `src-tauri\resources\oss-attribution`
+
+known issues:
+- "hidden combat"; seems to not be an issue if the combat tab is selected?; 
+- need a copy of the alternative log format
+- nonGodNames in combatLine.ts may need updating
+
+todo:
+- DIT_Death
+- DIT_Assist
+- DIT_KillingBlow minions/gods/towers?
+- DIT_Experience?
+- DIT_ManaRestore?
+- DIT_Level?
+- IET_AbilityPurchase?

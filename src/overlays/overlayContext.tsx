@@ -1,10 +1,13 @@
 import { emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from "../mainwindow/mainWindowContext";
+import { COMBAT_UPDATE, COMBAT_UPDATE_REQUEST, CombatLogData, OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from "../mainwindow/mainWindowContext";
 import OverlayData from "./overlayData";
 
-const OverlayContext = createContext<OverlayData | null>(null);
+const OverlayContext = createContext<{
+  overlayData: OverlayData;
+  combatLogData: CombatLogData | null;
+} | null>(null);
 
 const defaultOverlayData: OverlayData = {
   windowLabel: '',
@@ -14,9 +17,11 @@ const defaultOverlayData: OverlayData = {
 };
 
 let unlistenToOverlayUpdates: (() => void) | null = null;
+let unlistenToCombatUpdates: (() => void) | null = null;
 
 export const OverlayContextProvider = ({ children }: { children: ReactNode }) => {
   const [overlayData, setOverlayData] = useState<OverlayData>(defaultOverlayData);
+  const [combatLogData, setCombatLogData] = useState<CombatLogData | null>(null);
   const { overlayName, windowState } = overlayData;
 
   const window = useMemo(getCurrentWindow, []);
@@ -31,7 +36,17 @@ export const OverlayContextProvider = ({ children }: { children: ReactNode }) =>
     window.listen<OverlayData>(OVERLAY_UPDATE, (event) => { setOverlayData(event.payload); })
       .then((unlistenFn) => unlistenToOverlayUpdates = unlistenFn);
 
-    emit(OVERLAY_UPDATE_REQUEST, window.label);
+    window.emit(OVERLAY_UPDATE_REQUEST, window.label);
+
+    // update COMBAT_UPDATE listener
+    if (unlistenToCombatUpdates) {
+      unlistenToCombatUpdates();
+      unlistenToCombatUpdates = null;
+    }
+    window.listen<CombatLogData>(COMBAT_UPDATE, (event) => { setCombatLogData(event.payload); })
+      .then((unlistenFn) => unlistenToCombatUpdates = unlistenFn);
+
+    window.emit(COMBAT_UPDATE_REQUEST, window.label);
   }, []);
 
   // on overlay name change
@@ -54,7 +69,7 @@ export const OverlayContextProvider = ({ children }: { children: ReactNode }) =>
     }
   }, [windowState]);
 
-  return (<OverlayContext value={overlayData}>{children}</OverlayContext>);
+  return (<OverlayContext value={{ overlayData, combatLogData }}>{children}</OverlayContext>);
 };
 
 export const useOverlayContext = () => {
