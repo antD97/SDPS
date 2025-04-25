@@ -22,7 +22,7 @@ pub fn monitor_start(app: AppHandle, state: State<'_, Mutex<CombatLogMonitorStat
 
     // take combat log directory and monitor channel receiver
     let log_dir = state.log_dir.take().expect("Log directory path missing");
-    let recv = state
+    let recv: std::sync::mpsc::Receiver<CombatLogMonitorCommand> = state
         .recv
         .take()
         .expect("Combat monitor mpsc receiver missing");
@@ -115,7 +115,7 @@ pub fn monitor_start(app: AppHandle, state: State<'_, Mutex<CombatLogMonitorStat
                                     .expect("Failed to read combat log line");
 
                                 // check for log end
-                                if line.trim() == "end" {
+                                if line.trim() == ",{\"eventType\":\"end\"}" {
                                     loaded_file_state.reached_end_time = Some(
                                         loaded_file_state
                                             .reader
@@ -128,7 +128,7 @@ pub fn monitor_start(app: AppHandle, state: State<'_, Mutex<CombatLogMonitorStat
                                 }
 
                                 // check for file end
-                                if line == "" {
+                                if line.trim() == "" {
                                     break;
                                 }
 

@@ -12,6 +12,7 @@ type SelectedMenu = { id: 'About' } | { id: 'Presets' } | { id: 'Settings' } | {
 export type CombatLogData = {
   ign: string | null;
   filename: string;
+  debugLines: string[];
   combatLines: CombatLine[];
   potentialHiddenCombat: boolean;
 };
@@ -68,19 +69,29 @@ export const MainWindowContextProvider = ({ children }: { children: ReactNode })
 
       setCombatLogData((prevCombatLogData) => {
 
-        const { ign, combatLines, potentialHiddenCombat } = parseCombatLines(
+        const parsedCombatLines = parseCombatLines(
           prevCombatLogData?.ign ?? null,
           lines.map((lineData) => lineData[1])
         );
 
+        if (parsedCombatLines.logType === 'piped') {
+          throw new Error('Piped log type not supported. Use `/combatlog toggle` not `/combatlog toggle piped`.');
+        }
+
+        const { ign, combatLines, potentialHiddenCombat } = parsedCombatLines;
+
+        const debugLines = lines.map(([_, line]) => line);
+
         return isNewFile ? {
           ign,
           filename,
+          debugLines,
           combatLines,
           potentialHiddenCombat
         } : {
           ign: prevCombatLogData ? prevCombatLogData.ign : ign,
           filename: prevCombatLogData ? prevCombatLogData.filename : filename,
+          debugLines: prevCombatLogData ? prevCombatLogData.debugLines.concat(debugLines) : debugLines,
           combatLines: prevCombatLogData ? prevCombatLogData.combatLines.concat(combatLines) : combatLines,
           potentialHiddenCombat
         };

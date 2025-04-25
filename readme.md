@@ -13,8 +13,7 @@ Update oss attribution: `npx oss-attribution-generator generate-attribution`
 must be moved to `src-tauri\resources\oss-attribution`
 
 known issues:
-- "hidden combat"; seems to not be an issue if the combat tab is selected?; 
-- need a copy of the alternative log format
+- "hidden combat"; seems to not be an issue if the combat tab is selected?
 - nonGodNames in combatLine.ts may need updating
 
 todo:
