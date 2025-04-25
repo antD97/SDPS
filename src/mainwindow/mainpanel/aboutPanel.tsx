@@ -2,11 +2,11 @@ import { resolveResource } from '@tauri-apps/api/path';
 import { readTextFile } from '@tauri-apps/plugin-fs';
 import { useEffect, useState } from 'react';
 import { SiDiscord, SiKofi } from 'react-icons/si';
-import A from '../../components/ui/anchor';
-import Container from '../../components/ui/container';
+import { A } from '../../components/anchor';
+import { Container } from '../../components/container';
 import { useMainWindowContext } from '../mainWindowContext';
 
-export default function AboutPanel() {
+export const AboutPanel = () => {
   const { version } = useMainWindowContext();
 
   const [sdpsLicense, setSdpsLicense] = useState('');

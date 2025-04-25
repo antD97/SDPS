@@ -1,107 +1,47 @@
+import { EventCallback } from '@tauri-apps/api/event';
+import { CombatLogData } from '../mainwindow/mainWindowTypes';
+import { damageTypes, npcNames } from './combatMonitorConsts';
 
-export type CombatLine = {
-  type: 'start'
-} | {
-  type: 'end';
-} | {
-  type: 'damage-dealt'; // set PHC
-  time: number;
-  target: string;
-  from: string;
-  damage: number;
-  mitigated: number;
-  text: string;
-} | {
-  type: 'damage-received'; // set PHC
-  time: number;
-  source: string;
-  from: string;
-  damage: number;
-  mitigated: number;
-  text: string;
-} | {
-  type: 'heal-dealt'; // set PHC
-  time: number;
-  target: string;
-  from: string;
-  amount: number;
-  text: string;
-} | {
-  type: 'heal-received'; // set PHC
-  time: number;
-  source: string;
-  from: string;
-  amount: number;
-  text: string;
-} | {
-  type: 'kill-player';
-  time: number;
-  target: string;
-} | {
-  type: 'kill-npc';
-  time: number;
-  target: string;
-} | {
-  type: 'death';
-  time: number;
-} | {
-  type: 'assist';
-  time: number;
-} | {
-  type: 'experience'; // hides currency
-  time: number;
-} | {
-  type: 'currency'; // probably can hide experience
-  time: number;
-} | {
-  type: 'level'; // can be hidden :/ by ^
-  time: number;
-} | {
-  type: 'ability-purchase'; // clear PHC
-  time: number;
-} | {
-  type: 'cast-start'; // clear PHC
-  time: number;
-} | {
-  type: 'recall-end'; // gets hidden...
-  time: number;
-};
+export function combatMonitor(
+  setCombatLogData: React.Dispatch<React.SetStateAction<CombatLogData | null>>
+): EventCallback<{ Combat: [string, [number, string][]]; }> {
+  return (event) => {
+    const { Combat: [filename, lines] } = event.payload;
+    const isNewFile = lines[0][0] === 0;
 
-const damageTypes = [
-  'DIT_Damage',
-  'DIT_CritDamage',
-  'DIT_Backstab',
-  'DIT_HolyCrit'
-];
+    setCombatLogData((prevCombatLogData) => {
 
-const nonGodNames = [
-  'Gold Fury',
-  'Fire Giant',
-  'Chaos Swordsman',
-  'Chaos Brute',
-  'Order Swordsman',
-  'Order Archer',
-  'Harpy',
-  'Elder Harpy',
-  'Manticore',
-  'Alpha Manticore',
-  'Spirit Satyr',
-  'Elder Satyr',
-  'Centaur',
-  'Chief Centaur',
-  'Chimera',
-  'Alpha Chimera',
-  'Chaos Bastion',
-  'Order Bastion', // TODO check
-  'Chaos Tower',
-  'Order Tower', // TODO check
-  'Chaos Phoenix',
-  'Order Phoenix', // TODO check
-  'Chaos Titan',
-  'Order Titan', // TODO check
-];
+      const parsedCombatLines = parseCombatLines(
+        prevCombatLogData?.ign ?? null,
+        lines.map((lineData) => lineData[1])
+      );
 
-export function parseCombatLines(
+      if (parsedCombatLines.logType === 'piped') {
+        throw new Error('Piped log type not supported. Use `/combatlog toggle` not `/combatlog toggle piped`.');
+      }
+
+      const { ign, combatLines, potentialHiddenCombat } = parsedCombatLines;
+
+      const debugLines = lines.map(([_, line]) => line);
+
+      return isNewFile ? {
+        ign,
+        filename,
+        debugLines,
+        combatLines,
+        potentialHiddenCombat
+      } : {
+        ign: prevCombatLogData ? prevCombatLogData.ign : ign,
+        filename: prevCombatLogData ? prevCombatLogData.filename : filename,
+        debugLines: prevCombatLogData ? prevCombatLogData.debugLines.concat(debugLines) : debugLines,
+        combatLines: prevCombatLogData ? prevCombatLogData.combatLines.concat(combatLines) : combatLines,
+        potentialHiddenCombat
+      };
+    });
+  }
+}
+
+function parseCombatLines(
   ign: string | null,
   lines: string[]
 ): {
@@ -143,11 +83,11 @@ export function parseCombatLines(
       else if (eventType === 'combatmsg') {
 
         // damage
-        if (type && damageTypes.includes(type)) {
+        if (type && (damageTypes as readonly string[]).includes(type)) {
           potentialHiddenCombat = true;
 
           // track ign
-          if (ign === null && source && !nonGodNames.includes(source)) { ign = source; }
+          if (ign === null && source && !(npcNames as readonly string[]).includes(source)) { ign = source; }
 
           if (source === ign) {
             return {

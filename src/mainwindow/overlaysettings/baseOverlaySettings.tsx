@@ -1,7 +1,7 @@
-import OverlayData, { overlayNames, overlayStates } from "../../overlays/overlayData";
-import { useMainWindowContext } from "../mainWindowContext";
+import { overlayNames, overlayStates } from '../../overlays/overlayConsts';
+import { useMainWindowContext } from '../mainWindowContext';
 
-export default function BaseOverlaySettings() {
+export const BaseOverlaySettings = () => {
   const { selectedMenu, overlays, updateSelectedOverlay } = useMainWindowContext();
 
   if (selectedMenu.id !== 'Overlay') {

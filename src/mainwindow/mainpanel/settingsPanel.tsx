@@ -1,6 +1,6 @@
-import { useMainWindowContext } from "../mainWindowContext";
+import { useMainWindowContext } from '../mainWindowContext';
 
-export default function SettingsPanel() {
+export const SettingsPanel = () => {
   const { combatLogData } = useMainWindowContext();
 
   const filename = combatLogData?.filename ?? null;

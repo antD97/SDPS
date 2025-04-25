@@ -1,18 +1,24 @@
-import AdjustPanel from "./adjustPanel";
-import { useOverlayContext } from "./overlayContext";
-import OverlaySwitcher from "./overlaySwitcher";
+import { AdjustPanel } from './adjustPanel';
+import { CombatTable } from './combatTable/combatTable';
+import { EmptyOverlay } from './emptyOverlay/emptyOverlay';
+import { useOverlayContext } from './overlayContext';
 
-function OverlayWindow() {
-  const { overlayData: { windowState } } = useOverlayContext();
+export const OverlayWindow = () => {
+  const { overlayData: { windowState, type } } = useOverlayContext();
 
   if (windowState === 'hide') { return (<></>); }
 
   return (
     <main className="min-h-screen h-screen max-h-screen min-w-screen w-screen max-w-screen grid text-white select-none">
       {windowState === 'adjust' && <AdjustPanel />}
-      <OverlaySwitcher />
+      <OverlaySwitcher type={type} />
     </main>
   );
 }
 
-export default OverlayWindow;
+const OverlaySwitcher = ({ type }: { type: OverlayData['type'] }) => {
+  switch (type) {
+    case 'empty': return (<EmptyOverlay />);
+    case 'combat table': return (<CombatTable />);
+  }
+};

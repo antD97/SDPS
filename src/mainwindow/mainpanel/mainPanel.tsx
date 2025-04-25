@@ -1,14 +1,13 @@
-import Container from "../../components/ui/container";
-import OverlayData from "../../overlays/overlayData";
-import { useMainWindowContext } from "../mainWindowContext";
-import BaseOverlaySettings from "../overlaysettings/baseOverlaySettings";
-import CombatTableSettings from "../overlaysettings/combatTableSettings";
-import EmptyOverlaySettings from "../overlaysettings/emptyOverlaySettings";
-import AboutPanel from "./aboutPanel";
-import PresetsPanel from "./presetsPanel";
-import SettingsPanel from "./settingsPanel";
+import { Container } from '../../components/container';
+import { useMainWindowContext } from '../mainWindowContext';
+import { BaseOverlaySettings } from '../overlaysettings/baseOverlaySettings';
+import { CombatTableSettings } from '../overlaysettings/combatTableSettings';
+import { EmptyOverlaySettings } from '../overlaysettings/emptyOverlaySettings';
+import { AboutPanel } from './aboutPanel';
+import { PresetsPanel } from './presetsPanel';
+import { SettingsPanel } from './settingsPanel';
 
-export default function MainPanel() {
+export const MainPanel = () => {
   const { selectedMenu, overlays } = useMainWindowContext();
 
   switch (selectedMenu.id) {
@@ -25,7 +24,7 @@ export default function MainPanel() {
   };
 }
 
-function OverlaySettings({ type }: { type: OverlayData['type'] }) {
+const OverlaySettings = ({ type }: { type: OverlayData['type'] }) => {
   switch (type) {
     case 'empty': return (<EmptyOverlaySettings />);
     case 'combat table': return (<CombatTableSettings />);

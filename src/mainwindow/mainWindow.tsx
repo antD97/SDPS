@@ -1,8 +1,8 @@
-import TitleBar from "../components/titleBar";
-import MainPanel from "./mainpanel/mainPanel";
-import NavPanel from "./navpanel/navPanel";
+import { TitleBar } from '../components/titleBar';
+import { MainPanel } from './mainpanel/mainPanel';
+import { NavPanel } from './navpanel/navPanel';
 
-function MainWindow() {
+export const MainWindow = () => {
   return (
     <main className="min-h-screen h-screen max-h-screen min-w-screen w-screen max-w-screen flex flex-col bg-neutral-900/97 text-white select-none">
       <TitleBar />
@@ -15,5 +15,3 @@ function MainWindow() {
     </main>
   );
 }
-
-export default MainWindow;

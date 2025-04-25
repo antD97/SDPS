@@ -1,5 +1,4 @@
-
-function EmptyOverlay() {
+export const EmptyOverlay = () => {
   return (
     <div className="flex flex-col items-center justify-center gap-16 bg-neutral-900/97 overflow-hidden">
       <div>[ Empty Overlay ]</div>
@@ -7,5 +6,3 @@ function EmptyOverlay() {
     </div>
   );
 }
-
-export default EmptyOverlay;

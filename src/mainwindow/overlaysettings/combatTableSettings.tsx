@@ -1,9 +1,9 @@
-// import { exists, readDir, readTextFileLines, stat } from "@tauri-apps/plugin-fs";
-import { useState } from "react";
+// import { exists, readDir, readTextFileLines, stat } from '@tauri-apps/plugin-fs';
+import { useState } from 'react';
 
 // const logsDir = await join(await path.documentDir(), 'My Games', 'Smite', 'BattleGame', 'Logs');
 
-export default function CombatTableSettings() {
+export const CombatTableSettings = () => {
   // const [logsDirExists, setLogsDirExists] = useState<boolean | null>(null);
   // const [mostRecentLogFile, setMostRecentLogFile] = useState<{ filename: string, itr: AsyncIterableIterator<string> } | null>(null);
   const [lines, setLines] = useState<string[]>([]);

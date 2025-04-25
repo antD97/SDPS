@@ -1,14 +1,13 @@
-import { motion } from "framer-motion";
-import { ReactNode } from "react";
-import { CombatLine } from "../../mainwindow/combatLine";
-import { useOverlayContext } from "../overlayContext";
+import { motion } from 'framer-motion';
+import { ReactNode } from 'react';
+import { useOverlayContext } from '../overlayContext';
 
-function CombatTable() {
+export const CombatTable = () => {
   const { combatLogData } = useOverlayContext();
   const combatLines = combatLogData?.combatLines ?? [];
 
   return (
-    <div className="grid bg-neutral-900/97 p-4 overflow-hidden rounded-2xl">
+    <div className="flex flex-col bg-neutral-900/97 p-4 overflow-hidden rounded-2xl">
       <div className="grid grid-cols-4 font-bold pb-1 border-b">
         <div>damage</div>
         <div>mitigated</div>
@@ -49,5 +48,3 @@ const TableCell = ({ children }: { children?: ReactNode }) => (
     {children}
   </motion.div>
 )
-
-export default CombatTable;

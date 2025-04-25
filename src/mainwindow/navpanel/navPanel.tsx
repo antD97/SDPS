@@ -1,9 +1,9 @@
-import { getAllWindows } from "@tauri-apps/api/window";
-import { overlayNames } from "../../overlays/overlayData";
-import { useMainWindowContext } from "../mainWindowContext";
-import NavButton from "./navButton";
+import { getAllWindows } from '@tauri-apps/api/window';
+import { overlayNames } from '../../overlays/overlayConsts';
+import { useMainWindowContext } from '../mainWindowContext';
+import { NavButton } from './navButton';
 
-export default function NavPanel() {
+export const NavPanel = () => {
   const { selectedMenu, overlays, setSelectedMenu, newOverlay } = useMainWindowContext();
 
   const mainBtnList: ['About', 'Presets', 'Settings'] = ['About', 'Presets', 'Settings'];

@@ -1,15 +1,12 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useEffect, useState } from "react";
-import { GoArrowDownLeft, GoArrowDownRight, GoArrowUpLeft, GoArrowUpRight } from "react-icons/go";
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEffect, useState } from 'react';
+import { GoArrowDownLeft, GoArrowDownRight, GoArrowUpLeft, GoArrowUpRight } from 'react-icons/go';
 
-function AdjustPanel() {
+export const AdjustPanel = () => {
   const window = getCurrentWindow();
 
   const [windowSize, setWindowSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
-  useEffect(() => {
-    window.innerSize().then(size => setWindowSize(size));
-  });
-  window.innerSize
+  useEffect(() => { window.innerSize().then(size => setWindowSize(size)); }); // keep window size state updated
 
   return (
     <div
@@ -32,5 +29,3 @@ function AdjustPanel() {
     </div>
   );
 }
-
-export default AdjustPanel;

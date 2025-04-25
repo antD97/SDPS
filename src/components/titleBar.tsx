@@ -1,7 +1,7 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { VscChromeClose, VscChromeMaximize, VscChromeMinimize } from "react-icons/vsc";
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { VscChromeClose, VscChromeMaximize, VscChromeMinimize } from 'react-icons/vsc';
 
-export default function TitleBar() {
+export const TitleBar = () => {
   const window = getCurrentWindow();
   const btnClassName = "h-full px-2 hover:bg-cyan-500";
   return (
@@ -34,4 +34,4 @@ export default function TitleBar() {
       </div>
     </div>
   );
-}
+};
