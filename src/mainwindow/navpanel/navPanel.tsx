@@ -1,4 +1,5 @@
 import { getAllWindows } from '@tauri-apps/api/window';
+import { H } from '../../components/header';
 import { overlayNames } from '../../overlays/overlayConsts';
 import { useMainWindowContext } from '../mainWindowContext';
 import { NavButton } from './navButton';
@@ -11,7 +12,7 @@ export const NavPanel = () => {
   return (
     <div className="flex flex-col items-stretch border-r-1 border-neutral-700 text-center">
 
-      <h2 className="text-lg px-8 py-1 text-cyan-600">SDPS</h2>
+      <H level="2" className="border-none px-8 py-1 text-cyan-600">SDPS</H>
       {
         mainBtnList.map((btnName, i) => (
           <NavButton
@@ -24,7 +25,7 @@ export const NavPanel = () => {
         ))
       }
 
-      <h2 className="text-lg text-cyan-600 px-8 py-1 mt-1 border-t border-neutral-700">Overlays</h2>
+      <H level="2" className="text-cyan-600 px-8 py-1 mt-1 border-b-0 border-t border-neutral-700">Overlays</H>
       {
         overlays.map(({ windowLabel, type, windowState }, i) => {
           const selected = selectedMenu.id === 'Overlay' && selectedMenu.index === i;

@@ -1,27 +1,29 @@
+import { defaultCombatTableData } from '../../overlays/combatTable/combatTableConsts';
 import { overlayNames, overlayStates } from '../../overlays/overlayConsts';
 import { useMainWindowContext } from '../mainWindowContext';
 
 export const BaseOverlaySettings = () => {
-  const { selectedMenu, overlays, updateSelectedOverlay } = useMainWindowContext();
+  const { selectedMenu, selectedOverlayData, setSelectedOverlayData } = useMainWindowContext();
 
   if (selectedMenu.id !== 'Overlay') {
     throw Error('BaseOverlaySettings should only be rendered when an overlay menu is selected.');
   }
 
-  const selectedOverlay = overlays[selectedMenu.index];
+  if (selectedOverlayData === null) { return (<></>); }
 
   return (
     <div className="flex flex-col items-center gap-4">
       <label className="flex gap-2">
         Overlay:
         <select
-          value={selectedOverlay.type}
+          value={selectedOverlayData.type}
           onChange={(event) => {
             const overlayType = event.target.value as OverlayData['type'];
-            updateSelectedOverlay((prevOverlayData) => {
+            setSelectedOverlayData((prevOverlayData) => {
+              console.log(overlayType);
               switch (overlayType) {
                 case 'empty': return { ...prevOverlayData, type: 'empty' };
-                case 'combat table': return { ...prevOverlayData, type: 'combat table' };
+                case 'combat table': return { ...defaultCombatTableData, ...prevOverlayData, type: 'combat table' };
               }
             });
           }}
@@ -40,14 +42,14 @@ export const BaseOverlaySettings = () => {
           overlayStates.map((state, i) => {
             const first = i === 0 && 'rounded-l-md';
             const last = i === overlayStates.length - 1 && 'rounded-r-md';
-            const selected = selectedOverlay.windowState === state
+            const selected = selectedOverlayData.windowState === state
               ? 'bg-cyan-600'
               : 'bg-neutral-300 hover:bg-neutral-100 active:text-black active:bg-cyan-600';
             return (
               <button
                 key={i}
-                onClick={() => { updateSelectedOverlay((prevOverlayData) => ({ ...prevOverlayData, windowState: state })); }}
-                className={`px-2 text-black ${first} ${last} ${selected}`}
+                onClick={() => { setSelectedOverlayData((prevOverlayData) => ({ ...prevOverlayData, windowState: state })); }}
+                className={`px-2 text-black ${first} ${last} ${selected} transition-colors duration-300`}
               >
                 {state}
               </button>

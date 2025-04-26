@@ -8,7 +8,7 @@ import { PresetsPanel } from './presetsPanel';
 import { SettingsPanel } from './settingsPanel';
 
 export const MainPanel = () => {
-  const { selectedMenu, overlays } = useMainWindowContext();
+  const { selectedMenu, selectedOverlayData } = useMainWindowContext();
 
   switch (selectedMenu.id) {
     case 'About': return (<AboutPanel />);
@@ -18,7 +18,7 @@ export const MainPanel = () => {
       return (
         <Container>
           <BaseOverlaySettings />
-          <OverlaySettings type={overlays[selectedMenu.index].type} />
+          <OverlaySettings type={selectedOverlayData!.type} />
         </Container>
       );
   };

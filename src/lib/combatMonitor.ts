@@ -1,18 +1,19 @@
 import { EventCallback } from '@tauri-apps/api/event';
+import { Updater } from 'use-immer';
 import { CombatLogData } from '../mainwindow/mainWindowTypes';
 import { damageTypes, npcNames } from './combatMonitorConsts';
 
 export function combatMonitor(
-  setCombatLogData: React.Dispatch<React.SetStateAction<CombatLogData | null>>
+  setCombatLogData: Updater<CombatLogData | null>
 ): EventCallback<{ Combat: [string, [number, string][]]; }> {
   return (event) => {
     const { Combat: [filename, lines] } = event.payload;
     const isNewFile = lines[0][0] === 0;
 
-    setCombatLogData((prevCombatLogData) => {
+    setCombatLogData((draft) => {
 
       const parsedCombatLines = parseCombatLines(
-        prevCombatLogData?.ign ?? null,
+        draft?.ign ?? null,
         lines.map((lineData) => lineData[1])
       );
 
@@ -24,19 +25,12 @@ export function combatMonitor(
 
       const debugLines = lines.map(([_, line]) => line);
 
-      return isNewFile ? {
-        ign,
-        filename,
-        debugLines,
-        combatLines,
-        potentialHiddenCombat
-      } : {
-        ign: prevCombatLogData ? prevCombatLogData.ign : ign,
-        filename: prevCombatLogData ? prevCombatLogData.filename : filename,
-        debugLines: prevCombatLogData ? prevCombatLogData.debugLines.concat(debugLines) : debugLines,
-        combatLines: prevCombatLogData ? prevCombatLogData.combatLines.concat(combatLines) : combatLines,
-        potentialHiddenCombat
-      };
+      if (isNewFile || draft === null) {
+        return { ign, filename, debugLines, combatLines, potentialHiddenCombat };
+      } else {
+        draft.debugLines.push(...debugLines);
+        draft.combatLines.push(...combatLines);
+      }
     });
   }
 }

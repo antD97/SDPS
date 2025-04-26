@@ -1,87 +1,136 @@
-// import { exists, readDir, readTextFileLines, stat } from '@tauri-apps/plugin-fs';
-import { useState } from 'react';
+import { useCallback } from "react";
+import { Accordion } from "../../components/accordion";
+import { H } from "../../components/header";
+import { FieldContainer, NumField, SelectField, TextField } from "../../components/inputFields";
+import { useMainWindowContext } from "../mainWindowContext";
 
-// const logsDir = await join(await path.documentDir(), 'My Games', 'Smite', 'BattleGame', 'Logs');
+export const CombatTableSettings = () => (
+  <div className="flex flex-col gap-4">
 
-export const CombatTableSettings = () => {
-  // const [logsDirExists, setLogsDirExists] = useState<boolean | null>(null);
-  // const [mostRecentLogFile, setMostRecentLogFile] = useState<{ filename: string, itr: AsyncIterableIterator<string> } | null>(null);
-  const [lines, setLines] = useState<string[]>([]);
+    <H level="1">Combat Table</H>
 
-  // const findMostRecentDir = useCallback(async () => {
-  //   const files = (await readDir(logsDir))
-  //     .filter((f) => f.isFile && f.name.toLowerCase().startsWith('combatlog') && f.name.endsWith('.log'));
+    combat table settings...
 
-  //   let newestFile = files[0];
-  //   for (const f of files) {
-  //     const a = (await stat(await join(logsDir, f.name))).mtime!;
-  //     const b = (await stat(await join(logsDir, newestFile.name))).mtime!;
-  //     if (a > b) { newestFile = f; }
-  //   }
+    <StyleSettings />
+  </div>
+);
 
-  //   setMostRecentLogFile({
-  //     filename: newestFile.name,
-  //     itr: await readTextFileLines(await join(logsDir, newestFile.name))
-  //   });
-  // }, []);
+const StyleSettings = () => {
+  const { selectedOverlayData, setSelectedOverlayData } = useMainWindowContext();
+  if (selectedOverlayData === null || selectedOverlayData.type !== 'combat table') { return (<></>); }
 
-  // const nextLine = useCallback(async () => {
-  //   if (mostRecentLogFile) {
-  //     const a = await mostRecentLogFile.itr.next();
-  //     const line = `${a.value}${a.done === undefined ? '' : a.done === false ? ' | FALSE' : ' | TRUE'}`;
-  //     setLines([...lines, line]);
-  //   }
-  // }, [mostRecentLogFile, lines]);
+  // const textFieldProps = useCallback((path: string) => {
+  //   return {
+  //     value: _.get(selectedOverlayData, path, `FAILED TO FIND VALUE WITH PATH: "${path}"`),
+  //     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+  //       const value = e.target.value;
+  //       updateSelectedOverlayData((prev) => {
+  //         const result = _.cloneDeep(prev);
+  //         _.set(result, path, value);
+  //         return result;
+  //       });
+  //     }
+  //   };
+  // }, [selectedOverlayData, updateSelectedOverlayData]);
+
+  // const selectFieldProps = useCallback((path: string) => {
+  //   return {
+  //     value: _.get(selectedOverlayData, path, `FAILED TO FIND VALUE WITH PATH: "${path}"`),
+  //     onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //       const value = e.target.value;
+  //       updateSelectedOverlayData((prev) => {
+  //         const result = _.cloneDeep(prev);
+  //         _.set(result, path, value);
+  //         return result;
+  //       });
+  //     }
+  //   };
+  // }, [selectedOverlayData, updateSelectedOverlayData]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl self-center border-b border-cyan-600">Combat Table</h1>
-      combat table
+    <Accordion title="Overlay Style" contentClassName="gap-4">
 
-      {/* <div>logsdir: <code>{logsDir}</code></div> */}
+      <Accordion title="Window" color="gray1">
+        <FieldContainer>
+          {/* <TextField label="Background Color" {...textFieldProps('styles.window.backgroundColor')} />
+          <SelectField
+            label="Corners"
+            options={['Square', 'Small rounded', 'Medium rounded', 'Large rounded', 'XL rounded']}
+            {...selectFieldProps('styles.window.corners')}
+          /> */}
+          <NumField label="Padding" min={0} max={100} value={100} />
+        </FieldContainer>
+      </Accordion>
 
-      {/* <div>
-        <button
-          onClick={async () => { setLogsDirExists(await exists(logsDir)); }}
-          className="bg-cyan-600"
-        >
-          logsDir Exists?
-        </button>
-        {`${logsDirExists}`}
-      </div> */}
+      {/* <Accordion title="Headers" color="gray1">
+        <FieldContainer>
+          <TextField label="Background Color" value="" />
+          <TextField label="Text Color" value="" />
+          <NumField label="Text Size" min={1} max={100} value={12} />
+          <SelectField
+            label="Text Capitalization"
+            options={['lowercase', 'Capitalize', 'UPPERCASE']}
+            value="Capitalize"
+          />
+          <CheckboxField label="Text Bolded" checked={true} />
+          <TextField label="Border Color" value="" />
+          <NumField label="Border Thickness" min={1} max={10} value={1} />
+          <NumField label="Border Spacing" min={1} max={10} value={5} />
+        </FieldContainer>
+      </Accordion>
 
-      {/* <div>
-        <button
-          onClick={findMostRecentDir}
-          className="bg-cyan-600"
-        >
-          find most recent log file
-        </button>
-        {`${mostRecentLogFile}`}
-      </div> */}
+      <Accordion title="Rows" color="gray1" contentClassName="gap-4">
+        <p>
+          Row styling precedence follows the order:
+          "Row&nbsp;Type"&nbsp;&gt;&nbsp;"Odd/Even"&nbsp;&gt;&nbsp;"Default&nbsp;Row&nbsp;Style"
+        </p>
 
-      {/* <div>
-        <button
-          onClick={() => { invoke('monitor_file', { filename: mostRecentLogFile?.filename }) }}
-          className="bg-cyan-600"
-        >
-          update rust file
-        </button>
-      </div> */}
+        <Accordion title="Default Row Styles" color="blue2">
+          <FieldContainer>
+            <TextField label="Background Color" value="" />
+            <TextField label="Text Color" value="" />
+            <NumField label="Text Size" min={1} max={100} value={12} />
+          </FieldContainer>
+        </Accordion>
 
-      {/* <div>
-        <button
-          onClick={nextLine}
-          className="bg-cyan-600"
-        >
-          next line
-        </button>
-        <div className="bg-neutral-700 text-nowrap">
-          {lines.map((line, i) => (
-            <div key={i}>{line}</div>
-          ))}
-        </div>
-      </div> */}
-    </div>
+        <Accordion title="Odd Rows" color="blue2">
+          <FieldContainer>
+            <TextField label="Background Color" value="" />
+            <TextField label="Text Color" value="" />
+          </FieldContainer>
+        </Accordion>
+
+        <Accordion title="Even Rows" color="blue2">
+          <FieldContainer>
+            <TextField label="Background Color" value="" />
+            <TextField label="Text Color" value="" />
+          </FieldContainer>
+        </Accordion>
+
+        <Accordion title="Row Types" color="blue2" contentClassName="gap-4">
+          {
+            [
+              'Damage Dealt',
+              'Damage Received',
+              'Heal Dealt',
+              'Heal Received',
+              'Kill Player',
+              'Kill NPC',
+              'Death',
+              'Assist',
+              'Level',
+              'Ability Purchase'
+            ].map((rowType) => (
+              <Accordion key={rowType} title={rowType} color="gray2">
+                <FieldContainer>
+                  <TextField label="Background Color" value="" />
+                  <TextField label="Text Color" value="" />
+                </FieldContainer>
+              </Accordion>
+            ))
+          }
+        </Accordion>
+      </Accordion> */}
+    </Accordion>
   );
-}
+};

@@ -1,3 +1,4 @@
+import { Updater } from 'use-immer';
 import { CombatLine } from './combatLine';
 
 type SelectedMenu =
@@ -18,10 +19,11 @@ type MainWindowContextType = {
   version: string;
   selectedMenu: SelectedMenu;
   overlays: OverlayData[];
+  selectedOverlayData: OverlayData | null;
   combatLogData: CombatLogData | null;
   setSelectedMenu: (selectedMenu: SelectedMenu) => void;
   newOverlay: () => void;
-  updateSelectedOverlay: (mutator: (prevOverlayData: OverlayData) => OverlayData) => void;
+  setSelectedOverlayData: Updater<OverlayData>;
 };
 
 type MainWindowOverlaysState = {

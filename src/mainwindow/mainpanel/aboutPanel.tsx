@@ -1,16 +1,18 @@
 import { resolveResource } from '@tauri-apps/api/path';
 import { readTextFile } from '@tauri-apps/plugin-fs';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { SiDiscord, SiKofi } from 'react-icons/si';
+import { useImmer } from 'use-immer';
 import { A } from '../../components/anchor';
 import { Container } from '../../components/container';
+import { H } from '../../components/header';
 import { useMainWindowContext } from '../mainWindowContext';
 
 export const AboutPanel = () => {
   const { version } = useMainWindowContext();
 
-  const [sdpsLicense, setSdpsLicense] = useState('');
-  const [attribution, setAttribution] = useState('');
+  const [sdpsLicense, setSdpsLicense] = useImmer('');
+  const [attribution, setAttribution] = useImmer('');
 
   useEffect(() => {
     resolveResource('resources/oss-attribution/sdps-license.txt').then(async licensePath => {
@@ -29,7 +31,7 @@ export const AboutPanel = () => {
     <Container>
       <div className="flex flex-col items-stretch">
         <div className="relative self-center">
-          <h1 className="text-2xl text-center border-b border-cyan-600">About SDPS</h1>
+          <H level="1">About SDPS</H>
           <div className="absolute text-sm bottom-0 right-0 translate-x-full pl-1 text-cyan-600">
             v3.0.0
           </div>
@@ -51,12 +53,12 @@ export const AboutPanel = () => {
           <li>A fun combo counter to see how long you can continuously deal damage to enemy gods</li>
         </ul>
 
-        <h2 className="self-center text-lg border-b border-cyan-600">How to Use</h2>
+        <H level="2">How to Use</H>
         <p>TODO more</p>
         <ol className="list-decimal ml-6">
           <li>
             Once in a match,
-            enter <code className="bg-neutral-600/50 px-1 rounded">/combatlog toggle piped</code> to let SDPS see your
+            enter <code className="bg-neutral-600/50 px-1 rounded">/combatlog toggle</code> to let SDPS see your
             combat log. This command has to be typed in <i>once per game launch</i>.
           </li>
           <li>
@@ -65,7 +67,7 @@ export const AboutPanel = () => {
         </ol>
         <p>TODO more</p>
 
-        <h2 className="self-center text-lg border-b border-cyan-600">Community/Support</h2>
+        <H level="2">Community, Support, & Contributing</H>
         <p>
           If you're looking for help with the tool or would like to otherwise talk about the project, be it feature
           recommendations, fixes, or pull requests, please join the Discord using the button below. If you enjoy my
@@ -76,14 +78,14 @@ export const AboutPanel = () => {
       <div className="flex flex-col items-center gap-y-2 justify-around sm:flex-row">
         <A
           href="https://discord.gg/4P2TnBzr"
-          className="flex items-center gap-1 bg-[#7289da] hover:bg-[#4f5f99] px-2 rounded no-underline hover:text-inherit"
+          className="flex items-center gap-1 bg-[#7289da] hover:bg-[#4f5f99] px-2 rounded no-underline hover:text-inherit transition-colors duration-300"
         >
           <SiDiscord className="inline" />
           Join the Discord
         </A>
         <A
           href="https://ko-fi.com/antd_"
-          className="flex items-center gap-1 bg-[#FF6433] hover:bg-[#bf4926] px-2 rounded no-underline hover:text-inherit"
+          className="flex items-center gap-1 bg-[#FF6433] hover:bg-[#bf4926] px-2 rounded no-underline hover:text-inherit transition-colors duration-300"
         >
           <SiKofi className="inline" />
           Support me on Ko-fi

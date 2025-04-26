@@ -18,11 +18,13 @@
     "@tauri-apps/plugin-process": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.9.1",
+    "immer": "^10.1.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-icons": "^5.4.0",
     "tailwind-merge": "^3.0.1",
-    "tailwindcss": "^4.0.3"
+    "tailwindcss": "^4.0.3",
+    "use-immer": "^0.11.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

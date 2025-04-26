@@ -1,6 +1,7 @@
-import { ButtonHTMLAttributes, FC, useState } from 'react';
+import { ButtonHTMLAttributes, FC } from 'react';
 import { VscChromeClose } from 'react-icons/vsc';
 import { twMerge } from 'tailwind-merge';
+import { useImmer } from 'use-immer';
 
 interface NavButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   selected?: boolean;
@@ -8,7 +9,7 @@ interface NavButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, className, ...props }) => {
-  const [hovered, setIsHovered] = useState(false);
+  const [hovered, setIsHovered] = useImmer(false);
   return (
     <div
       onMouseEnter={() => { setIsHovered(true) }}
@@ -17,7 +18,7 @@ export const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, cla
     >
       <button
         className={twMerge(
-          `px-4 py-0 ${selected ? 'bg-neutral-700' : 'active:bg-neutral-700'} ${hovered && 'bg-neutral-800'}`,
+          `px-4 py-0 ${selected ? 'bg-neutral-700' : 'active:bg-neutral-700'} ${hovered && 'bg-neutral-800'} transition-colors duration-300`,
           className
         )}
         {...props}
@@ -27,7 +28,7 @@ export const NavButton: FC<NavButtonProps> = ({ selected, onClose, children, cla
       {onClose && hovered && (
         <button
           onClick={onClose}
-          className="absolute right-0 top-0 bottom-0 px-1 opacity-50 hover:opacity-100 hover:text-red-600"
+          className="absolute right-0 top-0 bottom-0 px-1 opacity-50 hover:opacity-100 hover:text-red-600 transition-colors duration-300"
         >
           <VscChromeClose />
         </button>

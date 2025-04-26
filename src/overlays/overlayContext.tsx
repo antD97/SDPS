@@ -1,5 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
+import { Updater, useImmer } from 'use-immer';
 import { COMBAT_UPDATE, COMBAT_UPDATE_REQUEST, OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from '../mainwindow/mainWindowContext';
 import { CombatLogData } from '../mainwindow/mainWindowTypes';
 
@@ -19,8 +20,8 @@ let unlistenToOverlayUpdates: (() => void) | null = null;
 let unlistenToCombatUpdates: (() => void) | null = null;
 
 export const OverlayContextProvider = ({ children }: { children: ReactNode }) => {
-  const [overlayData, setOverlayData] = useState<OverlayData>(defaultOverlayData);
-  const [combatLogData, setCombatLogData] = useState<CombatLogData | null>(null);
+  const [overlayData, setOverlayData] = useImmer<OverlayData>(defaultOverlayData);
+  const [combatLogData, setCombatLogData] = useImmer<CombatLogData | null>(null);
   const { overlayName, windowState } = overlayData;
 
   useEffect(() => initEffect(setOverlayData, setCombatLogData), []);
@@ -41,8 +42,8 @@ export const useOverlayContext = () => {
  * - Attaches combat log update listener through COMBAT_UPDATE
  */
 function initEffect(
-  setOverlayData: React.Dispatch<React.SetStateAction<OverlayData>>,
-  setCombatLogData: React.Dispatch<React.SetStateAction<CombatLogData | null>>
+  setOverlayData: Updater<OverlayData>,
+  setCombatLogData: Updater<CombatLogData | null>
 ) {
   // update the OVERLAY_UPDATE listener
   if (unlistenToOverlayUpdates) {
@@ -50,7 +51,7 @@ function initEffect(
     unlistenToOverlayUpdates = null;
   }
   const window = getCurrentWindow();
-  window.listen<OverlayData>(OVERLAY_UPDATE, (event) => { setOverlayData(event.payload); })
+  window.listen<OverlayData>(OVERLAY_UPDATE, (event) => setOverlayData(event.payload))
     .then((unlistenFn) => unlistenToOverlayUpdates = unlistenFn);
 
   window.emit(OVERLAY_UPDATE_REQUEST, window.label);
@@ -60,7 +61,7 @@ function initEffect(
     unlistenToCombatUpdates();
     unlistenToCombatUpdates = null;
   }
-  window.listen<CombatLogData>(COMBAT_UPDATE, (event) => { setCombatLogData(event.payload); })
+  window.listen<CombatLogData>(COMBAT_UPDATE, (event) => setCombatLogData(event.payload))
     .then((unlistenFn) => unlistenToCombatUpdates = unlistenFn);
 
   window.emit(COMBAT_UPDATE_REQUEST, window.label);
