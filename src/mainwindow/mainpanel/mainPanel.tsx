@@ -1,4 +1,5 @@
 import { Container } from '../../components/container';
+import { OverlayData } from '../../overlays/overlayTypes';
 import { useMainWindowContext } from '../mainWindowContext';
 import { BaseOverlaySettings } from '../overlaysettings/baseOverlaySettings';
 import { CombatTableSettings } from '../overlaysettings/combatTableSettings';

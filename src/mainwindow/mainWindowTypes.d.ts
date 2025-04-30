@@ -1,4 +1,5 @@
 import { Updater } from 'use-immer';
+import { OverlayData } from '../overlays/overlayTypes';
 import { CombatLine } from './combatLine';
 
 type SelectedMenu =

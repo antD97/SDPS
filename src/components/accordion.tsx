@@ -86,7 +86,7 @@ const accordionContentVariants = cva(
   }
 );
 
-interface AccordionProps {
+export interface AccordionProps {
   title: ReactNode;
   children: ReactNode;
   className?: string;

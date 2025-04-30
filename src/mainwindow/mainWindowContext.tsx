@@ -7,6 +7,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect } from 're
 import { Updater, useImmer } from 'use-immer';
 import { combatMonitor } from '../lib/combatMonitor';
 import { overlayNames } from '../overlays/overlayConsts';
+import { OverlayData } from '../overlays/overlayTypes';
 import { CombatLogData, MainWindowContextType, MainWindowOverlaysState, SelectedMenu } from './mainWindowTypes';
 
 const MAX_OVERLAYS = 16;

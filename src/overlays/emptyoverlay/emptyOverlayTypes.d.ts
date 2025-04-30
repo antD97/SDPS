@@ -1,4 +1,6 @@
+import { BaseOverlayData } from '../overlayTypes';
+
 /** Data specific to an empty overlay */
-interface EmptyOverlayData extends BaseOverlayData {
+export interface EmptyOverlayData extends BaseOverlayData {
   type: 'empty'
 }

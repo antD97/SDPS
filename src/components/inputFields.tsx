@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 const LabelledField = ({ label, children }: { label: string, children: ReactNode }) => (
   <>
     {label}
-    <div className="flex flex-col w-40 items-stretch justify-center">
+    <div className="flex flex-col w-48 items-stretch justify-center">
       {children}
     </div>
   </>
@@ -19,16 +19,18 @@ export const FieldContainer = ({ children }: { children: ReactNode }) => (
 
 interface TextFieldProps {
   label: string;
-  value: string;
+  value?: string;
+  placeholder?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
 
-export const TextField = ({ label, value, onChange }: TextFieldProps) => (
+export const TextField = ({ label, value, placeholder, onChange }: TextFieldProps) => (
   <LabelledField label={label}>
     <input
-      value={value}
+      value={value !== undefined ? value : ''}
+      placeholder={placeholder}
       onChange={onChange}
-      className="bg-black/50 rounded px-1"
+      className="bg-black/50 rounded px-1 placeholder-white/25"
     />
   </LabelledField>
 );
@@ -54,23 +56,25 @@ export const SelectField = ({ label, options, value, onChange }: SelectFieldProp
 
 interface NumFieldProps {
   label: string;
+  value?: number;
+  placeholder?: number;
   min: number;
   max: number;
   step?: number;
-  value: number;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
 
-export const NumField = ({ label, min, max, step = 1, value, onChange }: NumFieldProps) => (
+export const NumField = ({ label, value, placeholder, min, max, step = 1, onChange }: NumFieldProps) => (
   <LabelledField label={label}>
     <input
       type="number"
+      value={value !== undefined ? value : ''}
+      placeholder={`${placeholder}`}
       min={min}
       max={max}
       step={step}
-      value={value}
       onChange={onChange}
-      className="bg-black/50 rounded px-1"
+      className="bg-black/50 rounded px-1 placeholder-white/25"
     />
   </LabelledField>
 );

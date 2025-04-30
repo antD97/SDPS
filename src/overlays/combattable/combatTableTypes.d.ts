@@ -1,27 +1,29 @@
+import { BaseOverlayData, CapitalizationStyle } from '../overlayTypes';
+
 /** Data specific to a combat table overlay */
-interface CombatTableData extends BaseOverlayData {
+export interface CombatTableData extends BaseOverlayData {
   type: 'combat table';
   styles: {
     window: {
-      backgroundColor: string;
-      corners: 'Square' | 'Small rounded' | 'Medium rounded' | 'Large rounded' | 'XL rounded';
-      padding: number;
+      backgroundColor: StyleStringValue;
+      corners: StyleNumberValue;
+      padding: StyleNumberValue;
     };
     headers: {
-      backgroundColor: string;
-      textColor: string;
-      textSize: number;
-      textCapitalization: 'lowercase' | 'Capitalize' | 'UPPERCASE';
+      backgroundColor: StyleStringValue;
+      textColor: StyleStringValue;
+      textSize: StyleNumberValue;
+      textCapitalization: CapitalizationStyle;
       textBolded: boolean;
-      borderColor: string;
-      borderThickness: number;
-      borderSpacing: number;
+      borderColor: StyleStringValue;
+      borderThickness: StyleNumberValue;
+      borderSpacing: StyleNumberValue;
     };
     rows: {
       default: {
-        backgroundColor: string;
-        textColor: string;
-        textSize: number;
+        backgroundColor: StyleStringValue;
+        textColor: StyleStringValue;
+        textSize: StyleNumberValue;
       };
       odd: RowStyleType;
       even: RowStyleType;
@@ -42,6 +44,16 @@ interface CombatTableData extends BaseOverlayData {
 }
 
 type RowStyleType = {
-  backgroundColor?: string;
-  textColor?: string;
+  backgroundColor: StyleStringValue;
+  textColor: StyleStringValue;
+};
+
+type StyleStringValue = {
+  default: string;
+  value?: string;
+};
+
+type StyleNumberValue = {
+  default: number;
+  value?: number;
 };

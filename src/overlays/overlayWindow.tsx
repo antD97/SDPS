@@ -2,6 +2,7 @@ import { AdjustPanel } from './adjustPanel';
 import { CombatTable } from './combatTable/combatTable';
 import { EmptyOverlay } from './emptyOverlay/emptyOverlay';
 import { useOverlayContext } from './overlayContext';
+import { OverlayData } from './overlayTypes';
 
 export const OverlayWindow = () => {
   const { overlayData: { windowState, type } } = useOverlayContext();

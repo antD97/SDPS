@@ -1,5 +1,6 @@
-import { defaultCombatTableData } from '../../overlays/combatTable/combatTableConsts';
+import { initialCombatTableData } from '../../overlays/combatTable/combatTableConsts';
 import { overlayNames, overlayStates } from '../../overlays/overlayConsts';
+import { OverlayData } from '../../overlays/overlayTypes';
 import { useMainWindowContext } from '../mainWindowContext';
 
 export const BaseOverlaySettings = () => {
@@ -20,10 +21,9 @@ export const BaseOverlaySettings = () => {
           onChange={(event) => {
             const overlayType = event.target.value as OverlayData['type'];
             setSelectedOverlayData((prevOverlayData) => {
-              console.log(overlayType);
               switch (overlayType) {
                 case 'empty': return { ...prevOverlayData, type: 'empty' };
-                case 'combat table': return { ...defaultCombatTableData, ...prevOverlayData, type: 'combat table' };
+                case 'combat table': return { ...initialCombatTableData, ...prevOverlayData, type: 'combat table' };
               }
             });
           }}
