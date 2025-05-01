@@ -1,8 +1,8 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { createContext, ReactNode, useContext, useEffect } from 'react';
 import { Updater, useImmer } from 'use-immer';
-import { COMBAT_UPDATE, COMBAT_UPDATE_REQUEST, OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from '../mainwindow/mainWindowContext';
-import { CombatLogData } from '../mainwindow/mainWindowTypes';
+import { COMBAT_UPDATE, COMBAT_UPDATE_REQUEST, OVERLAY_UPDATE, OVERLAY_UPDATE_REQUEST } from '../mainWindow/mainWindowContext';
+import { CombatLogData } from '../mainWindow/mainWindowTypes';
 import { OverlayData, WindowState } from './overlayTypes';
 
 const OverlayContext = createContext<{

@@ -1,6 +1,6 @@
 import { EventCallback } from '@tauri-apps/api/event';
 import { Updater } from 'use-immer';
-import { CombatLogData } from '../mainwindow/mainWindowTypes';
+import { CombatLogData } from '../mainWindow/mainWindowTypes';
 import { damageTypes, npcNames } from './combatMonitorConsts';
 
 export function combatMonitor(

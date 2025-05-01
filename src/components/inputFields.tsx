@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ChangeEventHandler, ReactNode } from 'react';
 
 const LabelledField = ({ label, children }: { label: string, children: ReactNode }) => (
   <>
@@ -21,7 +21,7 @@ interface TextFieldProps {
   label: string;
   value?: string;
   placeholder?: string;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 export const TextField = ({ label, value, placeholder, onChange }: TextFieldProps) => (
@@ -39,7 +39,7 @@ interface SelectFieldProps {
   label: string;
   options: string[];
   value: string;
-  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  onChange?: ChangeEventHandler<HTMLSelectElement>;
 }
 
 export const SelectField = ({ label, options, value, onChange }: SelectFieldProps) => (
@@ -61,7 +61,7 @@ interface NumFieldProps {
   min: number;
   max: number;
   step?: number;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 export const NumField = ({ label, value, placeholder, min, max, step = 1, onChange }: NumFieldProps) => (
@@ -82,7 +82,7 @@ export const NumField = ({ label, value, placeholder, min, max, step = 1, onChan
 interface CheckboxFieldProps {
   label: string;
   checked: boolean;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 export const CheckboxField = ({ label, checked, onChange }: CheckboxFieldProps) => (

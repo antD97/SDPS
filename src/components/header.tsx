@@ -1,6 +1,6 @@
-import { cva } from "class-variance-authority";
-import { FC, HTMLAttributes } from "react";
-import { twMerge } from "tailwind-merge";
+import { cva } from 'class-variance-authority';
+import { FC, HTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 const headerVariants = cva(
   'self-center text-center border-b border-cyan-600',

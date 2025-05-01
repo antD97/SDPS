@@ -1,6 +1,6 @@
 import { TitleBar } from '../components/titleBar';
-import { MainPanel } from './mainpanel/mainPanel';
-import { NavPanel } from './navpanel/navPanel';
+import { MainPanel } from './mainPanel/mainPanel';
+import { NavPanel } from './navPanel/navPanel';
 
 export const MainWindow = () => {
   return (

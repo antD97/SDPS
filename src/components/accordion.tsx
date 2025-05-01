@@ -1,9 +1,9 @@
-import { cva } from "class-variance-authority";
-import { motion } from "framer-motion";
-import { ReactNode } from "react";
-import { VscAdd, VscRemove } from "react-icons/vsc";
-import { twMerge } from "tailwind-merge";
-import { useImmer } from "use-immer";
+import { cva } from 'class-variance-authority';
+import { motion } from 'framer-motion';
+import { ReactNode } from 'react';
+import { VscAdd, VscRemove } from 'react-icons/vsc';
+import { twMerge } from 'tailwind-merge';
+import { useImmer } from 'use-immer';
 
 const accordionHeaderVariants = cva(
   'relative text-lg text-center rounded-t-md transition-colors duration-300',

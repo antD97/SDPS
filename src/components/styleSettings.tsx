@@ -1,6 +1,6 @@
 import { Draft } from 'immer';
-import React from 'react';
-import { useMainWindowContext } from '../mainwindow/mainWindowContext';
+import { Fragment } from 'react/jsx-runtime';
+import { useMainWindowContext } from '../mainWindow/mainWindowContext';
 import { BaseOverlayData, StyleSettingsAccordionData, StyleSettingsEntry } from '../overlays/overlayTypes';
 import { Accordion } from './accordion';
 import { CheckboxField, FieldContainer, NumField, SelectField, TextField } from './inputFields';
@@ -27,7 +27,7 @@ export const StyleSettingsAccordion = <O extends BaseOverlayData>(
         switch (section.type) {
           case 'accordion': return (<StyleSettingsAccordion key={i} styleSettingsAccordionData={section} depth={depth + 1} />);
           case 'entries': return (<StyleSettingsEntries key={i} entries={section.entries} />);
-          case 'custom': return (<React.Fragment key={i}>{section.content}</React.Fragment>);
+          case 'custom': return (<Fragment key={i}>{section.content}</Fragment>);
         }
       })
     }
