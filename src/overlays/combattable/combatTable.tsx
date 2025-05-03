@@ -1,60 +1,45 @@
+import { css, SerializedStyles } from '@emotion/react';
 import { motion } from 'framer-motion';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { useDebouncedCallback } from 'use-debounce';
+import { useImmer } from 'use-immer';
 import { useOverlayContext } from '../overlayContext';
 
 export const CombatTable = () => {
   const { overlayData } = useOverlayContext();
   if (overlayData.type !== 'combat table') { return (<></>); }
-  const { styles: { window } } = overlayData;
 
-  const borderRadius = useMemo(() => (
-    `${window.corners.value !== undefined ? window.corners.value : window.corners.default}px`
-  ), [window.corners.value]);
+  const numCols = 4;
 
-  const paddingSize = useMemo(() => {
-    const size = `${window.padding.value !== undefined ? window.padding.value : window.padding.default}px`;
-    return { x: { width: size }, y: { height: size } };
-  }, [window.padding.value]);
-
-  const backgroundColor = useMemo(() => (
-    window.backgroundColor.value !== undefined ? window.backgroundColor.value : window.backgroundColor.default
-  ), [window.backgroundColor.value]);
+  const [cssObj, setCssObj] = useImmer<SerializedStyles>(css`${overlayData.styles}`);
+  const parseStyles = useDebouncedCallback(() => {
+    setCssObj(css`${overlayData.styles.replaceAll('{{{numCols}}}', `${numCols}`)}`);
+  }, 500);
+  useEffect(parseStyles, [overlayData.styles]);
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ borderRadius }} >
-      <div style={{ ...paddingSize.y, backgroundColor }} />
-      <div className="grow flex overflow-hidden">
-        <div style={{ ...paddingSize.x, backgroundColor }} />
+    <div css={cssObj}>
+      <div className="window-padding window-padding-t" />
+      <div className="window-vert-padding-content">
+        <div className="window-padding window-padding-l" />
 
-        <div className="grow flex flex-col overflow-hidden">
+        <div className="padding-content">
           <CombatTableHeader />
           <CombatTableData />
+          <div className="row-fill" />
         </div>
 
-        <div style={{ ...paddingSize.x, backgroundColor }} />
+        <div className="window-padding window-padding-r" />
       </div>
-      <div style={{ ...paddingSize.y, backgroundColor }} />
+      <div className="window-padding window-padding-b" />
     </div>
   );
 }
 
 const CombatTableHeader = () => {
-  const { overlayData } = useOverlayContext();
-  if (overlayData.type !== 'combat table') { throw new Error('Bad overlay data'); }
-
-  const { styles: { window, headers } } = overlayData;
-  const backgroundColor: string = useMemo(() => {
-    if (headers.backgroundColor.value !== undefined) { return headers.backgroundColor.value; }
-    else if (headers.backgroundColor.default !== '') { return headers.backgroundColor.default; }
-    else if (window.backgroundColor.value !== undefined) { return window.backgroundColor.value; }
-    else { return window.backgroundColor.default; }
-  }, [headers.backgroundColor, window.backgroundColor]);
-
   return (
-    <div
-      className="grid grid-cols-4 font-bold pb-1 border-b"
-      style={{ backgroundColor }}
-    >
+    <div className="header">
       <div>damage</div>
       <div>mitigated</div>
       <div>target</div>
@@ -67,9 +52,10 @@ const CombatTableData = () => {
   const { combatLogData } = useOverlayContext();
   const combatLines = combatLogData?.combatLines ?? [];
   return (
-    <div className="flex flex-col justify-end overflow-hidden">
-      <div className="grid grid-cols-4">
-        {combatLines.map((combatLine, i) => (<CombatRow key={i} combatLine={combatLine} />
+    <div className="table-data">
+      <div className="row">
+        {combatLines.map((combatLine, i) => (
+          <CombatRow key={i} combatLine={combatLine} />
         ))}
       </div>
     </div>
@@ -77,25 +63,28 @@ const CombatTableData = () => {
 }
 
 const CombatRow = ({ combatLine }: { combatLine: CombatLine }) => {
+  const { overlayData } = useOverlayContext();
+  if (overlayData.type !== 'combat table') { return (<></>); }
+
   switch (combatLine.type) {
     case 'damage-dealt':
       return (
         <>
-          <TableCell>{combatLine.damage}</TableCell>
-          <TableCell>({combatLine.mitigated})</TableCell>
-          <TableCell>{combatLine.target}</TableCell>
-          <TableCell>{combatLine.from}</TableCell>
+          <TableCell className="damage-dealt-row damage-cell">{combatLine.damage}</TableCell>
+          <TableCell className="damage-dealt-row mitigated-cell">({combatLine.mitigated})</TableCell>
+          <TableCell className="damage-dealt-row target-cell">{combatLine.target}</TableCell>
+          <TableCell className="damage-dealt-row from-cell">{combatLine.from}</TableCell>
         </>
       );
   }
-  return (<><TableCell>{combatLine.type}</TableCell><TableCell /><TableCell /><TableCell /></>);
+  // return (<><TableCell>{combatLine.type}</TableCell><TableCell /><TableCell /><TableCell /></>);
 };
 
-const TableCell = ({ children }: { children?: ReactNode }) => (
+const TableCell = ({ children, className }: { children?: ReactNode, className?: string }) => (
   <motion.div
     initial={{ height: 0, opacity: 0 }}
     animate={{ height: 'auto', opacity: 1 }}
-    className="truncate"
+    className={twMerge('cell', className)}
   >
     {children}
   </motion.div>
